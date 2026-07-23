@@ -6,8 +6,12 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-    env_file:
-      - .env
+    environment:
+      - JELLYFIN_URL=http://192.168.1.100:8096
+      - JELLYFIN_API_KEY=your_jellyfin_api_key
+      - JELLYSEERR_URL=http://192.168.1.100:5055
+      - JELLYSEERR_API_KEY=your_jellyseerr_api_key
+      - MDBLIST_API_KEY=your_mdblist_api_key
     volumes:
       # keeps the MDBList ratings cache across restarts
       - ./cache:/app/.cache

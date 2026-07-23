@@ -34,16 +34,7 @@ Rooms support more than two people. Match just requires everyone, and the fallba
 
 You need Node 22+ (or just Docker), a Jellyfin server, and API keys. Jellyseerr is optional if you only ever use Jellyfin Only mode, but the genre list for Any Movie mode comes from it.
 
-Copy `.env.example` to `.env` and fill it in:
-
-```
-PORT=3000
-JELLYFIN_URL=http://192.168.1.100:8096
-JELLYFIN_API_KEY=...        # Jellyfin dashboard -> API keys
-JELLYSEERR_URL=http://192.168.1.100:5055
-JELLYSEERR_API_KEY=...      # Jellyseerr settings -> general
-MDBLIST_API_KEY=...         # free at mdblist.com, the free tier is plenty
-```
+Five variables total, get them from: Jellyfin dashboard -> API keys, Jellyseerr settings -> general, and mdblist.com (free, the free tier is plenty). Where you put them depends on how you run it: Docker users set them right in `docker-compose.yml`, bare-metal installs copy `.env.example` to `.env` and fill that in.
 
 ### Straight on the server (no Docker)
 
@@ -75,7 +66,7 @@ Ratings cache lands in `.cache/` next to the app and survives restarts on its ow
 
 ### Docker
 
-A prebuilt image (amd64 and arm64) gets published to GHCR on every push, so no local build needed. Grab the compose file and your `.env`, then:
+A prebuilt image (amd64 and arm64) gets published to GHCR on every push, so no local build needed. Grab `docker-compose.yml`, put your URLs and keys straight into its `environment:` block, then:
 
 ```bash
 docker compose up -d
@@ -85,7 +76,12 @@ Or without compose:
 
 ```bash
 docker run -d --name jellyfin-matcher \
-  -p 3000:3000 --env-file .env \
+  -p 3000:3000 \
+  -e JELLYFIN_URL=http://192.168.1.100:8096 \
+  -e JELLYFIN_API_KEY=... \
+  -e JELLYSEERR_URL=http://192.168.1.100:5055 \
+  -e JELLYSEERR_API_KEY=... \
+  -e MDBLIST_API_KEY=... \
   -v ./cache:/app/.cache \
   ghcr.io/phineasfritsch/jellyfin-matcher:latest
 ```
