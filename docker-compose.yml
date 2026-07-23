@@ -1,6 +1,7 @@
 services:
   jellyfin-matcher:
-    build: .
+    image: ghcr.io/phineasfritsch/jellyfin-matcher:latest
+    # build: .   # uncomment to build from source instead of pulling
     container_name: jellyfin-matcher
     restart: unless-stopped
     ports:

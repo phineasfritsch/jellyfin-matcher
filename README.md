@@ -73,13 +73,24 @@ WantedBy=multi-user.target
 
 Ratings cache lands in `.cache/` next to the app and survives restarts on its own.
 
-### Docker (if you prefer)
+### Docker
+
+A prebuilt image (amd64 and arm64) gets published to GHCR on every push, so no local build needed. Grab the compose file and your `.env`, then:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
-Same thing in a container. The compose file mounts `./cache` so the MDBList cache persists.
+Or without compose:
+
+```bash
+docker run -d --name jellyfin-matcher \
+  -p 3000:3000 --env-file .env \
+  -v ./cache:/app/.cache \
+  ghcr.io/phineasfritsch/jellyfin-matcher:latest
+```
+
+The cache mount keeps MDBList ratings across restarts. If you'd rather build from source, uncomment the `build: .` line in the compose file.
 
 Either way, first deck build for a genre pair is a bit slow (the free tier only allows 10 titles per ratings request, so a big library means a bunch of round trips), after that it's cached for a week.
 
