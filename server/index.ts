@@ -13,7 +13,9 @@ const PORT = Number(process.env.PORT ?? 3000);
 
 export const store = new RoomStore();
 
-const dev = process.env.NODE_ENV !== 'production';
+// Production is the default so `npm run build && npm start` just works on a
+// bare server; `npm run dev` opts into the Next dev server explicitly.
+const dev = process.env.NODE_ENV === 'development';
 const nextApp = next({ dev });
 const nextHandler = nextApp.getRequestHandler();
 

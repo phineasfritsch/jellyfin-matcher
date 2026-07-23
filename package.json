@@ -4,10 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx --env-file=.env server/index.ts",
+    "dev": "cross-env NODE_ENV=development tsx --env-file=.env server/index.ts",
     "build": "next build",
     "start": "tsx --env-file=.env server/index.ts",
-    "server": "tsx --env-file=.env server/index.ts",
     "e2e": "tsx scripts/e2e-session.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -27,6 +26,7 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
+    "cross-env": "^10.1.0",
     "express": "^5.2.1",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.26.0",

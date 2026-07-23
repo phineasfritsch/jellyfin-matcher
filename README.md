@@ -45,15 +45,56 @@ JELLYSEERR_API_KEY=...      # Jellyseerr settings -> general
 MDBLIST_API_KEY=...         # free at mdblist.com, the free tier is plenty
 ```
 
-### Docker (the intended way)
+### Straight on the server (no Docker)
+
+```bash
+git clone <this repo> && cd jellyfin-matcher
+npm install
+npm run build
+npm start
+```
+
+That's it, one Node process on port 3000 (set `PORT` in `.env` to change it). Production mode is the default so `npm start` just works. If you want it to survive reboots, a systemd unit like this does the job:
+
+```ini
+[Unit]
+Description=Jellyfin Matcher
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/jellyfin-matcher
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+User=youruser
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Ratings cache lands in `.cache/` next to the app and survives restarts on its own.
+
+### Docker (if you prefer)
 
 ```bash
 docker compose up -d --build
 ```
 
-Then open `http://your-server:3000` on your phones. The compose file mounts `./cache` so MDBList ratings survive restarts; first deck build for a genre pair is a bit slow (the free tier only allows 10 titles per ratings request, so a big library means a bunch of round trips), after that it's cached for a week.
+Same thing in a container. The compose file mounts `./cache` so the MDBList cache persists.
 
-To use it away from home put it behind a Cloudflare Tunnel or whatever reverse proxy you already have. There's no auth built in, it's a party app, don't expose it raw to the internet.
+Either way, first deck build for a genre pair is a bit slow (the free tier only allows 10 titles per ratings request, so a big library means a bunch of round trips), after that it's cached for a week.
+
+### Cloudflare Tunnel
+
+Works out of the box, websockets included, no config beyond pointing the tunnel at the app. If you manage tunnels from the Cloudflare dashboard just add a public hostname with service `http://localhost:3000`. Config file style:
+
+```yaml
+ingress:
+  - hostname: match.yourdomain.com
+    service: http://localhost:3000
+  - service: http_status:404
+```
+
+QR codes and room links use whatever hostname the page was opened on, so they'll point at your tunnel domain automatically. One warning: there's no auth built in, it's a party app. If the hostname is public, consider slapping a Cloudflare Access policy on it, or at least don't post the URL anywhere.
 
 ### Development
 
