@@ -8,13 +8,15 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: docker-publish
+  cancel-in-progress: true
+
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: docker/setup-qemu-action@v3
 
       - uses: docker/setup-buildx-action@v3
 
@@ -35,8 +37,9 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          # amd64 for regular servers, arm64 for Pi-style homelabs
-          platforms: linux/amd64,linux/arm64
+          # amd64 only; arm64 under QEMU tripled build times. Add
+          # linux/arm64 back here if you run on a Pi.
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
