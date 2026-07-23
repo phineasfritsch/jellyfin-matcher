@@ -1,0 +1,12 @@
+services:
+  jellyfin-matcher:
+    build: .
+    container_name: jellyfin-matcher
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      # keeps the MDBList ratings cache across restarts
+      - ./cache:/app/.cache
