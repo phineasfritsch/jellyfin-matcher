@@ -93,23 +93,9 @@ Main websocket events, roughly in the order they happen: `room:create`, `room:jo
 
 Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}` batch-resolves full movie objects including a `ratings` array where `score` is already 0-100 for every source, even Letterboxd's 5 star scale. Free tier caps batches at 10 ids. `GET /user` shows your remaining quota. The client retries 429s with backoff and caches to disk for 7 days.
 
-## The UI
-
-Dark only (it's a movie night app, you're on the couch, lights are off). Palette is a deep indigo navy thing with green for "yes" actions, Inter for type. Swipe cards are Framer Motion with rotation and LIKE/NOPE/MAYBE stamps that fade in as you drag; springs instead of easing curves so releases feel physical. Everything respects `prefers-reduced-motion`, which mostly means the confetti doesn't fire and cards fade instead of flying.
-
-It installs to the home screen via the web manifest. No service worker on purpose: the app is useless offline (it's all live sockets), so caching a shell felt like homework nobody assigned.
-
 ## Testing
 
-Sixty unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real 986 movie Jellyfin library, with the deck coming back in the expected order (Alien on top of the horror/sci-fi hybrids at 86.7, checks out).
-
-Known gaps and honest TODOs:
-
-- Swipe thresholds (110px or a fast flick) were tuned in a desktop browser. They feel okay on a phone but could probably use a nudge after more real use.
-- The Jellyseerr request button is wired and the API call is tested against their docs, but I haven't let it fire a real download request end to end yet.
-- The Jellyfin deep link opens the movie's detail page in Jellyfin web. On iOS it won't hand off into the native app, you get the web player. Living with it for now.
-- Elimination ties are broken alphabetically, which is deterministic but a little dumb. Random would arguably be fairer.
-- No tests on the socket handlers themselves, only the logic underneath them.
+Sixty unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
 ## License
 
