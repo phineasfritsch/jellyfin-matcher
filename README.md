@@ -111,7 +111,7 @@ QR codes and room links use whatever hostname the page was opened on, so they'll
 
 ### A help tab inside Jellyfin
 
-`custom-tab-guide.html` is a self-contained page of instructions for your users: which apps to install on a TV, phone, or laptop, how to request things in Jellyseerr, and how to use Matcher. It's meant for the [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin. Add a tab in the plugin settings, paste the file's contents into the Html Content box, and swap the `MATCHER_URL` placeholder for your Matcher address. The styles are scoped so they won't leak into the rest of Jellyfin.
+Matcher serves a `/guide` page: which apps to install on a TV, phone, or laptop, how to request things in Jellyseerr, and how to use Matcher. You can drop it into the Jellyfin web client as a tab with the [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin. Add a tab in the plugin settings, paste the contents of `custom-tab-guide.html` into the Html Content box, and replace `MATCHER_URL` with your Matcher address (keep the `/guide` on the end). It's an iframe, which is the plugin's own tested pattern, so it fills the tab cleanly. The `/guide` page has no login gate, so it works for everyone.
 
 ### Development
 
