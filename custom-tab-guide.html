@@ -1,0 +1,178 @@
+<!--
+  Jellyfin "Custom Tabs" plugin content.
+
+  How to use:
+  1. Admin Dashboard -> My Plugins -> Custom Tabs -> add a tab.
+  2. Set Display Text to something like "Help" or "Guide".
+  3. Paste EVERYTHING below this comment into the "Html Content" box.
+  4. Replace MATCHER_URL further down with your Matcher address
+     (e.g. https://match.yourdomain.com). Search for MATCHER_URL.
+  5. Save, then force-refresh the web client.
+
+  Styles are scoped under .jfg so they will not affect the rest of Jellyfin.
+-->
+<style>
+  .jfg {
+    --jfg-bg: #0f0f23;
+    --jfg-fg: #f8fafc;
+    --jfg-muted: #a5b4fc;
+    --jfg-surface: #1b1b33;
+    --jfg-border: #2c2c4a;
+    --jfg-accent: #22c55e;
+    --jfg-chip: #4338ca;
+    box-sizing: border-box;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+    color: var(--jfg-fg);
+    font-family: inherit;
+    line-height: 1.6;
+  }
+  .jfg * { box-sizing: border-box; }
+  .jfg h1 { font-size: 2rem; font-weight: 700; margin: 0 0 12px; }
+  .jfg .jfg-lead { color: var(--jfg-muted); margin: 0 0 28px; }
+  .jfg h2 {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.4rem; font-weight: 700; margin: 40px 0 16px;
+  }
+  .jfg h2 .jfg-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--jfg-chip); font-size: 1.2rem;
+  }
+  .jfg h3 { font-size: 1rem; font-weight: 600; margin: 0 0 4px; }
+  .jfg p { margin: 0 0 14px; }
+  .jfg .jfg-muted { color: var(--jfg-muted); }
+  .jfg code {
+    background: #26264a; color: var(--jfg-accent);
+    padding: 2px 6px; border-radius: 5px; font-size: 0.9em;
+    word-break: break-all;
+  }
+  .jfg .jfg-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .jfg .jfg-grid { grid-template-columns: 1fr 1fr; } }
+  .jfg .jfg-card {
+    border: 1px solid var(--jfg-border); background: var(--jfg-surface);
+    border-radius: 12px; padding: 16px;
+  }
+  .jfg .jfg-card p { margin: 0; font-size: 0.9rem; color: var(--jfg-muted); }
+  .jfg ol.jfg-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .jfg ol.jfg-steps li { display: flex; gap: 12px; }
+  .jfg ol.jfg-steps .jfg-num {
+    flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%;
+    background: #1e1b4b; color: var(--jfg-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+  }
+  .jfg ol.jfg-steps span.jfg-body { color: var(--jfg-muted); padding-top: 2px; }
+  .jfg .jfg-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 20px; height: 48px; padding: 0 24px;
+    background: var(--jfg-accent); color: var(--jfg-bg);
+    font-weight: 600; border-radius: 12px; text-decoration: none;
+  }
+  .jfg .jfg-foot {
+    margin-top: 48px; padding-top: 20px;
+    border-top: 1px solid var(--jfg-border);
+    color: var(--jfg-muted); font-size: 0.9rem;
+  }
+  .jfg a { color: var(--jfg-accent); }
+</style>
+
+<div class="jfg">
+  <h1>How to use the server</h1>
+  <p class="jfg-lead">
+    Which apps to install on your TV, phone, and laptop, how to request something we don't have
+    yet, and how to settle movie night when nobody can agree.
+  </p>
+
+  <h2><span class="jfg-badge">📺</span> Watch on your TV</h2>
+  <p class="jfg-muted">
+    Almost every TV platform has a Jellyfin app. Install it, point it at this server's address,
+    and sign in with the account you were given.
+  </p>
+  <div class="jfg-grid">
+    <div class="jfg-card">
+      <h3>Android TV / Google TV / Chromecast</h3>
+      <p>Official Jellyfin app from the Play Store. Easiest option, best supported.</p>
+    </div>
+    <div class="jfg-card">
+      <h3>Amazon Fire TV / Fire Stick</h3>
+      <p>Official Jellyfin app from the Amazon Appstore. Search "Jellyfin" on the device.</p>
+    </div>
+    <div class="jfg-card">
+      <h3>Apple TV</h3>
+      <p>Swiftfin (free, official) from the App Store. Infuse works well too if you use it.</p>
+    </div>
+    <div class="jfg-card">
+      <h3>Roku</h3>
+      <p>Official Jellyfin channel from the Roku store. Solid, a little plainer than the rest.</p>
+    </div>
+    <div class="jfg-card">
+      <h3>Samsung (Tizen) / LG (webOS)</h3>
+      <p>Jellyfin is in both smart-TV stores. If yours is missing, a cheap Fire Stick fixes it.</p>
+    </div>
+    <div class="jfg-card">
+      <h3>Kodi</h3>
+      <p>Add the Jellyfin for Kodi plugin if you already run Kodi and want one unified library.</p>
+    </div>
+  </div>
+
+  <h2><span class="jfg-badge">📱</span> Watch on your phone or tablet</h2>
+  <div class="jfg-grid">
+    <div class="jfg-card">
+      <h3>iPhone / iPad</h3>
+      <p>Swiftfin (free, official) is the one to get. Infuse is a slicker paid alternative with better format support.</p>
+    </div>
+    <div class="jfg-card">
+      <h3>Android</h3>
+      <p>Official Jellyfin app works fine. Findroid is a great community-built alternative; Streamyfin is another good one.</p>
+    </div>
+  </div>
+  <p class="jfg-muted" style="margin-top:14px">
+    Each one asks for the server address and your login, then your library and resume points sync everywhere.
+  </p>
+
+  <h2><span class="jfg-badge">💻</span> Watch on your laptop or desktop</h2>
+  <div class="jfg-grid">
+    <div class="jfg-card">
+      <h3>Any web browser</h3>
+      <p>Just open the server in your browser and sign in. Nothing to install. Chrome, Edge, Firefox, Safari all work.</p>
+    </div>
+    <div class="jfg-card">
+      <h3>Jellyfin Media Player</h3>
+      <p>Free desktop app for Windows, macOS, and Linux. Smoother playback and more file types than the browser.</p>
+    </div>
+  </div>
+
+  <h2><span class="jfg-badge">🔎</span> Want something we don't have?</h2>
+  <p class="jfg-muted">
+    We use <strong style="color:var(--jfg-fg)">Jellyseerr</strong> for requests. If a movie or show
+    isn't in the library, ask for it there and it gets downloaded and added automatically.
+  </p>
+  <ol class="jfg-steps">
+    <li><span class="jfg-num">1</span><span class="jfg-body">Open Jellyseerr and sign in with your Jellyfin account (same login).</span></li>
+    <li><span class="jfg-num">2</span><span class="jfg-body">Search for the movie or show you want.</span></li>
+    <li><span class="jfg-num">3</span><span class="jfg-body">Open it and hit Request. For a show you can pick specific seasons.</span></li>
+    <li><span class="jfg-num">4</span><span class="jfg-body">That's it. It shows up in Jellyfin once it finishes downloading.</span></li>
+  </ol>
+
+  <h2><span class="jfg-badge">🍿</span> Can't agree on a movie? Use Matcher</h2>
+  <p class="jfg-muted">
+    <strong style="color:var(--jfg-fg)">Jellyfin Matcher</strong> is a swipe game for picking
+    something together. Everyone joins on their phone and it guarantees a pick.
+  </p>
+  <ol class="jfg-steps">
+    <li><span class="jfg-num">1</span><span class="jfg-body">One person opens Matcher and taps Create Room. A short code and QR appear.</span></li>
+    <li><span class="jfg-num">2</span><span class="jfg-body">Everyone scans the QR or types the code, then picks server-only or any movie.</span></li>
+    <li><span class="jfg-num">3</span><span class="jfg-body">You each check the genres you're up for; a quick knockout narrows it to two.</span></li>
+    <li><span class="jfg-num">4</span><span class="jfg-body">Then swipe: right to like, left to pass, up for maybe, star for a super like. Tap a poster for the trailer and ratings.</span></li>
+    <li><span class="jfg-num">5</span><span class="jfg-body">When everyone likes the same movie it locks in. If the deck runs out first, points decide a winner anyway.</span></li>
+  </ol>
+  <!-- Replace MATCHER_URL with your Matcher address, e.g. https://match.yourdomain.com -->
+  <a class="jfg-cta" href="MATCHER_URL" target="_blank" rel="noreferrer">🍿 Open Matcher</a>
+
+  <p class="jfg-foot">
+    Trouble signing in anywhere? Your username and password are the same across Jellyfin,
+    Jellyseerr, and Matcher. If something's broken, ask whoever runs the server.
+  </p>
+</div>

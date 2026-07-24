@@ -14,6 +14,9 @@ function card(id: string, composite: number | null, isHybrid = false): MovieCand
     genres: [],
     isHybrid,
     jellyfinItemId: null,
+    description: null,
+    trailerUrl: null,
+    allRatings: [],
     scores: { letterboxd: null, imdb: null, rt: null, composite },
   };
 }

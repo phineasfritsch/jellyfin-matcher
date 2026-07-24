@@ -13,6 +13,11 @@ export interface MovieCandidate {
   isHybrid: boolean;
   /** Present when the title exists in the Jellyfin library. */
   jellyfinItemId: string | null;
+  description: string | null;
+  /** YouTube watch URL from MDBList, when known. */
+  trailerUrl: string | null;
+  /** Everything MDBList sent back, for the details view. */
+  allRatings: Array<{ source: string; score: number | null; votes: number | null }>;
   scores: {
     letterboxd: number | null;
     imdb: number | null;
@@ -36,6 +41,8 @@ export interface MdblistMedia {
   year: number | null;
   runtime: number | null;
   poster: string | null;
+  description?: string | null;
+  trailer?: string | null;
   genres: Array<{ id?: number; title?: string; name?: string }> | string[] | null;
   ids: {
     imdb: string | null;

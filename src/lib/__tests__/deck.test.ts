@@ -15,6 +15,9 @@ function candidate(over: Partial<MovieCandidate>): MovieCandidate {
     genres: [],
     isHybrid: false,
     jellyfinItemId: null,
+    description: null,
+    trailerUrl: null,
+    allRatings: [],
     scores: { letterboxd: null, imdb: null, rt: null, composite: null },
     ...over,
   };

@@ -6,12 +6,14 @@ import { playbackUrl } from '../src/lib/jellyfin';
 import { requestMovie } from '../src/lib/jellyseerr';
 import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
 import { fallbackWinner, isInstantMatch, isValidVote, rankFallback } from '../src/lib/match';
+import { authEnabled, authenticateWithJellyfin, AuthStore } from './auth';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { RoomStore, type Room, type RoomSettings } from './store';
 
 const PORT = Number(process.env.PORT ?? 3000);
 
 export const store = new RoomStore();
+const auth = new AuthStore();
 
 // Production is the default so `npm run build && npm start` just works on a
 // bare server; `npm run dev` opts into the Next dev server explicitly.
@@ -20,11 +22,42 @@ const nextApp = next({ dev });
 const nextHandler = nextApp.getRequestHandler();
 
 const app = express();
+app.use(express.json());
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
+
+// Whether the browser needs to show a login screen at all.
+app.get('/api/auth-config', (_req, res) => res.json({ required: authEnabled() }));
+
+// Exchange Jellyfin credentials for a matcher session token. The server's
+// admin API key never reaches the browser; only real server accounts pass.
+app.post('/api/login', async (req, res) => {
+  const { username, password } = (req.body ?? {}) as { username?: string; password?: string };
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+  try {
+    const user = await authenticateWithJellyfin(username, password);
+    const token = auth.issue(user);
+    res.json({ token, name: user.name });
+  } catch (err) {
+    res.status(401).json({ error: err instanceof Error ? err.message : 'Login failed' });
+  }
+});
+
 app.use((req, res) => void nextHandler(req, res));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: true } });
+
+// Every socket must carry a valid session token, unless auth is switched off.
+io.use((socket, nextFn) => {
+  if (!authEnabled()) return nextFn();
+  const token = (socket.handshake.auth as { token?: string })?.token;
+  const user = auth.validate(token);
+  if (!user) return nextFn(new Error('unauthorized'));
+  socket.data = { ...socket.data, authedName: user.name };
+  nextFn();
+});
 
 type Ack = (response: { ok: true; [k: string]: unknown } | { ok: false; error: string }) => void;
 

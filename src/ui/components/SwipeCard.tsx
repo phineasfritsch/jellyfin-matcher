@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion';
-import { Layers } from 'lucide-react';
+import { Info, Layers } from 'lucide-react';
 import type { MovieCandidate } from '../../lib/types';
 import { VOTE_POINTS } from '../../lib/match';
 
@@ -14,9 +14,11 @@ export interface SwipeCardProps {
   onVote: (points: number) => void;
   /** Only the top card is draggable. */
   active: boolean;
+  /** Open the details sheet (synopsis, all ratings, trailer). */
+  onOpenDetails: () => void;
 }
 
-export function SwipeCard({ card, onVote, active }: SwipeCardProps) {
+export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProps) {
   const reducedMotion = useReducedMotion();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -72,6 +74,18 @@ export function SwipeCard({ card, onVote, active }: SwipeCardProps) {
             </span>
           )}
 
+          {active && (
+            <button
+              type="button"
+              aria-label={`Details for ${card.title}`}
+              onPointerDownCapture={(e) => e.stopPropagation()}
+              onClick={onOpenDetails}
+              className="absolute right-3 top-3 flex size-11 cursor-pointer items-center justify-center rounded-full bg-black/50 text-foreground backdrop-blur-sm transition active:scale-90"
+            >
+              <Info aria-hidden className="size-5" />
+            </button>
+          )}
+
           {/* Drag verdict badges */}
           <motion.span
             style={{ opacity: likeOpacity }}
@@ -96,7 +110,11 @@ export function SwipeCard({ card, onVote, active }: SwipeCardProps) {
           </motion.span>
         </div>
 
-        <div className="flex flex-col gap-1.5 p-4">
+        <div
+          className={`flex flex-col gap-1.5 p-4 ${active ? 'cursor-pointer' : ''}`}
+          onPointerDownCapture={active ? (e) => e.stopPropagation() : undefined}
+          onClick={active ? onOpenDetails : undefined}
+        >
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="truncate text-xl font-bold">{card.title}</h2>
             {card.scores.composite != null && (

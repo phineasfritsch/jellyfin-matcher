@@ -4,10 +4,53 @@ import { io, type Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
+const AUTH_TOKEN_KEY = 'matcher:auth-token';
+const AUTH_NAME_KEY = 'matcher:auth-name';
+
+export function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getAuthName(): string | null {
+  try {
+    return localStorage.getItem(AUTH_NAME_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuth(token: string, name: string): void {
+  try {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem(AUTH_NAME_KEY, name);
+  } catch {
+    /* private mode: token just won't persist across reloads */
+  }
+  // Reconnect so the handshake carries the new token.
+  if (socket) {
+    socket.auth = { token };
+    socket.disconnect().connect();
+  }
+}
+
+export function clearAuth(): void {
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_NAME_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Singleton socket to the matcher server (same origin as the page). */
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io({ autoConnect: true });
+    // Pass the token on every (re)connect so a refreshed session stays valid.
+    socket = io({ autoConnect: true, auth: (cb) => cb({ token: getAuthToken() ?? '' }) });
   }
   return socket;
 }

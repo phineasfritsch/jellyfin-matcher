@@ -25,6 +25,7 @@ export interface JellyfinMovie {
   tmdbId: number | null;
   imdbId: string | null;
   posterUrl: string | null;
+  overview: string | null;
 }
 
 interface JellyfinItemDto {
@@ -33,6 +34,7 @@ interface JellyfinItemDto {
   ProductionYear?: number;
   RunTimeTicks?: number;
   Genres?: string[];
+  Overview?: string;
   ProviderIds?: Record<string, string>;
   ImageTags?: Record<string, string>;
 }
@@ -54,6 +56,7 @@ function mapItem(item: JellyfinItemDto, cfg: JellyfinConfig): JellyfinMovie {
     tmdbId: Number.isFinite(tmdbId) ? tmdbId : null,
     imdbId: item.ProviderIds?.Imdb ?? item.ProviderIds?.imdb ?? null,
     posterUrl: item.ImageTags?.Primary ? posterUrl(item.Id, cfg) : null,
+    overview: item.Overview ?? null,
   };
 }
 
@@ -97,7 +100,7 @@ export async function getMovies(
 ): Promise<JellyfinMovie[]> {
   const data = (await jellyfinGet(
     cfg,
-    '/Items?IncludeItemTypes=Movie&Recursive=true&Fields=Genres,ProviderIds,ProductionYear',
+    '/Items?IncludeItemTypes=Movie&Recursive=true&Fields=Genres,ProviderIds,ProductionYear,Overview',
   )) as { Items?: JellyfinItemDto[] };
   const movies = (data.Items ?? []).map((item) => mapItem(item, cfg));
   return filterMovies(movies, filter);

@@ -58,6 +58,7 @@ describe('getMovies', () => {
         tmdbId: 348,
         imdbId: 'tt0078748',
         posterUrl: 'http://jf.local:8096/Items/abc123/Images/Primary?maxWidth=600',
+        overview: null,
       },
     ]);
   });
@@ -73,6 +74,7 @@ describe('filterMovies', () => {
     tmdbId: null,
     imdbId: null,
     posterUrl: null,
+    overview: null,
     ...over,
   });
 

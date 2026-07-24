@@ -4,7 +4,9 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { CircleHelp, Heart, Star, X } from 'lucide-react';
 import { VOTE_POINTS } from '../../lib/match';
+import type { MovieCandidate } from '../../lib/types';
 import type { RoomHook } from '../useRoom';
+import { MovieDetails } from './MovieDetails';
 import { SwipeCard } from './SwipeCard';
 
 /** How many upcoming posters to warm the browser cache with. */
@@ -15,6 +17,8 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
   const reducedMotion = useReducedMotion();
   /** Exit direction per card id so AnimatePresence knows where it flew. */
   const [exits, setExits] = useState<Record<string, number>>({});
+  /** Card whose details sheet is open, if any. */
+  const [details, setDetails] = useState<MovieCandidate | null>(null);
 
   const deck = room?.deck;
   const index = room && userId ? (room.progress[userId] ?? 0) : 0;
@@ -108,6 +112,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
                       card={card}
                       active={i === 0}
                       onVote={(points) => castVote(card.id, points)}
+                      onOpenDetails={() => setDetails(card)}
                     />
                   </CardShell>
                 ))
@@ -118,6 +123,8 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
           <ActionBar onVote={(points) => castVote(visible[0]!.id, points)} />
         </>
       )}
+
+      {details && <MovieDetails card={details} onClose={() => setDetails(null)} />}
     </div>
   );
 }

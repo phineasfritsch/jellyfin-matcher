@@ -24,11 +24,15 @@ This project was a collaboration between me and Claude (Anthropic's coding agent
 
    If a source is missing the weights redistribute across the ones that exist, so an unrated-on-letterboxd movie doesn't get buried. The 35/35/30 split is not science, it just felt right. Argue with us about it in an issue.
 
-4. **Swiping.** Left is no (-5 points), up is maybe (+1), right is like (+2), and there's a super like button (+3). Buttons exist for every action too, you don't have to use gestures. The instant *every* person in the room has swiped right or super liked the same movie, the room locks and you're done. A "maybe" never triggers a match, that felt wrong.
+4. **Swiping.** Left is no (-5 points), up is maybe (+1), right is like (+2), and there's a super like button (+3). Buttons exist for every action too, you don't have to use gestures. Tap a poster (or the info button) to pull up the synopsis, an embedded trailer, and every rating MDBList knows about, not just the three that feed the score. The instant *every* person in the room has swiped right or super liked the same movie, the room locks and you're done. A "maybe" never triggers a match, that felt wrong.
 
 5. **Fallback.** Deck runs out with no unanimous like? Every card gets `composite score + sum of everyone's points` and the highest total wins. Ties go to the both-genres tier.
 
 Rooms support more than two people. Match just requires everyone, and the fallback sums all votes.
+
+## Login
+
+Everyone signs in with their Jellyfin account before they can do anything. The app hands the username and password to Jellyfin's own authenticate endpoint, so only people with a real account on the server get in, and nobody can fire off a Jellyseerr request without one. The server's admin API key stays server side and never touches the browser. Sessions last 12 hours. If you want to run it wide open on a private network, set `MATCHER_AUTH=off` and the login screen disappears.
 
 ## Running it
 
@@ -101,7 +105,11 @@ ingress:
   - service: http_status:404
 ```
 
-QR codes and room links use whatever hostname the page was opened on, so they'll point at your tunnel domain automatically. One warning: there's no auth built in, it's a party app. If the hostname is public, consider slapping a Cloudflare Access policy on it, or at least don't post the URL anywhere.
+QR codes and room links use whatever hostname the page was opened on, so they'll point at your tunnel domain automatically. Since the Jellyfin login gates the whole thing, a public hostname is fine, but a Cloudflare Access policy on top never hurts.
+
+### A help tab inside Jellyfin
+
+`custom-tab-guide.html` is a self-contained page of instructions for your users: which apps to install on a TV, phone, or laptop, how to request things in Jellyseerr, and how to use Matcher. It's meant for the [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin. Add a tab in the plugin settings, paste the file's contents into the Html Content box, and swap the `MATCHER_URL` placeholder for your Matcher address. The styles are scoped so they won't leak into the rest of Jellyfin.
 
 ### Development
 
