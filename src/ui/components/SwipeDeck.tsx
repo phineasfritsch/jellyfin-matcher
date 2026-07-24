@@ -1,17 +1,35 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CircleHelp, Heart, Star, X } from 'lucide-react';
 import { VOTE_POINTS } from '../../lib/match';
 import type { RoomHook } from '../useRoom';
 import { SwipeCard } from './SwipeCard';
+
+/** How many upcoming posters to warm the browser cache with. */
+const PREFETCH_AHEAD = 8;
 
 export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
   const { room, userId, vote } = roomHook;
   const reducedMotion = useReducedMotion();
   /** Exit direction per card id so AnimatePresence knows where it flew. */
   const [exits, setExits] = useState<Record<string, number>>({});
+
+  const deck = room?.deck;
+  const index = room && userId ? (room.progress[userId] ?? 0) : 0;
+
+  // Fetch upcoming posters before their cards reach the top of the stack,
+  // so swiping never waits on the network. Browser dedupes repeats.
+  useEffect(() => {
+    if (!deck) return;
+    for (const card of deck.slice(index, index + PREFETCH_AHEAD)) {
+      if (card.posterUrl) {
+        const img = new Image();
+        img.src = card.posterUrl;
+      }
+    }
+  }, [deck, index]);
 
   if (!room || !userId) return null;
 

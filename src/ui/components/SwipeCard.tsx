@@ -58,7 +58,7 @@ export function SwipeCard({ card, onVote, active }: SwipeCardProps) {
               alt={`${card.title} poster`}
               className="absolute inset-0 h-full w-full object-cover"
               draggable={false}
-              loading={active ? 'eager' : 'lazy'}
+              loading="eager"
             />
           ) : (
             <div className="flex h-full items-center justify-center p-6 text-center text-2xl font-bold text-muted-fg">

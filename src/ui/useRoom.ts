@@ -54,10 +54,23 @@ export function useRoom(roomId: string): RoomHook {
       }
     }
 
+    // Deck builds can outlive a phone's socket (screen lock, backgrounded tab).
+    // Socket.io reconnects the transport but the server sees a fresh socket
+    // that is not in the room anymore, so re-join with the stored identity or
+    // we silently stop receiving broadcasts.
+    const onConnect = () => {
+      const session = loadSession(roomId);
+      if (session) {
+        emitAck('room:join', { roomId, userId: session.userId }).catch(() => {});
+      }
+    };
+    socket.on('connect', onConnect);
+
     return () => {
       socket.off('room:state', onState);
       socket.off('match:declared', onMatch);
       socket.off('room:error', onRoomError);
+      socket.off('connect', onConnect);
     };
   }, [roomId]);
 
