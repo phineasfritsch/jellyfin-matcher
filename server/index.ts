@@ -6,7 +6,7 @@ import { playbackUrl } from '../src/lib/jellyfin';
 import { requestMovie } from '../src/lib/jellyseerr';
 import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
 import { fallbackWinner, isInstantMatch, isValidVote, rankFallback } from '../src/lib/match';
-import { authEnabled, authenticateWithJellyfin, AuthStore } from './auth';
+import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { RoomStore, type Room, type RoomSettings } from './store';
 
@@ -25,8 +25,8 @@ const app = express();
 app.use(express.json());
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
 
-// Whether the browser needs to show a login screen at all.
-app.get('/api/auth-config', (_req, res) => res.json({ required: authEnabled() }));
+// Tells the browser which actions need a Jellyfin login.
+app.get('/api/auth-config', (_req, res) => res.json(authConfig()));
 
 // Exchange Jellyfin credentials for a matcher session token. The server's
 // admin API key never reaches the browser; only real server accounts pass.
@@ -49,15 +49,13 @@ app.use((req, res) => void nextHandler(req, res));
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: true } });
 
-// Every socket must carry a valid session token, unless auth is switched off.
-io.use((socket, nextFn) => {
-  if (!authEnabled()) return nextFn();
+// Anyone may connect; auth is enforced per action (create vs join) so that
+// account-less guests can still join a room. The token rides in the handshake
+// and is re-sent on reconnect, so it stays current after a mid-session login.
+function authedName(socket: Socket): string | null {
   const token = (socket.handshake.auth as { token?: string })?.token;
-  const user = auth.validate(token);
-  if (!user) return nextFn(new Error('unauthorized'));
-  socket.data = { ...socket.data, authedName: user.name };
-  nextFn();
-});
+  return auth.validate(token)?.name ?? null;
+}
 
 type Ack = (response: { ok: true; [k: string]: unknown } | { ok: false; error: string }) => void;
 
@@ -115,6 +113,9 @@ function socketRoom(socket: Socket): Room | undefined {
 io.on('connection', (socket) => {
   socket.on('room:create', ({ name }: { name: string }, ack?: Ack) => {
     try {
+      if (authConfig().createRequires && !authedName(socket)) {
+        throw new Error('Sign in with your Jellyfin account to create a room');
+      }
       const { room, userId } = store.createRoom(String(name || 'Host').slice(0, 30));
       socket.data = { roomId: room.roomId, userId };
       void socket.join(room.roomId);
@@ -129,6 +130,11 @@ io.on('connection', (socket) => {
     'room:join',
     ({ roomId, name, userId }: { roomId: string; name?: string; userId?: string }, ack?: Ack) => {
       try {
+        // Only a fresh join is gated; reconnecting an existing member is not,
+        // so a guest who already joined keeps their seat.
+        if (!userId && authConfig().joinRequires && !authedName(socket)) {
+          throw new Error('Sign in with your Jellyfin account to join this room');
+        }
         const result = userId
           ? { room: store.reconnect(roomId, userId), userId } // returning member
           : store.joinRoom(roomId, String(name || 'Guest').slice(0, 30));
@@ -159,6 +165,11 @@ io.on('connection', (socket) => {
 
   socket.on('room:settings', (settings: Partial<RoomSettings>, ack?: Ack) => {
     try {
+      // "Any Movie" scope unlocks Jellyseerr requests, so switching to it needs
+      // an account even when creating and joining did not.
+      if (settings.scope === 'wide' && authConfig().wideRequires && !authedName(socket)) {
+        throw new Error('Sign in with your Jellyfin account to search any movie');
+      }
       const { roomId } = socket.data as { roomId: string };
       const room = store.updateSettings(roomId, settings);
       ack?.({ ok: true });
@@ -246,6 +257,10 @@ io.on('connection', (socket) => {
 
   socket.on('winner:request', async (_payload: unknown, ack?: Ack) => {
     try {
+      // Firing a real download always needs an account, even if joining didn't.
+      if (authConfig().requestRequires && !authedName(socket)) {
+        throw new Error('Sign in with your Jellyfin account to request a download');
+      }
       const room = socketRoom(socket);
       if (!room || room.status !== 'FINISHED' || !room.winner) {
         throw new Error('No winner to request yet');

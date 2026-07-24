@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { isLoggedIn, LoginScreen, useAuthConfig } from './AuthGate';
+import { getAuthName } from './socket';
 import { Knockout } from './components/Knockout';
 import { Lobby } from './components/Lobby';
 import { SwipeDeck } from './components/SwipeDeck';
@@ -58,9 +60,18 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 function JoinGate({ roomId, join }: { roomId: string; join: (name: string) => Promise<void> }) {
-  const [name, setName] = useState('');
+  const { config } = useAuthConfig();
+  const [name, setName] = useState(() => getAuthName() ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  // Only strict deployments (MATCHER_AUTH=all) make guests sign in to join.
+  if (config?.joinRequires && !isLoggedIn() && !loggedIn) {
+    return (
+      <LoginScreen reason={`Sign in to join room ${roomId}`} onLoggedIn={() => setLoggedIn(true)} />
+    );
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

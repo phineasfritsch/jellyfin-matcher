@@ -1,5 +1,48 @@
-import { describe, expect, it } from 'vitest';
-import { AuthStore } from '../auth';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { authConfig, authMode, AuthStore } from '../auth';
+
+describe('authMode / authConfig', () => {
+  const original = process.env.MATCHER_AUTH;
+  beforeEach(() => {
+    delete process.env.MATCHER_AUTH;
+  });
+  afterEach(() => {
+    if (original === undefined) delete process.env.MATCHER_AUTH;
+    else process.env.MATCHER_AUTH = original;
+  });
+
+  it('defaults to requests: login only for wide scope and requests', () => {
+    expect(authMode()).toBe('requests');
+    expect(authConfig()).toEqual({
+      createRequires: false,
+      joinRequires: false,
+      wideRequires: true,
+      requestRequires: true,
+    });
+  });
+
+  it('create mode gates room creation but not joining', () => {
+    process.env.MATCHER_AUTH = 'create';
+    expect(authConfig()).toMatchObject({ createRequires: true, joinRequires: false });
+  });
+
+  it('all mode (and the "on" alias) gates everything', () => {
+    process.env.MATCHER_AUTH = 'all';
+    expect(authConfig()).toMatchObject({ createRequires: true, joinRequires: true });
+    process.env.MATCHER_AUTH = 'on';
+    expect(authMode()).toBe('all');
+  });
+
+  it('off mode requires nothing', () => {
+    process.env.MATCHER_AUTH = 'off';
+    expect(authConfig()).toEqual({
+      createRequires: false,
+      joinRequires: false,
+      wideRequires: false,
+      requestRequires: false,
+    });
+  });
+});
 
 describe('AuthStore', () => {
   it('issues opaque tokens that validate back to the user', () => {

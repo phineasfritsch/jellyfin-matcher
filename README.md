@@ -32,7 +32,9 @@ Rooms support more than two people. Match just requires everyone, and the fallba
 
 ## Login
 
-Everyone signs in with their Jellyfin account before they can do anything. The app hands the username and password to Jellyfin's own authenticate endpoint, so only people with a real account on the server get in, and nobody can fire off a Jellyseerr request without one. The server's admin API key stays server side and never touches the browser. Sessions last 12 hours. If you want to run it wide open on a private network, set `MATCHER_AUTH=off` and the login screen disappears.
+Sign-in is tied to what an action actually costs, not to the app as a whole, so account-less friends can still play. By default (`MATCHER_AUTH=requests`) a Jellyfin-only night needs no login at all: anyone can open a room, share the code, and swipe through what's on the server. Signing in with a Jellyfin account is only asked for when someone switches a room to "Any Movie" (which enables downloads) or fires an actual Jellyseerr request. Login goes through Jellyfin's own authenticate endpoint, so only real server accounts pass, and the admin API key stays server side and never reaches the browser. Sessions last 12 hours.
+
+If you want it stricter, `MATCHER_AUTH=create` makes creating any room require an account (joining stays open), `all` requires an account to join too, and `off` turns login off everywhere. One thing to know about the default: since a Jellyfin-only room is openable by anyone who can reach the app, a guest in that room sees the deck of your library titles. That's the nature of the app, but if it matters, put a Cloudflare Access policy on the hostname or bump to `create`.
 
 ## Running it
 

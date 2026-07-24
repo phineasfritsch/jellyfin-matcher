@@ -4,47 +4,60 @@ import { useEffect, useState } from 'react';
 import { Clapperboard, Loader2, Lock } from 'lucide-react';
 import { getAuthToken, setAuth } from './socket';
 
-type Status = 'checking' | 'needsLogin' | 'ready';
+export interface AuthConfig {
+  createRequires: boolean;
+  joinRequires: boolean;
+  wideRequires: boolean;
+  requestRequires: boolean;
+}
 
 /**
- * Gates the whole app behind a Jellyfin login. Users sign in with their real
- * server credentials, so only people with an account can create rooms or make
- * requests. Disabled when the server reports auth is off (MATCHER_AUTH=off).
+ * Fetches which actions need a Jellyfin login. Auth is enforced per action
+ * (create vs join) rather than gating the whole app, so account-less guests
+ * can still join a room someone shares with them.
  */
-export function AuthGate({ children }: { children: React.ReactNode }) {
-  const [status, setStatus] = useState<Status>('checking');
+export function useAuthConfig(): { config: AuthConfig | null; loading: boolean } {
+  const [config, setConfig] = useState<AuthConfig | null>(null);
 
   useEffect(() => {
     let active = true;
     fetch('/api/auth-config')
       .then((r) => r.json())
-      .then((cfg: { required: boolean }) => {
-        if (!active) return;
-        if (!cfg.required || getAuthToken()) setStatus('ready');
-        else setStatus('needsLogin');
-      })
-      .catch(() => active && setStatus('ready')); // fail open rather than lock everyone out
+      .then((cfg: AuthConfig) => active && setConfig(cfg))
+      // Fail open rather than lock everyone out if the check errors.
+      .catch(
+        () =>
+          active &&
+          setConfig({
+            createRequires: false,
+            joinRequires: false,
+            wideRequires: false,
+            requestRequires: false,
+          }),
+      );
     return () => {
       active = false;
     };
   }, []);
 
-  if (status === 'checking') {
-    return (
-      <main className="flex min-h-dvh items-center justify-center">
-        <Loader2 aria-hidden className="size-8 animate-spin text-muted-fg" />
-      </main>
-    );
-  }
-
-  if (status === 'needsLogin') {
-    return <LoginScreen onLoggedIn={() => setStatus('ready')} />;
-  }
-
-  return <>{children}</>;
+  return { config, loading: config === null };
 }
 
-function LoginScreen({ onLoggedIn }: { onLoggedIn: () => void }) {
+export function isLoggedIn(): boolean {
+  return getAuthToken() !== null;
+}
+
+/** Full-screen Jellyfin login. `reason` explains why it's being asked for. */
+export function LoginScreen({
+  reason,
+  onLoggedIn,
+  onCancel,
+}: {
+  reason?: string;
+  onLoggedIn: () => void;
+  /** When set, shows a way back out (for optional gates the user can decline). */
+  onCancel?: () => void;
+}) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -79,7 +92,7 @@ function LoginScreen({ onLoggedIn }: { onLoggedIn: () => void }) {
         </div>
         <h1 className="text-2xl font-bold tracking-tight">Jellyfin Matcher</h1>
         <p className="flex items-center gap-1.5 text-sm text-muted-fg">
-          <Lock aria-hidden className="size-4" /> Sign in with your Jellyfin account
+          <Lock aria-hidden className="size-4" /> {reason ?? 'Sign in with your Jellyfin account'}
         </p>
       </header>
 
@@ -122,6 +135,15 @@ function LoginScreen({ onLoggedIn }: { onLoggedIn: () => void }) {
           <p role="alert" className="text-center text-sm text-destructive">
             {error}
           </p>
+        )}
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="mt-1 cursor-pointer text-center text-sm text-muted-fg underline-offset-4 hover:underline"
+          >
+            Back
+          </button>
         )}
       </form>
     </main>

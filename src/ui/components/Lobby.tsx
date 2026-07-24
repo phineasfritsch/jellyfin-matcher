@@ -2,22 +2,44 @@
 
 import { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { Check, Clock3, Film, Globe, Users } from 'lucide-react';
+import { Check, Clock3, Film, Globe, Lock, Users } from 'lucide-react';
+import { isLoggedIn, LoginScreen, useAuthConfig } from '../AuthGate';
 import type { RoomHook } from '../useRoom';
 
 const RUNTIME_STOPS = [90, 100, 110, 120, 135, 150, 180, null] as const;
 
 export function Lobby({ roomHook }: { roomHook: RoomHook }) {
   const { room, userId, setReady, updateSettings } = roomHook;
+  const { config } = useAuthConfig();
   const [shareUrl, setShareUrl] = useState('');
+  const [loginForWide, setLoginForWide] = useState(false);
   useEffect(() => {
     setShareUrl(`${window.location.origin}/room/${room?.roomId ?? ''}`);
   }, [room?.roomId]);
+
+  if (loginForWide) {
+    return (
+      <LoginScreen
+        reason="Sign in to search any movie"
+        onLoggedIn={() => {
+          setLoginForWide(false);
+          void updateSettings({ scope: 'wide' });
+        }}
+        onCancel={() => setLoginForWide(false)}
+      />
+    );
+  }
 
   if (!room || !userId) return null;
   const me = room.users[userId];
   const members = Object.values(room.users);
   const soloRoom = members.length < 2;
+  const wideLocked = Boolean(config?.wideRequires) && !isLoggedIn();
+
+  function chooseWide() {
+    if (wideLocked) setLoginForWide(true);
+    else void updateSettings({ scope: 'wide' });
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,10 +67,11 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
           />
           <ScopeButton
             active={room.settings.scope === 'wide'}
-            onClick={() => void updateSettings({ scope: 'wide' })}
+            onClick={chooseWide}
             icon={<Globe aria-hidden className="size-5" />}
             title="Any Movie"
-            subtitle="Winner gets requested"
+            subtitle={wideLocked ? 'Sign in to use' : 'Winner gets requested'}
+            badge={wideLocked ? <Lock aria-hidden className="size-4 text-muted-fg" /> : undefined}
           />
         </div>
 
@@ -148,22 +171,25 @@ function ScopeButton({
   icon,
   title,
   subtitle,
+  badge,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
   subtitle: string;
+  badge?: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`flex cursor-pointer flex-col items-start gap-1 rounded-xl border p-4 text-left transition active:scale-95 ${
+      className={`relative flex cursor-pointer flex-col items-start gap-1 rounded-xl border p-4 text-left transition active:scale-95 ${
         active ? 'border-secondary bg-primary' : 'border-border bg-muted'
       }`}
     >
+      {badge && <span className="absolute right-3 top-3">{badge}</span>}
       <span className={active ? 'text-accent' : 'text-muted-fg'}>{icon}</span>
       <span className="text-sm font-semibold">{title}</span>
       <span className="text-xs text-muted-fg">{subtitle}</span>

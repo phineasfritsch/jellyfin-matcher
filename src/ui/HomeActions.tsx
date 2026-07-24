@@ -3,17 +3,25 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ArrowRight, Loader2, Plus } from 'lucide-react';
+import { isLoggedIn, LoginScreen, useAuthConfig } from './AuthGate';
 import { emitAck, saveSession } from './socket';
 
 export function HomeActions() {
   const router = useRouter();
+  const { config } = useAuthConfig();
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
 
   async function createRoom() {
     if (!name.trim()) return setError('Enter your name first');
+    // Some deployments require a Jellyfin login before opening a room.
+    if (config?.createRequires && !isLoggedIn()) {
+      setShowLogin(true);
+      return;
+    }
     setBusy('create');
     setError(null);
     try {
@@ -26,6 +34,19 @@ export function HomeActions() {
       setError(err instanceof Error ? err.message : 'Could not create room');
       setBusy(null);
     }
+  }
+
+  if (showLogin) {
+    return (
+      <LoginScreen
+        reason="Sign in to create a room"
+        onLoggedIn={() => {
+          setShowLogin(false);
+          void createRoom();
+        }}
+        onCancel={() => setShowLogin(false)}
+      />
+    );
   }
 
   function joinRoom() {
