@@ -84,6 +84,33 @@ const COPY: Pin[] = [
  */
 const BEHAVIOUR: Pin[] = [
   { id: 'B01', why: 'Room codes exclude O/0/I/1/L; the README promises no confusing characters', find: "CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'" },
+  { id: 'B02', why: 'Confetti is suppressed under reduced motion, not merely shortened (R18)', find: 'if (reducedMotion) return null;' },
+  { id: 'B03', why: 'The admin API key is read server-side only and never sent to a client', find: 'apiKey: process.env.JELLYFIN_API_KEY' },
+  { id: 'B04', why: 'The guide page is never statically cached with one household’s server address baked in', find: "dynamic = 'force-dynamic'" },
+  { id: 'B05', why: 'A failed socket ack rejects, so a lost action surfaces instead of hanging', find: 'reject(new Error(res.error))' },
+  { id: 'B06', why: 'Connecting state is always cleared, even on a failed join — otherwise the UI hangs', find: '.finally(() => setConnecting(false))' },
+];
+
+/**
+ * The second wave of pins, from a mechanical sweep of every screen. These are
+ * the properties a port would drop precisely because they look like detail.
+ */
+const SWEEP: Pin[] = [
+  { id: 'S01', why: 'The knockout explains a too-thin round instead of silently re-asking (R13)', find: 'Too few shared picks' },
+  { id: 'S02', why: 'The elimination round says how many genres survive, so the end is in sight', find: '2 survive' },
+  { id: 'S03', why: 'A player can see which genre was their own vote, not just the tally', find: 'your vote' },
+  { id: 'S04', why: 'Waiting states name the state reached, not just a spinner (R35)', find: 'Vote cast' },
+  { id: 'S05', why: 'Locked picks are confirmed as locked, so nobody re-picks', find: 'Picks locked in' },
+  { id: 'S06', why: 'A trailer that cannot embed still has a named way out to YouTube', find: 'Watch trailer' },
+  { id: 'S07', why: 'The trailer can go fullscreen; a phone-sized iframe is not a trailer', find: 'allowFullScreen' },
+  { id: 'S08', why: 'The play action names where it plays, not a bare icon (R12)', find: 'Play in Jellyfin' },
+  { id: 'S09', why: 'The request action names the system it will hit, before it is pressed (R09/R33)', find: 'Request via Jellyseerr' },
+  { id: 'S10', why: 'The join-name field on the room shell is bound to its label', find: 'htmlFor="join-name"' },
+  { id: 'S11', why: 'The login says which room it is for, so a guest knows what it unlocks (R10)', find: 'Sign in to join room ${roomId}' },
+  { id: 'S12', why: 'Password managers are told this is a password field, not a text box', find: 'autoComplete="current-password"' },
+  { id: 'S13', why: 'The username field is fillable by a password manager', find: 'autoComplete="username"' },
+  { id: 'S14', why: 'The password is masked', find: 'type="password"' },
+  { id: 'S15', why: 'Rotten Tomatoes ratings are labelled as critics, not conflated with audience (R12)', find: "tomatoes: 'RT Critics'" },
 ];
 
 /**
@@ -120,12 +147,13 @@ describe('pinned live regions', () => {
 
 describe('pinned copy', () => check(COPY, APP));
 describe('pinned behaviour', () => check(BEHAVIOUR, APP));
+describe('pinned sweep claims', () => check(SWEEP, APP));
 describe('pinned documentation promises', () => check(DOCS, README));
 
 describe('pin inventory', () => {
   it('reports how many claims are pinned', () => {
-    const total = A11Y.length + COPY.length + BEHAVIOUR.length + DOCS.length;
+    const total = A11Y.length + COPY.length + BEHAVIOUR.length + SWEEP.length + DOCS.length;
     expect(total).toBeGreaterThan(0);
-    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${DOCS.length} docs)`);
+    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${SWEEP.length} sweep, ${DOCS.length} docs)`);
   });
 });
