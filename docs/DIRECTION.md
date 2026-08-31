@@ -1130,3 +1130,43 @@ recognise.
 Failing open is still right. A cache that cannot be written must never cost anybody
 their evening. But failing open and saying nothing is a different decision, and it
 was never made deliberately.
+
+### R110 — Every setting the app reads is a setting somebody can find.
+
+**Frozen:** the README documented nine environment variables; the code read fourteen.
+
+**Built:** a settings table covering all of them, and a test that fails when a new one
+appears in neither the table nor an explicit exemption.
+
+**Why.** Two of the undocumented five were real deployment knobs.
+`MDBLIST_REQUEST_BUDGET` caps what a single deck build may spend against a metered
+key — a host with a large library needs to raise it, and a host protecting a free
+quota needs to lower it. `MATCHER_ALLOWED_ORIGINS` decides who may open a socket into
+a household's rooms, which is a security control. The only way to discover either was
+to read the source.
+
+**The allowlist is the interesting half.** A variable is exempt only by being named in
+`NOT_SETTINGS` with the reason it is not configuration — `NODE_ENV` comes from the
+runtime, `MATCHER_VERSION` is stamped by CI, `CHROME_PATH` belongs to the dev-only
+harnesses. So the next variable somebody adds is documented, or deliberately not,
+rather than undocumented by default. A guard that only checks what exists today
+catches nothing tomorrow.
+
+The defaults in the table are checked against the code as well, because a table of
+defaults that has drifted is worse than no table: it looks like an answer.
+
+**This came out of getting it wrong.** A commit claimed the README explained the
+Docker bind-mount trap when the edit had silently replaced nothing — the string
+anchor did not match, the replace returned the text unchanged, and the script printed
+success. The README shipped still recommending the flag that causes the bug. Prose is
+the part of this repository with the fewest guards on it, and that is exactly why it
+drifts.
+
+**Not pinned, deliberately.** The obvious pin would name the exemption list, and the
+pin haystack skips `__tests__` -- so it would search a corpus that cannot contain its
+own subject and fail immediately. That is the second time this session a pin was
+written for a file the scanner does not walk (the first was removed as T69). The
+guard here is the test, which runs in the suite; a pin asserting that the test exists
+would be a check on a check, and the thing it protects is one file away from the
+thing it reads.
+

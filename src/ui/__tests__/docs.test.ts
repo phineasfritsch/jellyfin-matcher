@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readDoc } from '../../../scripts/lib/source-scan';
+import { appSources, readDoc } from '../../../scripts/lib/source-scan';
 
 /**
  * The counts stated in prose must match the counts the gate enforces.
@@ -248,5 +248,74 @@ describe('the materials do what they say', () => {
     // A gel is lit: white over the ground. A scrim holds light back: near-black.
     expect(gel).toContain('255, 255, 255');
     expect(scrim).not.toContain('255, 255, 255');
+  });
+});
+
+/**
+ * R110: every setting the app reads is a setting somebody can find.
+ *
+ * `MDBLIST_REQUEST_BUDGET` caps what one deck build may spend against a metered
+ * key, and `MATCHER_ALLOWED_ORIGINS` decides who may open a socket into a
+ * household's rooms. Both are real deployment knobs, both were read by the code,
+ * and neither appeared anywhere a host would look — so the only way to discover
+ * either was to read the source.
+ *
+ * The allowlist below is the interesting half. A variable is exempt only by
+ * being named here with a reason, so the next one added is documented or
+ * deliberately not, rather than undocumented by default.
+ */
+describe('the settings a host can actually find', () => {
+  const readme = readDoc('README.md');
+
+  /** Read by the app but not configuration a host sets. */
+  const NOT_SETTINGS: Record<string, string> = {
+    NODE_ENV: 'set by the runtime, not by a deployment',
+    CHROME_PATH: 'used only by the dev-only screenshot and e2e harnesses',
+    MATCHER_VERSION: 'stamped into the image by CI so /healthz can report parity',
+    MATCHER_URL: 'read by scripts that point AT a deployment, never by the server',
+    MATCHER_HISTORY_DAYS_TEST: 'reserved; not read in production paths',
+  };
+
+  const used = [
+    ...new Set(
+      appSources()
+        .flatMap((f) => [...f.code.matchAll(/process\.env\.([A-Z][A-Z0-9_]*)/g)].map((m) => m[1]!)),
+    ),
+  ].sort();
+
+  it('finds the variables the app reads', () => {
+    // If this drops to nothing, every case below passes on an empty list.
+    expect(used.length).toBeGreaterThan(5);
+    expect(used).toContain('JELLYFIN_URL');
+  });
+
+  for (const name of used) {
+    if (NOT_SETTINGS[name]) {
+      it(`${name} is deliberately not a documented setting`, () => {
+        // Present so the exemption is a decision with a reason attached.
+        expect(NOT_SETTINGS[name]).toBeTruthy();
+      });
+      continue;
+    }
+    it(`${name} is documented where a host would look`, () => {
+      expect(
+        readme.includes(name),
+        `${name} is read by the app and appears nowhere in README.md. Either document it ` +
+          'in the settings table, or add it to NOT_SETTINGS with the reason it is not a ' +
+          'setting a host sets.',
+      ).toBe(true);
+    });
+  }
+
+  it('states the defaults the code actually uses', () => {
+    // A table of defaults is worse than no table when it drifts.
+    // The table row, not the first prose mention: several of these are also
+    // discussed in the text, and the text is not where a default lives.
+    const row = (name: string) =>
+      readme.split('\n').find((l) => l.startsWith('|') && l.includes(`\`${name}\``)) ?? '';
+    expect(row('MATCHER_HISTORY_DAYS')).toContain('`30`');
+    expect(row('MDBLIST_REQUEST_BUDGET')).toContain('`40`');
+    expect(row('MATCHER_AUTH')).toContain('`requests`');
+    expect(row('PORT')).toContain('`3000`');
   });
 });

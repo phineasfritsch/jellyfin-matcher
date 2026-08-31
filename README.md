@@ -3,7 +3,7 @@
 [![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
 [![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-476%20in%2029%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![tests](https://img.shields.io/badge/tests-490%20in%2029%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
 [![pinned claims](https://img.shields.io/badge/pinned%20claims-172-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
 
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
@@ -174,6 +174,26 @@ On a LAN with no tunnel, the default is fine.
 
 Matcher serves a `/guide` page: which apps to install on a TV, phone, or laptop, how to request things in Jellyseerr, and how to use Matcher. You can drop it into the Jellyfin web client as a tab with the [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin. Add a tab in the plugin settings, paste the contents of `custom-tab-guide.html` into the Html Content box, and replace `MATCHER_URL` with your Matcher address (keep the `/guide` on the end). It's an iframe, which is the plugin's own tested pattern, so it fills the tab cleanly. The `/guide` page has no login gate, so it works for everyone.
 
+### Every setting
+
+Everything the app reads, and what happens if you leave it alone.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `JELLYFIN_URL` | — | Your Jellyfin server. Required; without it there is no deck. |
+| `JELLYFIN_API_KEY` | — | Admin key. Stays server-side and never reaches a browser. |
+| `JELLYSEERR_URL` | — | Optional. Without it, "Any Movie" and requests are off. |
+| `JELLYSEERR_API_KEY` | — | Optional, as above. |
+| `MDBLIST_API_KEY` | — | Optional. Without it every card is unrated and the deck is roughly alphabetical. |
+| `PORT` | `3000` | What it listens on. |
+| `MATCHER_AUTH` | `requests` | Which actions need a Jellyfin account: `off`, `requests`, `create`, `all`. See [Login](#login). |
+| `MATCHER_HISTORY_DAYS` | `30` | How long a film the room landed on stays out of the deck. `0` turns it off without discarding the record. |
+| `MDBLIST_REQUEST_BUDGET` | `40` | Most MDBList calls one deck build may spend. A free key is 1000 a day, and a build of 50 cards costs 5 — raise it for a big library, lower it to protect the quota. Titles past the budget arrive unrated rather than the build failing. |
+| `MATCHER_ALLOWED_ORIGINS` | same-origin | Comma-separated origins allowed to open a socket. Only needed if you serve the front end from somewhere other than this process. |
+
+`MATCHER_URL` is not read by the server — it is what `npm run prod:read` points at, and
+the placeholder in `custom-tab-guide.html`.
+
 ### Development
 
 ```bash
@@ -214,7 +234,7 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 476 cases across 29 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 490 cases across 29 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
