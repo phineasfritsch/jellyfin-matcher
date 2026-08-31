@@ -156,7 +156,22 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
           cannot vote without knowing what he is voting on. The card carries
           what a vote needs and the sheet carries the rest.
         */}
-        <div className="flex max-h-[45%] shrink-0 flex-col gap-1 overflow-y-auto border-t border-[var(--color-hairline)] px-4 py-3">
+        {/*
+          R84: no cap and no scroller here.
+
+          This was `max-h-[45%] overflow-y-auto`, which is a scrolling region
+          inside the deck -- the exact thing R21 says the deck is physically
+          incapable of, reaffirmed by R59. It did not degrade gracefully: at a
+          32px root the three lines need about 236px against a cap of roughly
+          133, so the title scrolled out of its own box and "RT critics 98"
+          was sheared mid-glyph against the card's overflow-hidden. A person
+          at 200% text was voting on a film whose name was not on the screen.
+
+          The poster above is `min-h-0 flex-1`, so it yields instead. The
+          facts a vote needs stay on the face (R58); it is the picture that
+          gives up room, which is the correct thing to trade.
+        */}
+        <div className="flex shrink-0 flex-col gap-1 border-t border-[var(--color-hairline)] px-4 py-3">
           <h2 className="truncate text-title font-semibold tracking-[-0.01em]">{card.title}</h2>
           <p className="tabular text-label text-muted-fg">
             {card.year ?? 'Year unknown'}

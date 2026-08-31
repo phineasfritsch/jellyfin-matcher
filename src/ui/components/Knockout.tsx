@@ -74,7 +74,16 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
         )}
 
         {genres === null ? (
+          /*
+            R85: the one wait in this component that said nothing.
+            aria-hidden on the stripes is right -- eight decorative bars are
+            not information -- but with nothing else here a screen reader met
+            silence between "I'm ready" and a list of genres appearing.
+          */
           <Group>
+            <p role="status" className="sr-only">
+              Loading genres
+            </p>
             <div aria-hidden>
               {Array.from({ length: 8 }, (_, i) => (
                 <div key={i} className="h-[60px] animate-pulse border-b border-border bg-white/[0.04]" />

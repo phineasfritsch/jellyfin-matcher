@@ -60,16 +60,38 @@ export function WinnerScreen({
           search result. The deck gives a poster the whole card; the payoff
           should not give it less.
         */}
-        <div className="gel mx-3 mt-3 overflow-hidden rounded-[var(--radius-card)]">
+        {/*
+          R84: the picture yields, the words do not.
+
+          At a 32% root this screen showed a poster and two buttons and nothing
+          else -- no title, no year, no "Everyone said yes." -- on the screen
+          whose entire job is to name the film the room just chose.
+
+          Two things were wrong and the first hid the second. The card was a
+          flex item at flex-shrink 1 inside a `.scroll-body` column, so instead
+          of overflowing and scrolling it shrank to fit the column and clipped
+          its own caption against its overflow-hidden. Fixing that alone was not
+          enough: the poster was capped at 46dvh, which at 200% text still
+          pushed the caption past the dock, so the name was merely one scroll
+          away instead of absent -- on the payoff screen, which nobody should
+          have to scroll to read.
+
+          Now the poster is `min-h-0 flex-1` and the caption is `shrink-0`, the
+          same trade the deck card makes: whatever room is left over goes to the
+          picture, and the words are never the thing that gives way. The
+          poster still gets the whole card at ordinary text sizes (R79), which
+          was the point of that ruling.
+        */}
+        <div className="gel mx-3 mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-card)]">
           {winner.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={winner.posterUrl}
               alt={`${winner.title} poster`}
-              className="max-h-[46dvh] w-full object-cover"
+              className="min-h-0 w-full flex-1 object-cover"
             />
           ) : null}
-          <div className="min-w-0 p-4">
+          <div className="min-w-0 shrink-0 p-4">
             <h1
               ref={heading}
               tabIndex={-1}

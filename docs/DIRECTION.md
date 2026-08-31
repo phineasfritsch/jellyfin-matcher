@@ -354,3 +354,61 @@ So the failing check was an artifact, and the bug it sent us looking at was real
 separate. Both are worth recording: a harness that drives an app unlike a user
 produces failures that are true of nothing, and they cost exactly as much to chase
 as real ones.
+
+### R84 — The picture yields. The words do not.
+
+**Frozen:** the deck card capped its caption at `max-h-[45%]` with `overflow-y-auto`;
+the winner card capped its poster at `max-h-[46dvh]`.
+
+**Built:** on both screens the poster is `min-h-0 flex-1` and the text block is
+`shrink-0`.
+
+**Why.** At 200% OS text — the size the README promises to serve, and the reason two
+of the nine captures exist at all — both screens lost the one fact they are about.
+
+The deck card put a scrolling box around the title, year and ratings line. At a 32px
+root that content needs roughly 236px against a cap of about 133: the title scrolled
+out of its own box and "RT critics 98" was sheared mid-glyph against the card's
+`overflow-hidden`. A person at 200% text was voting on a film whose name was not on
+the screen. It was also a scrolling region on the deck, which R21 says the deck is
+physically incapable of — reaffirmed by R59, cited in comments, and tested by
+nothing until `src/ui/__tests__/deck.test.ts`.
+
+The winner screen failed the same way for a different reason, and the first cause hid
+the second. The card was a flex item at `flex-shrink: 1` inside a `.scroll-body`
+column, so rather than overflowing and scrolling it shrank to fit and clipped its own
+caption: poster, two buttons, nothing else. Adding `shrink-0` was not enough — the
+poster's 46dvh cap then pushed the caption past the dock, so the winner's name was
+merely one scroll away instead of absent. On the payoff screen, one scroll away is
+still wrong.
+
+The rule both now follow: whatever room is left over goes to the picture, and the
+words are never the thing that gives way. R79 — the poster gets the whole card
+rather than a 96px thumbnail — is intact at ordinary text sizes, which is what it
+was about.
+
+### R85 — Photograph the screen, not the wait in front of it.
+
+**Frozen:** the capture waited for `Check everything`, then shot `04-knockout`.
+
+**Built:** it waits for `button[aria-label^="Pick "]` — an actual genre row.
+
+**Why.** `Check everything` is a static explainer row, present in the loading
+skeleton too. So every `04-knockout.png` this repository has ever committed is eight
+empty grey stripes, and the README shipped one above the fold with alt text
+promising "a list of genres to pick from". The first screen that asks a person for an
+opinion had never been photographed, through a redesign, a rendering bug, and a board
+round convened specifically to look at the pictures.
+
+The deck step in the same script already knew to refuse a skeleton. This one did not,
+and nothing compares a capture against what it claims to be — the alt text is the
+only place the claim is written down, and prose does not fail.
+
+The skeleton also announced nothing. `aria-hidden` on eight decorative bars is right,
+but with nothing beside it a screen reader met silence between "I'm ready" and a list
+of genres appearing; it now carries a `role="status"` label.
+
+**And the README hero row.** `08-winner.png` — poster, confetti, "Everyone said yes.",
+a real Play button — was captured, committed, and referenced in no markdown anywhere,
+while the lobby held a hero slot. The row is now the story: pick what you are open to,
+swipe the deck it builds, land on one film.

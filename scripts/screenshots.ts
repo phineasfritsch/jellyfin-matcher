@@ -210,7 +210,27 @@ async function main() {
 
     await ack(host.a, 'room:ready', { ready: true });
     await clickButton(page, "I'm ready");
-    await page.locator('::-p-text(Check everything)').setTimeout(20_000).waitHandle();
+    /*
+      Wait for a real genre row, not for the screen.
+
+      This waited on "Check everything", which is a static row present in the
+      loading skeleton too -- so every 04-knockout.png this project has ever
+      committed, including the ones the README ships above the fold with alt
+      text promising "a list of genres to pick from", is eight empty grey
+      stripes. The first screen that asks a person for an opinion had never
+      been photographed. The deck step below already knew to refuse a skeleton;
+      this one did not (R85).
+    */
+    await page
+      .locator('button[aria-label^="Pick "]')
+      .setTimeout(25_000)
+      .waitHandle()
+      .catch(() => {
+        // The error path sets genres to [], so without its own message this
+        // would just hang to the outer timeout with nothing to say.
+        throw new Error('the knockout never rendered a genre row (still the skeleton, or genres came back empty)');
+      });
+    await new Promise((r) => setTimeout(r, 400));
     await shoot(page, '04-knockout');
 
     const genres = await ack<{ genres: string[] }>(host.a, 'genres:list', {});
