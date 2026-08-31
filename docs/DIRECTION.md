@@ -1027,3 +1027,23 @@ by the time any of this runs; losing the note must never reach anybody's phone.
 live library landed on Toy Story 3 and wrote it down. The next session — same
 genres, same library — landed on Up. The harness always votes on card one, so card
 one had changed.
+
+### R106 — A feature that can silently do nothing says whether it is doing anything.
+
+**Frozen:** the watch history was written and read, and reported nowhere.
+
+**Built:** `/healthz` carries `history`, and `npm run prod:read` prints it.
+
+**Why.** R105 has one specific way to silently do nothing: a deployment that does not
+mount `.cache` writes the history into a container layer and loses it every time the
+container is replaced. From the couch that is **indistinguishable from the feature
+working** — the deck simply repeats, which is the exact complaint it was built to
+answer. The household would conclude the app is broken in the old way, and the host
+would have nothing to check.
+
+So the count goes where the host already looks, and `prod:read` says outright that an
+empty history on a server that has been up an hour is worth investigating. Naming the
+Docker volume in that note, because that is the cause it will almost always be.
+
+Same reasoning as the ratings quota and the last deck build cost (R67): the things a
+host is on the hook for should be answerable without reading the code.

@@ -134,3 +134,25 @@ export async function recentlyWatched(
   }
   return ids;
 }
+
+/**
+ * What the household remembers, for /healthz.
+ *
+ * R106: a feature that silently does nothing is worse than one that is absent,
+ * and this one has a specific way to silently do nothing -- a deployment that
+ * does not mount `.cache` writes the history into a container layer and loses
+ * it on every replacement. From the couch that is indistinguishable from
+ * working: the deck simply repeats, which is the complaint this was built to
+ * answer. So the count is reported where the host already looks.
+ */
+export async function historyHealth(
+  cfg: HistoryConfig = defaultHistoryConfig(),
+): Promise<{ remembered: number; windowDays: number; newest: string | null }> {
+  try {
+    const history = await load(cfg.file);
+    const newest = history.watched[0]?.at ?? null;
+    return { remembered: history.watched.length, windowDays: cfg.windowDays, newest };
+  } catch {
+    return { remembered: 0, windowDays: cfg.windowDays, newest: null };
+  }
+}

@@ -35,6 +35,7 @@ type Health = {
     quota: { limit: number | null; remaining: number | null; checkedAt: string | null };
     lastBuild: { cached: number; requests: number; skipped: number };
   };
+  history?: { remembered: number; windowDays: number; newest: string | null };
   auth?: Record<string, boolean | string>;
 };
 
@@ -121,6 +122,29 @@ async function main() {
   );
   if (q) console.log(`ratings   quota ${q.remaining ?? '?'}/${q.limit ?? '?'} left`);
   if (lb) console.log(`last deck ${lb.requests} requests, ${lb.cached} cached, ${lb.skipped} skipped`);
+
+  /*
+    R106: whether the household is actually being remembered.
+
+    A deployment that does not mount .cache writes the watch history into a
+    container layer and loses it on every replacement, and from the couch that
+    is indistinguishable from the feature working -- the deck just repeats,
+    which is the complaint it was built to answer. Reported here because this is
+    the command a host runs to ask whether the state is sane.
+  */
+  const h = health.history;
+  if (h) {
+    console.log(
+      h.windowDays === 0
+        ? `history   off (MATCHER_HISTORY_DAYS=0), ${h.remembered} remembered`
+        : `history   ${h.remembered} film(s) remembered, ${h.windowDays}-day window`,
+    );
+    if (h.windowDays > 0 && h.remembered === 0 && (health.uptimeSec ?? 0) > 3600) {
+      notes.push(
+        'nothing in the watch history after an hour up: if this is Docker, check the .cache volume is mounted, or the household forgets on every restart',
+      );
+    }
+  }
   console.log(`latency   ${ms}ms`);
   for (const note of notes) console.log(`note      ${note}`);
 

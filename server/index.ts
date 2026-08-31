@@ -44,7 +44,7 @@ import {
   undoVote,
 } from './transitions';
 import { buildDeckForRoom, genresForScope } from './deckService';
-import { recordWatched } from './history';
+import { historyHealth, recordWatched } from './history';
 import { RoomStore, type Room, type RoomSettings } from './store';
 import * as handlers from './handlers';
 import type { Ctx } from './handlers';
@@ -146,7 +146,7 @@ async function probeAll(): Promise<void> {
  * background on an interval rather than per request, so the container's
  * HEALTHCHECK cannot itself hammer Jellyfin every thirty seconds.
  */
-app.get('/healthz', (_req, res) =>
+app.get('/healthz', async (_req, res) =>
   res.json({
     ok: true,
     version: process.env.MATCHER_VERSION ?? 'dev',
@@ -162,6 +162,11 @@ app.get('/healthz', (_req, res) =>
     // What the last deck build cost, and what the key has left. Both are the
     // host's problem and neither was visible from anywhere.
     ratings: { quota, lastBuild: lastRatingsCost() },
+    // R106: whether the household is actually being remembered. A deployment
+    // that does not mount .cache writes this into a container layer and loses
+    // it on every replacement, which from the couch looks exactly like the
+    // repeating deck this was built to fix.
+    history: await historyHealth(),
     // The numbers on the things that used to have none.
     limits: {
       rooms: `${store.roomCount()}/${MAX_ROOMS}`,
