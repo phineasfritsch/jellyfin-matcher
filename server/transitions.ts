@@ -20,9 +20,9 @@
  * Each returns what happened rather than mutating and staying silent, because
  * the caller usually has to tell the room something about it.
  */
-import { createKnockout, submitElimination, submitGenres } from '../src/lib/knockout';
+import { createKnockout, reresolve, submitElimination, submitGenres } from '../src/lib/knockout';
 import type { MovieCandidate } from '../src/lib/types';
-import { canSettle, type Settlement } from './settlement';
+import { activeUserIds, canSettle, type Settlement } from './settlement';
 import type { Room, RoomStore } from './store';
 
 /** Everyone is ready: the lobby closes and genre picking starts. */
@@ -66,7 +66,9 @@ export function recordGenres(
   genres: string[],
   store: RoomStore,
 ): { done: boolean; needsRevote: boolean } {
-  room.knockout = submitGenres(room.knockout, userId, genres, Object.keys(room.users));
+  // Active members decide when the round ends; every submission still counts
+  // toward the overlap (R87).
+  room.knockout = submitGenres(room.knockout, userId, genres, activeUserIds(room));
   if (room.knockout.phase === 'DONE') room.lockedGenres = room.knockout.locked;
   store.touch(room);
   return { done: room.knockout.phase === 'DONE', needsRevote: room.knockout.needsRevote };
@@ -79,7 +81,7 @@ export function recordElimination(
   genre: string,
   store: RoomStore,
 ): { done: boolean } {
-  room.knockout = submitElimination(room.knockout, userId, genre, Object.keys(room.users));
+  room.knockout = submitElimination(room.knockout, userId, genre, activeUserIds(room));
   if (room.knockout.phase === 'DONE') room.lockedGenres = room.knockout.locked;
   store.touch(room);
   return { done: room.knockout.phase === 'DONE' };
@@ -139,4 +141,21 @@ export function rejectWinner(room: Room, store: RoomStore): boolean {
   room.status = 'SWIPING';
   store.touch(room);
   return true;
+}
+
+/**
+ * A member left. Re-run the knockout round in case they were the only one it
+ * was still waiting on.
+ *
+ * settlement.ts already applied this rule to the deck; the knockout was left
+ * out, so a phone closing during genre picking stranded the room reading
+ * "2 of 3 in" until the leaver came back or the 2h TTL reaped it -- the exact
+ * permanent stalemate this product's headline promise denies (R87).
+ */
+export function knockoutMemberLeft(room: Room, store: RoomStore): { done: boolean } {
+  if (room.status !== 'KNOCKOUT') return { done: false };
+  room.knockout = reresolve(room.knockout, activeUserIds(room));
+  if (room.knockout.phase === 'DONE') room.lockedGenres = room.knockout.locked;
+  store.touch(room);
+  return { done: room.knockout.phase === 'DONE' };
 }

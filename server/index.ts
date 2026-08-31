@@ -35,6 +35,7 @@ import {
   deckBuilt,
   deckBuildFailed,
   declare,
+  knockoutMemberLeft,
   recordElimination,
   recordGenres,
   recordVote,
@@ -618,9 +619,22 @@ io.on('connection', (socket) => {
     if (!roomId || !userId) return;
     const room = store.leaveRoom(roomId, userId);
     if (!room) return;
-    // The person who just left may have been the only one the room was waiting
-    // on. Without this the room waits for them forever, which is the stalemate
-    // this whole app exists to prevent.
+    /*
+      The person who just left may have been the only one the room was waiting
+      on. Without this the room waits for them forever, which is the stalemate
+      this whole app exists to prevent.
+
+      This covered SWIPING only. A phone closing during the knockout left the
+      room reading "2 of 3 in" until the leaver returned or the two-hour TTL
+      reaped it -- the same permanent stalemate, in the phase before the one
+      that was guarded (R87).
+    */
+    if (room.status === 'KNOCKOUT') {
+      const { done } = knockoutMemberLeft(room, store);
+      if (done) void startSwiping(room);
+      broadcast(room);
+      return;
+    }
     if (room.status === 'SWIPING' && settleIfPossible(room, null)) return;
     broadcast(room);
   });

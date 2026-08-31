@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 365 test cases, 24 files, 138 pinned claims, all green.
+**Today's numbers:** 375 test cases, 25 files, 141 pinned claims, all green.
 
 This queue is the output of the 2026-08-31 board round (see [docs/BOARD.md](docs/BOARD.md)).
 Every item below survived an adversarial verifier with repo access; one claim was

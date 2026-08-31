@@ -62,24 +62,44 @@ function unionAll(lists: string[][]): string[] {
 }
 
 /**
- * Record one member's checkbox picks. Resolves the phase once every member
- * in `allUserIds` has submitted.
+ * Record one member's checkbox picks. Resolves once every member in
+ * `deciderIds` has submitted.
+ *
+ * R87: `deciderIds` is who must answer, not who counts. The caller passes the
+ * members still holding a phone; the overlap is computed from every submission
+ * on record, including one left behind by somebody who has since closed their
+ * tab. That is the same split settlement.ts states for the deck -- leaving
+ * forfeits your say in *when* the round ends, it does not delete what you
+ * already said.
  */
 export function submitGenres(
   state: KnockoutState,
   userId: string,
   genres: string[],
-  allUserIds: string[],
+  deciderIds: string[],
 ): KnockoutState {
   if (state.phase !== 'CHECKBOX') return state;
   const submissions = { ...state.submissions, [userId]: normalize(genres) };
-  const next: KnockoutState = { ...state, submissions, needsRevote: false };
+  return resolveCheckbox({ ...state, submissions, needsRevote: false }, deciderIds);
+}
 
-  const allIn = allUserIds.every((id) => submissions[id] !== undefined);
+/**
+ * The CHECKBOX resolution, separated from the act of submitting.
+ *
+ * Resolution used to exist only inside a submission, so the only event that
+ * could end a round was somebody answering. When the last member the room was
+ * waiting on closed their tab instead, nothing looked again (R87).
+ */
+function resolveCheckbox(next: KnockoutState, deciderIds: string[]): KnockoutState {
+  const submissions = next.submissions;
+
+  const allIn = deciderIds.every((id) => submissions[id] !== undefined);
   if (!allIn) return next;
 
   // Abstainers are counted as having answered but do not constrain the room.
-  const lists = allUserIds.map((id) => submissions[id]!).filter((l) => l.length > 0);
+  // Every submission counts, not just the deciders': a member who picked and
+  // then left still shaped the deck (R87).
+  const lists = Object.values(submissions).filter((l) => l.length > 0);
   if (lists.length === 0) {
     // Everybody abstained. Nobody has an opinion, so the room needs the full
     // list back rather than a deadlock.
@@ -106,27 +126,39 @@ export function submitGenres(
 }
 
 /**
- * Record one member's elimination vote. Resolves the round once every member
- * has voted: the most-voted genre drops (alphabetical tiebreak, exactly one
- * per round). Locks when 2 remain.
+ * Record one member's elimination vote. Resolves once every member in
+ * `deciderIds` has voted: the most-voted genre drops (alphabetical tiebreak,
+ * exactly one per round). Locks when 2 remain.
+ *
+ * Same split as submitGenres (R87): deciders gate the resolution, every vote
+ * cast is tallied.
  */
 export function submitElimination(
   state: KnockoutState,
   userId: string,
   genre: string,
-  allUserIds: string[],
+  deciderIds: string[],
 ): KnockoutState {
   if (state.phase !== 'ELIMINATION') return state;
   if (genre !== ABSTAIN && !state.pool.includes(genre)) return state;
   const elimVotes = { ...state.elimVotes, [userId]: genre };
-  const next: KnockoutState = { ...state, elimVotes };
+  return resolveElimination({ ...state, elimVotes }, deciderIds);
+}
 
-  const allVoted = allUserIds.every((id) => elimVotes[id] !== undefined);
+/** The ELIMINATION resolution, separated from the act of voting. See R87. */
+function resolveElimination(next: KnockoutState, deciderIds: string[]): KnockoutState {
+  const state = next;
+  const elimVotes = next.elimVotes;
+
+  const allVoted = deciderIds.every((id) => elimVotes[id] !== undefined);
   if (!allVoted) return next;
 
   const tally = new Map<string, number>();
-  for (const id of allUserIds) {
-    const g = elimVotes[id]!;
+  // Iterating the votes rather than the deciders. Iterating deciders here
+  // would read `elimVotes[id]!` as undefined for anyone who had not voted and
+  // tally that as a genre; iterating votes counts a departed member's vote,
+  // which is the half of R87 that must still count.
+  for (const g of Object.values(elimVotes)) {
     if (g === ABSTAIN) continue;
     tally.set(g, (tally.get(g) ?? 0) + 1);
   }
@@ -143,4 +175,23 @@ export function submitElimination(
     return { ...next, phase: 'DONE', pool, locked: pool, elimVotes: {} };
   }
   return { ...next, pool, elimVotes: {} };
+}
+
+/**
+ * Re-run the current round's resolution without recording an answer.
+ *
+ * For the case where the thing that changed is who is still here: a member
+ * closes their tab, the room is no longer waiting on them, and the round can
+ * finish on the answers already given. Returns the state unchanged when the
+ * round still has someone to wait for, so it is safe to call on any departure.
+ *
+ * This is the knockout's half of the rule settlement.ts states for the deck:
+ * only members still holding a phone decide *when* a round ends; everything
+ * already answered still counts (R87).
+ */
+export function reresolve(state: KnockoutState, deciderIds: string[]): KnockoutState {
+  if (deciderIds.length === 0) return state;
+  if (state.phase === 'CHECKBOX') return resolveCheckbox(state, deciderIds);
+  if (state.phase === 'ELIMINATION') return resolveElimination(state, deciderIds);
+  return state;
 }

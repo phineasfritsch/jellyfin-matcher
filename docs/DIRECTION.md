@@ -449,3 +449,39 @@ refresh — promised in the README, and the reason `room:join` accepts an id at 
 breaks completely if the secret is not persisted beside the id. `StoredSession.secret`
 is optional purely so a session written by an older build does not throw on read;
 without it the reconnect is refused and the member rejoins by name.
+
+### R87 — The knockout obeys the rule the deck already obeyed.
+
+**Frozen:** genre and elimination rounds resolved only when every member in
+`Object.keys(room.users)` had answered, and the disconnect handler re-checked
+nothing outside `SWIPING`.
+
+**Built:** rounds resolve when every *connected* member has answered, every answer
+on record still counts, and a departure re-runs the round.
+
+**Why.** `settlement.ts` states the rule outright and states it well:
+
+> Only CONNECTED members decide whether a room can settle.
+> Everyone's votes still count once it does.
+
+It was applied to the deck and not to the knockout. So two of three members
+submitting, with the third's tab closed, left the room reading "2 of 3 in" until
+that person came back or the two-hour TTL reaped the room. That is the permanent
+stalemate this product's headline promise denies, sitting one phase before the
+phase that was guarded — and reachable by locking a phone.
+
+**The half that is easy to get wrong.** Swapping the member list wholesale breaks
+the other half of the rule. The elimination tally iterated the same list and read
+`elimVotes[id]!` for each: pass only connected members and a departed member's cast
+vote stops counting; pass all members and an unvoted `undefined` gets tallied as a
+genre. The two lists are genuinely different questions — *who must answer* and
+*what has been answered* — so the resolution now gates on `deciderIds` and tallies
+`Object.values(elimVotes)`.
+
+**Resolution had to stop being a side effect of answering.** It lived inside
+`submitGenres` and `submitElimination`, so the only event that could end a round was
+a member responding — and a member leaving is precisely the case where nobody will.
+`reresolve` runs the same resolution against the current answers and the current
+deciders, returns the state untouched when the round still has somebody to wait for,
+and refuses to resolve at all when nobody is left to decide (an empty decider list
+makes `every` vacuously true, which would lock genres for an empty room).
