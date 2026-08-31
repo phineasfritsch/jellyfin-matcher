@@ -1862,3 +1862,46 @@ either way, so the lock bought nothing and cost a criterion.
 Both are the same shape, and it is the shape R125 and R129 are about: a claim
 made in a comment that the code did not keep, with nothing able to tell the
 difference.
+
+### R134 — A control you can see and cannot say
+
+WCAG 2.2 A 2.5.3 requires a control's accessible name to contain the text shown
+on it, so somebody driving a phone by voice can say what they can see. Two
+controls failed, and both failures are the kind that only a person using the app
+that way would ever notice.
+
+The knockout's abstain row **reads** "No preference" and was **named** "Abstain
+— go with the room". Not one word in common, so "click No preference" did
+nothing at all. That is the control R47 added *for* the person who does not want
+to invent an opinion, and it was the one control a voice user could not reach.
+The deck's undo row read "Undo — <film>" and was named "Undo your vote on
+<film>".
+
+Both are one-line fixes. The interesting part is the check.
+
+Pinning the two instances would have left the third to be found by a user, so
+the test walks every labelled control on four screens and asserts the
+relationship. Getting that right took three attempts, and each wrong version is
+worth recording because each was wrong in a way that looks right:
+
+1. **Too broad by element.** It walked every `[aria-label]`, which flagged the
+   vote row's `role="group"` labelled "Vote" and the details sheet's dialog
+   label. Both are correctly labelled *containers* whose text is other controls.
+2. **Too broad by text.** Reading `textContent` concatenated a row's gutter tag
+   with its title, so a control that reads perfectly on screen failed on
+   "backundo" — a word no human would ever say.
+3. **Too strict by rule.** It demanded every visible word appear in the name,
+   which failed the *fixed* abstain row for the sentence beneath it, "Counts as
+   voted, weighs nothing". Nobody says that to operate a control.
+
+Version three is the dangerous one, and not because it was inconvenient: **a
+check that fails correct code teaches the next reader to delete it.** The rule
+now compares the name against the control's *label* — the first substantive
+visible run, skipping the short all-caps gutter tags and the glyphs — which is
+what the criterion is actually about.
+
+Both defects are in `mutations.json`, so G9 puts them back on every gate run.
+The first mutation attempt did not catch the abstain case, because the test
+rendered the checkbox phase and that control lives on the elimination ballot:
+the test was named for a screen it never drew. Found by running the mutation
+rather than by reading the test, which is the whole of R129 restated.

@@ -1,7 +1,7 @@
 {
   "_": "Expected numbers for `npm run gate`. Floors, not equalities: the gate fails when a number goes down, because that is what a silent deletion looks like. When work legitimately adds tests or pins, raise these in the same commit.",
   "testFiles": 42,
-  "testCases": 681,
+  "testCases": 685,
   "pinnedClaims": 190,
-  "mutations": 28
+  "mutations": 30
 }

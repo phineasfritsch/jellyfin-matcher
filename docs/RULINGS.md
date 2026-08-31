@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-128 rulings. 93 argued in a design document; the rest are
+129 rulings. 94 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -49,7 +49,7 @@ defined at their first citation.
 | **R32** | `docs/DIRECTION.md:130` | — |
 | **R33** | `docs/DIRECTION.md:131` | — |
 | **R34** | `docs/DIRECTION.md:135` | — |
-| **R35** | `docs/DIRECTION.md:136` | `src/ui/components/Knockout.tsx:221` |
+| **R35** | `docs/DIRECTION.md:136` | `src/ui/components/Knockout.tsx:229` |
 | **R36** | `docs/DIRECTION.md:140` | — |
 | **R37** | `docs/DIRECTION.md:141` | `src/ui/components/WinnerScreen.tsx:274` |
 | **R38** | `docs/DIRECTION.md:145` | — |
@@ -61,7 +61,7 @@ defined at their first citation.
 | **R44** | _at its citation_ | `server/store.ts:17` |
 | **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:77` |
 | **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:228` +1 |
-| **R47** | _at its citation_ | `src/lib/knockout.ts:18` +1 |
+| **R47** | _at its citation_ | `src/lib/knockout.ts:18` +2 |
 | **R48** | _at its citation_ | `server/handlers.ts:232` +2 |
 | **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
 | **R50** | _at its citation_ | `src/ui/components/VoteRow.tsx:14` |
@@ -143,5 +143,6 @@ defined at their first citation.
 | **R131** | `docs/DIRECTION.md:1783` | — |
 | **R132** | `docs/DIRECTION.md:1810` | — |
 | **R133** | `docs/DIRECTION.md:1842` | — |
+| **R134** | `docs/DIRECTION.md:1866` | — |
 
 No ruling is orphaned.

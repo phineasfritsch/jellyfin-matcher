@@ -573,3 +573,130 @@ describe('the installed app is allowed to rotate', () => {
     expect(manifest.orientation).toBeUndefined();
   });
 });
+
+/**
+ * R134 / WCAG 2.2 A 2.5.3 Label in Name, as a rule rather than two instances.
+ *
+ * A control's accessible name must contain the text shown on it, so somebody
+ * driving the phone by voice can say what they can see. Two controls failed:
+ * the knockout's abstain row read "No preference" and was named "Abstain — go
+ * with the room", with not one word in common, and it is the control R47 added
+ * FOR the person who does not want to invent an opinion. The deck's undo row
+ * read "Undo — <film>" and was named "Undo your vote on <film>".
+ *
+ * Checking the two instances would leave the third to be found by a user. This
+ * walks every labelled control the screen renders and checks the relationship,
+ * so a new control is covered by existing here rather than by somebody
+ * remembering.
+ */
+/*
+  Controls only. The criterion is about things you can operate by voice, and the
+  first draft of this walked every `[aria-label]` — which caught the vote row's
+  `role="group"` labelled "Vote" (a container whose text is four separate
+  buttons) and the details sheet's dialog label (a container whose text is the
+  whole sheet). Both are correctly labelled containers, and reporting them as
+  failures would have taught the next reader to ignore this check.
+*/
+const CONTROLS = [
+  'button',
+  'a[href]',
+  'input',
+  '[role="button"]',
+  '[role="radio"]',
+  '[role="checkbox"]',
+  '[role="switch"]',
+].join(',');
+
+function expectSpeakableNames(container: HTMLElement) {
+  for (const el of container.querySelectorAll<HTMLElement>(CONTROLS)) {
+    const label = el.getAttribute('aria-label');
+    if (!label) continue;
+    const name = label.toLowerCase();
+    /*
+      Joined with spaces, not `textContent`. A row renders its gutter tag and
+      its title as separate elements, and concatenating them produced
+      "backundo" and "1puts" — a control that reads fine on screen failing on
+      words no human would ever say.
+    */
+    const visible: string[] = [];
+    const walker = el.ownerDocument.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const parent = (n.parentElement as HTMLElement | null) ?? null;
+      if (parent?.closest('.sr-only') || parent?.closest('[aria-hidden="true"]')) continue;
+      visible.push(n.textContent ?? '');
+    }
+    const flat = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+
+    /*
+      The control's LABEL, not everything written inside it.
+
+      2.5.3 is about the text that identifies a control, so a voice user can say
+      what they see. It is not a rule that every descriptive word must be in the
+      name — and the first version of this demanded exactly that, which failed
+      the abstain row for the sentence underneath it ("Counts as voted, weighs
+      nothing") that no one would ever say to operate it. A check that fails
+      correct code teaches the next reader to delete it.
+
+      The label is the first substantive visible run: the gutter tags these rows
+      carry (ANY, BACK, MAX) are short all-caps category markers, and the glyphs
+      are punctuation.
+    */
+    const runs = visible.map(flat).filter((t) => t.length > 0);
+    const label_text = runs.find((t) => !(t.length <= 4 && !/\d/.test(t))) ?? runs[0];
+    if (!label_text) continue; // icon-only: the name IS the label
+    expect(
+      flat(name),
+      `"${label_text}" is on screen but the control is named "${label}" — ` +
+        'a voice user saying what they see would not reach it',
+    ).toContain(label_text);
+  }
+}
+
+describe('every control can be spoken to (2.5.3)', () => {
+  it('on the deck, where the undo row failed', () => {
+    const voted = room({ progress: { u_1: 1 } });
+    const { container } = render(<SwipeDeck roomHook={hook(voted)} />);
+    expectSpeakableNames(container);
+  });
+
+  it('on the elimination ballot, where the abstain row failed', () => {
+    /*
+      The ELIMINATION phase specifically. The first version of this rendered
+      `picking()` — the checkbox phase — where the abstain control is plain
+      text with no aria-label, so restoring the old "Abstain — go with the
+      room" name left it green. The control this test is named for is on the
+      other screen.
+    */
+    const ballot = room({
+      status: 'KNOCKOUT',
+      knockout: {
+        phase: 'ELIMINATION',
+        submissions: {},
+        pool: ['Action', 'Comedy', 'Drama'],
+        locked: [],
+        elimVotes: {},
+        needsRevote: false,
+      },
+    });
+    const { container } = render(<Knockout roomHook={hook(ballot)} />);
+    expect(screen.getByRole('button', { name: /no preference/i })).toBeTruthy();
+    expectSpeakableNames(container);
+  });
+
+  it('on the winner screen, which has the costly control on it', () => {
+    const { container } = render(
+      <WinnerScreen roomHook={hook(room({ status: 'FINISHED' }))} match={null} />,
+    );
+    expectSpeakableNames(container);
+  });
+
+  it('on the details sheet, which portals out of its own container', () => {
+    render(<MovieDetails card={card()} onClose={vi.fn()} />);
+    // The sheet renders into <body> (R81), so the container is the document.
+    expectSpeakableNames(document.body);
+  });
+});

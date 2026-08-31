@@ -162,7 +162,13 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
               label="BACK"
               title={`Undo — ${behind.title}`}
               detail="Puts the card back and clears your vote."
-              ariaLabel={`Undo your vote on ${behind.title}`}
+              /*
+                R134 / 2.5.3. The row reads "Undo — <film>" and was named "Undo
+                your vote on <film>", so the visible words were not in the
+                accessible name in the order they are spoken. The name now
+                opens with the visible label and keeps the consequence after it.
+              */
+              ariaLabel={`Undo — ${behind.title}, puts the card back and clears your vote`}
               onClick={() => void undoVote()}
             />
             </Group>

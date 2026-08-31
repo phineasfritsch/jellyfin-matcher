@@ -173,12 +173,14 @@ describe('taking a vote back', () => {
     // a tremor, a nudge, a thumb put down to steady the phone.
     const voted = room({ progress: { u_1: 1 } });
     render(<SwipeDeck roomHook={hook(voted)} />);
-    expect(screen.getByRole('button', { name: /undo your vote on Film 1/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /undo — Film 1/i })).toBeTruthy();
   });
 
   it('offers none on the first card, where there is nothing to undo', () => {
     render(<SwipeDeck roomHook={hook(room())} />);
-    expect(screen.queryByRole('button', { name: /undo your vote/i })).toBeNull();
+    // The pattern has to track the control's real name: a negative assertion
+    // aimed at a name nothing uses any more passes whatever is on the screen.
+    expect(screen.queryByRole('button', { name: /undo —/i })).toBeNull();
   });
 
   it('says what undoing will do before it is pressed', () => {
@@ -198,7 +200,7 @@ describe('taking a vote back', () => {
     const undoVote = vi.fn();
     const voted = room({ progress: { u_1: 1 } });
     render(<SwipeDeck roomHook={hook(voted, { undoVote })} />);
-    screen.getByRole('button', { name: /undo your vote on Film 1/i }).click();
+    screen.getByRole('button', { name: /undo — Film 1/i }).click();
     expect(undoVote).toHaveBeenCalled();
   });
 });

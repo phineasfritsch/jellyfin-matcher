@@ -201,7 +201,15 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
           tone="room"
           title="No preference"
           detail="Go with the room. Counts as voted, weighs nothing."
-          ariaLabel="Abstain — go with the room"
+          /*
+            R134 / WCAG 2.2 A 2.5.3 Label in Name. The name was "Abstain — go
+            with the room" over a row that reads "No preference", with not one
+            word in common, so "click No preference" did nothing. This is the
+            control R47 added FOR the person who does not want to invent an
+            opinion, and a voice user could not reach it. The name now starts
+            with what the row says.
+          */
+          ariaLabel="No preference — go with the room"
           onClick={() => void eliminate(ABSTAIN)}
         />
         </Group>

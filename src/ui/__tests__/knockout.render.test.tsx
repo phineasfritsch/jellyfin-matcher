@@ -216,7 +216,7 @@ describe('the elimination round', () => {
 
   it('keeps an abstain here too', () => {
     render(<Knockout roomHook={hook(elimination)} />);
-    expect(screen.getByRole('button', { name: /abstain/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /no preference/i })).toBeTruthy();
   });
 
   it('counts who has answered without naming them', () => {
