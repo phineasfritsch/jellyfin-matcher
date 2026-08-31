@@ -2101,3 +2101,43 @@ only `getAuthName`. Once `RoomClient` also called `typedName`, that mock would
 have thrown the moment a case exercised the guest path — the path the whole
 ruling is about. Mocks that export half a module fail exactly where the new
 behaviour lives.
+
+### R140 — The dependency check found a real break on its first run
+
+`.github/dependabot.yml` went in a few hours ago as part of gate U11, on the
+argument that a project people install and leave alone breaks from the outside.
+It opened its first pull request the same afternoon — eight dev dependencies —
+and CI failed it. Two separate causes, both real, both of which would have
+landed on whoever next upgraded anything:
+
+**`environmentMatchGlobs` is gone.** Vitest deprecated it and then removed it,
+and it is what routed nine files to jsdom, so every rendering test in the
+project failed to collect at once. The warning had been printing on every local
+run all session and I had been reading past it.
+
+The fix is not the documented replacement. Six of the nine files already carried
+a `// @vitest-environment jsdom` pragma, so the glob was quietly doing work for
+three of them and duplicating the pragma for the other six. All nine carry the
+pragma now and the config option is gone — better than `projects` here for a
+reason unrelated to the removal: **the environment a test runs in is a fact
+about that test**, and it now reads at the top of the file instead of in a glob
+somebody has to go and find.
+
+**A stylesheet import needs a declaration.** `app/layout.tsx` does
+`import './globals.css'`, which is how Next takes a global stylesheet, and newer
+TypeScript raises TS2882 on a side-effect import with no declaration.
+`next-env.d.ts` does not cover it and is not the place to put it — generated,
+often gitignored, and Next's own guidance is not to edit it. So `src/css.d.ts`,
+committed, with a reason attached.
+
+**What this is really about.** The scheduled check and the grouped updates were
+justified in R131's commit as insurance against rot, which is the kind of
+argument that is easy to make and impossible to evaluate until something
+happens. Something happened within hours. The value was not that a bot proposed
+an upgrade — it is that the upgrade was proposed *into a full gate*, on a
+branch, where it failed loudly and could not merge, instead of arriving as a
+mystery six months later when a security patch forced the same bump.
+
+Both fixes are on `main` ahead of the bot, so the pull request should now
+rebase onto a tree that already accommodates it. Should, not does — that is a
+prediction until the rebased run is green, and it is written here as one.

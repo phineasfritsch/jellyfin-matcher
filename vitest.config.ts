@@ -53,6 +53,20 @@ export default defineConfig({
       is wrong, and the next person will make it.
     */
     environmentOptions: { jsdom: { url: 'http://localhost:3000' } },
-    environmentMatchGlobs: [['src/ui/__tests__/*.render.test.tsx', 'jsdom']],
+    /*
+      R140: each file declares its own environment with a
+      `// @vitest-environment jsdom` pragma.
+
+      This was `environmentMatchGlobs`, which vitest deprecated and then removed
+      -- the first dependency update this project's new weekly check produced
+      failed CI on exactly that, taking every jsdom suite with it. Six of the
+      nine files already carried the pragma, so the glob was quietly doing work
+      for three of them and duplicating the pragma for the rest.
+
+      The pragma is better than the replacement (`projects`) here for a reason
+      that has nothing to do with the removal: the environment a test runs in is
+      a fact about that test, and it now reads at the top of the file rather
+      than in a glob somebody has to go and find.
+    */
   },
 });
