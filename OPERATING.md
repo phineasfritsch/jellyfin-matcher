@@ -11,8 +11,8 @@ contradicted by something that is not an agent.
 ## One command
 
 ```
-npm run gate            # everything local, including the production build
-npm run gate -- --fast  # types, tests, counts, pins. What CI runs.
+npm run gate            # everything local, including the build. What CI runs.
+npm run gate -- --fast  # types, tests, counts, pins. Skips the build, so skips G7.
 npm run gate -- --prod  # also checks the deployed app (needs $MATCHER_URL)
 ```
 
@@ -26,6 +26,7 @@ Numbered, counted, non-zero on failure:
 | G4 | counts stated in prose match `gates.json` | in sync |
 | G5 | `next build` | builds |
 | G6 | deployed app is up, configured, and on this commit | opt in |
+| G7 | the built stylesheet ships what the source declares | 4 standard |
 
 `npm run counts` rewrites the prose from `gates.json`. G4 exists because this
 repo's whole argument is that a gate stops false claims shipping, and the README

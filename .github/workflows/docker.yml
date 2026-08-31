@@ -21,25 +21,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Nothing ships past a red gate. The docker job builds the app anyway, so
-  # this one runs --fast: types, tests, counts and pinned claims.
+  # Nothing ships past a red gate.
+  #
+  # This ran --fast on the reasoning that the docker job builds the app anyway.
+  # But --fast skips G7, which inspects the built stylesheet -- and G7 exists
+  # because Lightning CSS silently dropped `backdrop-filter` from every frosted
+  # pane in the app, shipping the whole redesign flat on Chrome (R82). The
+  # docker job does build, but into an image nothing reads the CSS out of, so
+  # that build proved nothing. A gate that skips the check for the worst bug
+  # this repo has shipped is decorative on the axis that matters most.
+  #
+  # The cost is one `next build` per run. That is the correct price.
   gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci --no-fund --no-audit
-      - run: npm run gate -- --fast
+      - run: npm run gate
 
   docker:
     needs: gate
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: docker/setup-buildx-action@v3
 

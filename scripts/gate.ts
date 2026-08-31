@@ -112,6 +112,16 @@ else {
   if (code !== 0) console.log(text.split('\n').slice(-25).join('\n'));
 }
 
+// G6 -- the deployed app. Opt in, because a red gate you cannot fix locally
+// teaches people to ignore the gate.
+if (!wantProd) skip('G6', 'production health', 'not requested (--prod)');
+else if (!process.env.MATCHER_URL) skip('G6', 'production health', 'MATCHER_URL unset');
+else {
+  const { code, text } = run('npx', ['tsx', 'scripts/health.ts']);
+  record('G6', 'production health', code === 0, text.trim().split('\n').pop() ?? '');
+  if (code !== 0) console.log(text);
+}
+
 // G7 -- what the stylesheet actually ships, not what it says.
 //
 // The source said `backdrop-filter` and the build emitted only
@@ -146,16 +156,6 @@ else {
       : `backdrop-filter: ${standard} standard, ${prefixed} prefixed` +
         (ok ? '' : ' -- the build dropped the property Chrome actually reads'),
   );
-}
-
-// G6 -- the deployed app. Opt in, because a red gate you cannot fix locally
-// teaches people to ignore the gate.
-if (!wantProd) skip('G6', 'production health', 'not requested (--prod)');
-else if (!process.env.MATCHER_URL) skip('G6', 'production health', 'MATCHER_URL unset');
-else {
-  const { code, text } = run('npx', ['tsx', 'scripts/health.ts']);
-  record('G6', 'production health', code === 0, text.trim().split('\n').pop() ?? '');
-  if (code !== 0) console.log(text);
 }
 
 const failures = results.filter((r) => !r.ok);
