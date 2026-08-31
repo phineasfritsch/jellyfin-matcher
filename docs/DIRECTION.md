@@ -1340,3 +1340,18 @@ with no use for a DOM and no reason to pay for one; files opt in by name. And th
 cleanup is explicit, because auto-cleanup only registers when vitest runs with
 globals enabled — without it every assertion reads the text of every render before
 it, and a test that greps for a sentence passes on one an earlier test drew.
+
+**Extended to the controls a person touches.** The failure panel and the vote row,
+for the same reason as the winner screen: both have already cost something. R98 took
+the whole room and offered no way out of it; R95 printed a scale nobody could read on
+the screen a person uses fifty times a night.
+
+Both were verified the same way — reintroduce the bug, watch the test go red.
+Restoring R98's missing control and R95's `opacity-70` fails two of the nine cases.
+A rendering test cannot measure contrast, but it can insist the class that caused it
+is gone, which is the cause rather than the symptom.
+
+`RoomClient` is deliberately not covered yet: it calls `useRoom` internally and opens
+a socket, so testing it means mocking the hook. That is a different piece of work and
+worth doing on its own rather than smuggled in behind two prop-driven components.
+
