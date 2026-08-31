@@ -95,7 +95,7 @@ defined at their first citation.
 | **R82** | `docs/DIRECTION.md:297` | `scripts/gate.ts:132` +1 |
 | **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:53` |
 | **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:178` +1 |
-| **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:78` +2 |
+| **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:78` +3 |
 | **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:123` +11 |
 | **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:326` +11 |
 | **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:91` +2 |

@@ -387,3 +387,101 @@ Growth's blocker was closed by `a049c4d` before the round was even read: the REA
 had shipped a `docker run` still recommending the bind mount that breaks a non-root
 image, because an earlier edit silently replaced nothing and the commit claimed
 otherwise.
+
+## Round 5
+
+**Verdict: NOT FINISHED.** 4 of 5 finished — the closest this board has come. One blocker, verified live at HEAD, in the mandate it belongs to.
+
+| Mandate | Vote | Blocking reason |
+| --- | --- | --- |
+| Product | Finished | — |
+| Growth | Finished | — |
+| Engineering | Finished | — |
+| Design Director | Finished | — |
+| Access and Honesty | Not finished | The max-runtime slider ships as an unstyled native range about 15 CSS px tall — under the app's own 44px floor — while `README.md:40` promises "Nothing you tap is under 44px". |
+
+Every mandate verified its own round-4 blocker at HEAD rather than trusting the
+brief, and every one held: R111 (the sign-in that destroyed the seat it was raised
+from), R112 (the stale disconnect that evicted a member sitting right there),
+`a049c4d` (the named volume, guarded by `server/__tests__/packaging.test.ts`), and
+R107/R113 (the download disclosure that now agrees with itself, on confirms that
+take focus with an accessible name).
+
+### What blocks 1.0
+
+**Access and Honesty.** `src/ui/components/Lobby.tsx:131-142` renders a bare
+`<input type="range">` whose only styling is `accent-maybe` — a colour, not a size.
+`app/globals.css` is the only stylesheet and sizes no range thumb or track anywhere;
+grepping it for range/slider/`::-webkit-`/`::-moz-` returns only the `.scroll-body`
+scrollbar rules at 269-276. Measured off the shipped capture rather than argued:
+`docs/screenshots/03-lobby.png` is a 402x874 viewport at deviceScaleFactor 2
+(`scripts/screenshots.ts:27`), and the cyan thumb occupies x 716-744, y 965-994
+device px — 14.5 x 15 CSS px — over a track 6 CSS px tall.
+
+Verification corrected the framing in the app's favour and it did not rescue it: a
+native range takes a touch anywhere on its box, so the real target is about
+300 x 15 CSS px. The width is fine. The height fails `docs/REDESIGN.md:42`'s own
+"Touch targets stay >= 44px", fails WCAG 2.5.8's 24px minimum, and is shorter than
+the 26px genre chip R39 threw out at `Knockout.tsx:93-98` as "a target a tremor
+cannot hit". It is the only such control in the app — everything else is
+`min-h-[52px]`, `min-h-[60px]`, `min-h-[62px]`, `size-[44px]`, or an `h-12` input.
+`README.md:40` says "Nothing you tap is under 44px, the list rows are 60",
+unqualified, under the bullet headed "It works in the dark, one-handed." On a phone
+the slider is the only way to set a runtime cap; the arrow keys that justified
+keeping a native input are not there. The household with ninety minutes before a
+school night is the household that needs this control.
+
+### Three claims survived, none struck
+
+A first for this board. Each survived with a correction, and each correction is in
+the queue item.
+
+- **The slider** lost two overstatements: the 15x15 "dot" framing (only the height
+  fails) and "the one control that does not grow with OS text size" — the slider is
+  not in `03b-lobby-200-percent.png` at all, so that point is reasoned, not
+  photographed.
+- **`CHANGELOG.md`** was understated. Its Unreleased section was last written at
+  `4259cc6`, twelve commits back, and does worse than omit R107, R111 and R112: it
+  asserts 462 cases / 29 files / 167 pins against `gates.json`'s 520 / 31 / 181,
+  three e2e rooms against the four `scripts/e2e-two-phones.ts:469` prints, and 86
+  rulings against `docs/RULINGS.md:13`'s 95 — the prose-count drift 0.9.0's notes
+  claim to have retired, in the one file gate G4 does not read. (Its evidence was
+  wrong on one grep: "socket" does appear, in pre-round-three entries.)
+- **`WinnerScreen.tsx:347`** is `flex flex-col` where its identical sibling at `:200`
+  and `Dock` at `Listing.tsx:275` are `flex flex-col gap-2`, so the request confirm's
+  cost line and Yes/Cancel row touch at zero pixels in `12-request-confirm.png`.
+  Dropped: the "only rhythm break in thirteen captures" superlative, and "the app's
+  one irreversible control" — R63/R71 in the same file call the reject irreversible.
+
+### The four blocked items, unanimously
+
+All five mandates weighed them and all five said in their own words that none blocks
+a 1.0: whether a household reaches for this, a "let's just watch that one" control,
+whether the deck stays interesting at card 30, and reading real Jellyfin play
+history. Three cannot be answered without shipping; the fourth wants a user context
+and a household policy that does not exist. They stay in `QUEUE.md`. Nobody withheld
+on them, and none is being carried as work.
+
+### What this means
+
+One sentence in the README that the shipped UI contradicts, on one control, located
+to the line, fixable with a stylesheet rule and a re-capture. Behind it, two items
+both filed by their own mandates as explicitly not blocking. Round six should be
+shorter than this one.
+
+### What happened next
+
+All three items closed in `4aaadd7`.
+
+- **R118** — the slider is a 44px target. It had taken the user agent default,
+  about 15 CSS px tall, because its only styling was a colour. The README sentence
+  it contradicted — "Nothing you tap is under 44px" — had been written an hour
+  earlier while correcting a *different* false claim in the same line.
+- **R119** — `CHANGELOG.md` joined `sync-counts`. Third file to drift for sitting
+  outside that list, after the README badges and QUEUE.md, and the third time the fix
+  was one line.
+- The request confirm's panel and its Yes/Cancel row no longer touch at zero pixels.
+
+Nothing was struck this round, for the first time in five: all three claims survived
+verification, each with a correction attached, and each correction changed the item
+rather than killing it.

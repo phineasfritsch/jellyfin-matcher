@@ -223,7 +223,31 @@ async function main() {
     }, TEXT_200);
     await new Promise((r) => setTimeout(r, 900));
     await shoot(page, '03b-lobby-200-percent');
+
+    /*
+      And the settings rows, which the frame above does not reach.
+
+      R120: at a 32px root the lobby list runs past the dock, so the first
+      capture shows the member card and the top of one setting. Everything the
+      200% claims are actually about is below it -- the four-character DECK
+      label R102 widened the gutter for, and the runtime slider R118 resized --
+      and neither had ever been photographed at the size that constrains them.
+      The evidence for two rulings stopped just above the rows they governed.
+    */
+    // Scroll to the rows themselves rather than to an offset: a guessed number
+    // landed past them, on the member list, which is a picture of the wrong
+    // thing in exactly the way R85 was about.
     await page.evaluate(() => {
+      const label = [...document.querySelectorAll('*')].find((el) =>
+        (el.textContent ?? '').startsWith('Max runtime'),
+      );
+      label?.scrollIntoView({ block: 'center' });
+    });
+    await new Promise((r) => setTimeout(r, 700));
+    await shoot(page, '03c-lobby-200-percent-settings');
+
+    await page.evaluate(() => {
+      document.querySelector('.scroll-body')?.scrollTo({ top: 0 });
       document.documentElement.style.fontSize = '';
     });
     await new Promise((r) => setTimeout(r, 500));

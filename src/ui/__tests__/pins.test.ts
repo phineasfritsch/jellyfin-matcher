@@ -21,7 +21,7 @@
  *     property survives. Never weaken one to something a blank page passes.
  */
 import { describe, expect, it } from 'vitest';
-import { appHaystack, readDoc, stripCssComments } from '../../../scripts/lib/source-scan';
+import { appHaystack, readDoc, stripComments, stripCssComments } from '../../../scripts/lib/source-scan';
 
 const APP = appHaystack();
 /**
@@ -30,6 +30,24 @@ const APP = appHaystack();
  * pin green after the declaration it protects is gone.
  */
 const CSS = stripCssComments(readDoc('app/globals.css'));
+
+/**
+ * The harnesses, comment-stripped.
+ *
+ * R121: five pins in one session were written for files the app haystack does
+ * not walk, and four of them were about the two browser harnesses. That is not
+ * five mistakes; it is one missing haystack. `scripts/` is deliberately outside
+ * appSources -- the gate and the generators are not the product -- but these two
+ * files encode decisions that cost real money to get wrong: never press the
+ * control that spends the host's disk, focus before clicking, wait for a row
+ * rather than for the screen.
+ *
+ * Its own group, so a claim about a harness has somewhere honest to live and
+ * cannot be smuggled into a claim about the app.
+ */
+const HARNESS = stripComments(
+  readDoc('scripts/screenshots.ts') + readDoc('scripts/e2e-two-phones.ts'),
+);
 const README = readDoc('README.md');
 
 type Pin = { id: string; why: string; find: string };
@@ -265,6 +283,21 @@ const LOBBY: Pin[] = [
  * Documented promises. The README is the only place several of these live, and
  * it is the thing people read before trusting the app with their server.
  */
+/**
+ * Claims about the two browser harnesses (R121).
+ *
+ * These are not decoration. A screenshot script that can spend the host's disk
+ * is not a screenshot script, and a capture that stops above the rows it is
+ * about is a picture of the wrong thing.
+ */
+const HARNESS_PINS: Pin[] = [
+  { id: 'H01', why: 'The capture opens the request confirmation and stops. The send is the button inside it, and pressing that fires a real Jellyseerr request into the host’s Radarr as a real download (R114)', find: "clickButton(page, 'Request via Jellyseerr')" },
+  { id: 'H02', why: 'The 200% lobby is photographed where its claims live. One frame stopped above the settings rows, so the four-character label R102 widened the gutter for and the slider R118 resized had never appeared at that size (R120)', find: '03c-lobby-200-percent-settings' },
+  { id: 'H03', why: 'The harness focuses a control before clicking it. HTMLElement.click() dispatches without moving focus, so the app was driven with nothing focused and anything remembering its opener had nothing to remember -- a failure true of nothing, costing as much to chase as a real one (R83)', find: 'target.focus();' },
+  { id: 'H04', why: 'The knockout capture waits for a real genre row rather than the screen. It waited on a static explainer present in the loading skeleton too, so every 04-knockout.png ever committed was eight empty stripes -- shipped above the fold with alt text promising a list of genres (R85)', find: 'button[aria-label^="Pick "]' },
+  { id: 'H05', why: 'Two phones get one browser context each. Two pages in one context share localStorage, so the second silently reconnected as the first -- a room of one phone pretending to be two, which is the illusion the harness exists to stop relying on (R94)', find: 'createBrowserContext()' },
+];
+
 const DOCS: Pin[] = [
   { id: 'D01', why: 'A maybe never locks a match; stated because it is a deliberate choice', find: 'never triggers a match' },
   { id: 'D02', why: 'Missing rating sources redistribute weight rather than burying a film', find: 'weights redistribute' },
@@ -291,6 +324,8 @@ const APP_SCOPE =
   'scanned: if the thing worth protecting lives there, the guard is a test, not a pin.';
 const CSS_SCOPE = `${APP_SCOPE} Plus app/globals.css, comment-stripped.`;
 const README_SCOPE = 'README.md only. Not OPERATING.md, not CLAUDE.md, not docs/.';
+const HARNESS_SCOPE =
+  'scripts/screenshots.ts and scripts/e2e-two-phones.ts, comment-stripped. No other script.';
 
 function check(pins: Pin[], haystack: string, scope: string) {
   for (const pin of pins) {
@@ -317,11 +352,22 @@ describe('pinned sweep claims', () => check(SWEEP, APP, APP_SCOPE));
 describe('pinned lobby claims', () => check(LOBBY, APP, APP_SCOPE));
 describe('pinned Late Show claims', () => check(LATESHOW, APP + CSS, CSS_SCOPE));
 describe('pinned documentation promises', () => check(DOCS, README, README_SCOPE));
+describe('pinned harness behaviour', () => check(HARNESS_PINS, HARNESS, HARNESS_SCOPE));
 
 describe('pin inventory', () => {
   it('reports how many claims are pinned', () => {
-    const total = A11Y.length + COPY.length + BEHAVIOUR.length + SWEEP.length + LOBBY.length + LATESHOW.length + DOCS.length;
+    // Every group, or the count the gate reads is smaller than the truth --
+    // and a floor that undercounts is a floor a deletion can walk under.
+    const total =
+      A11Y.length +
+      COPY.length +
+      BEHAVIOUR.length +
+      SWEEP.length +
+      LOBBY.length +
+      LATESHOW.length +
+      DOCS.length +
+      HARNESS_PINS.length;
     expect(total).toBeGreaterThan(0);
-    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${SWEEP.length} sweep, ${LOBBY.length} lobby, ${LATESHOW.length} lateshow, ${DOCS.length} docs)`);
+    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${SWEEP.length} sweep, ${LOBBY.length} lobby, ${LATESHOW.length} lateshow, ${DOCS.length} docs, ${HARNESS_PINS.length} harness)`);
   });
 });

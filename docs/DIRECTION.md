@@ -1453,3 +1453,51 @@ pull and redeploy, and it was the last place these numbers were written by hand.
 G4's whole argument is that a gate stops false claims shipping. A claim it does not
 read is a claim nobody checks, and "nobody checks it" is not a property of the file,
 it is a property of the list.
+
+### R120 — The evidence has to reach the rows it is about.
+
+**Frozen:** one 200%-text capture of the lobby, taken at the top of the list.
+
+**Built:** a second frame, scrolled to the settings rows.
+
+**Why.** At a 32px root the lobby runs well past the dock, so the existing capture
+showed the member card and the top of one setting — and everything the 200% claims
+are actually about sits below it. R102 widened the label gutter so a four-character
+label (`DECK`) would stop clipping; R118 resized the runtime slider. **Neither row
+appeared in any capture at that size.** The board found the slider absent from the
+frame while checking whether it was too small, which is the sharpest possible way to
+learn that a picture stops short of its subject.
+
+Both are now visible: `DECK` renders complete, and the slider is plainly a target
+rather than a hairline. Two rulings that rested on argument now rest on pixels.
+
+**Scrolled to the row, not to an offset.** The first attempt scrolled by a guessed
+number, landed past the settings on the member list, and produced a photograph of the
+wrong thing — R85 again, in the harness written after R85. It finds the row by its
+text now.
+
+### R121 — Five mistakes in one session were one missing haystack.
+
+**Frozen:** pins searched the app, `globals.css`, or `README.md`, and nothing else.
+
+**Built:** a fourth haystack for the two browser harnesses, with its own group.
+
+**Why.** Five pins this session were written for files no haystack walks, and four
+were about `screenshots.ts` or `e2e-two-phones.ts`. Each was deleted as "a pin that
+cannot see its subject", which was correct each time and stopped being an
+explanation somewhere around the third.
+
+It is one missing haystack, not five lapses. Those files encode decisions that cost
+real money to get wrong: **never press the control that spends the host's disk**,
+focus before clicking, wait for a genuine row rather than for the screen, one browser
+context per phone. Every one of those is a lesson bought by a failure, and none of
+them had anywhere to be protected.
+
+`scripts/` stays out of `appSources` — the gate and the generators are not the
+product, and putting them in would let script text satisfy pins about the app. The
+harness gets its own corpus and its own group instead, so a claim about a harness has
+an honest home and cannot be smuggled into a claim about the product.
+
+**The failure message is what made this visible.** R110 made a lost pin name the
+corpus it searched; without that, the fifth occurrence would have looked like a
+sixth deleted string rather than a pattern with a shape.
