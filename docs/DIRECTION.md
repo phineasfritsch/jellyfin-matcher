@@ -1590,3 +1590,46 @@ twenty-four missing rulings. That difference is the whole ruling.
 The rule this generalises to: **when a generator and its checker share a
 pattern, the pattern is unguarded.** Cross-check it from outside, with code
 written at a different moment, or do not claim the thing is complete.
+
+### R125 — The details sheet, and where a rendering test stops
+
+The last component with no test. Seventeen cases: the portal, the focus
+handling, the trailer that reaches no network until asked, the ratings named in
+words rather than by their API keys, the unknown year admitted rather than left
+blank.
+
+The portal one is the shape worth keeping. R81 moved this sheet to
+`document.body` because it is written inside the deck — a stack of animated,
+overflowing, translucent panes — and a frosted pane only blurs what its nearest
+backdrop root painted. Any ancestor with a filter, an opacity below 1, or a
+will-change becomes one, so the sheet was translucent over the poster without
+blurring it, and the vote row's No/Maybe/Yes read straight through the synopsis.
+Chasing which ancestor is at fault fixes it until somebody adds another. So the
+test does not assert a class or a computed style; it asserts the dialog is *not*
+inside the container it was rendered into and *is* in the body. That property
+cannot be broken by adding a pane.
+
+**The part worth writing down is what these tests do not catch.**
+
+R83 was the sheet handing focus, on close, to the element it was unmounting —
+itself — so Escape dropped a keyboard user onto `<body>` and the rest of the
+deck was gone. It was found by the behavioural check in `scripts/screenshots.ts`
+and by nothing else, because every unit test was green.
+
+The obvious thing to write here was a test that reproduces it, and the obvious
+thing to write in the comment was "R83, exactly". Both were checked instead.
+Restore `a4dfbc9^` — the exact buggy effect — and all seventeen of these tests
+still pass. jsdom's effect cleanup focuses the opener before the setup re-reads
+`document.activeElement`, so the state self-corrects and the browser-only
+failure is invisible. Deleting the focus restore altogether does turn two of
+them red, which is the real, weaker claim they guard: focus is handed back to
+the opener, and is still handed back after a re-render.
+
+So the file says that, and does not say R83. The harness keeps R83.
+
+The rule: **a rendering test and a browser test are not substitutes, and the way
+to find out which one you have written is to reintroduce the bug.** R124 was a
+checker that shared its subject's blind spot; this is the same error one step
+earlier — a test whose comment claimed more than the test could see. The
+difference between them is one mutation run, and it is the cheapest honesty
+available in this repository.

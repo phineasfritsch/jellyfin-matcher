@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 577 test cases, 36 files, 190 pinned claims, all green.
+**Today's numbers:** 594 test cases, 37 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
@@ -60,11 +60,13 @@ and every mandate agreed none of it names a defect a household would meet.
 
 ## Next
 
-- [ ] **The details sheet is the last component with no rendering test.**
-      R115–R124 covered the winner, the controls, the screen chooser, the
-      socket, the knockout, the deck and the lobby. `MovieDetails.tsx` is what
-      remains, and R81 and R83 both lived in it. Files:
-      `src/ui/__tests__/details.render.test.tsx`.
+- [ ] **Nothing. Every component now renders under the gate** — R115 to R125
+      closed the last of them with the details sheet. What R125 found on the way
+      out is the thing to remember: restoring the exact pre-R83 effect leaves all
+      seventeen of its tests green, because jsdom self-corrects the focus order
+      that a real browser does not. A rendering test and a browser test are not
+      substitutes. `scripts/screenshots.ts` is still the only thing guarding
+      R83, and the only thing that ever found it.
 
 - [ ] **The stacked row layout at 200% text.** R102 made the label gutter scale
       rather than clip, and deliberately left the crowding it exposed as an open
