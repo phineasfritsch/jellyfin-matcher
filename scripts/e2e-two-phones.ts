@@ -277,7 +277,75 @@ async function main() {
     ok(bexReloaded.includes(adaCard ?? '\u0000'), 'a reload still names the winner');
     ok(!bexReloaded.includes('Not on your server'), 'a reload does not offer to download a film the server has');
 
-    console.log(`\n${checks - failures}/${checks} checks passed in room ${roomId}.`);
+    /*
+      Second room, second scenario: somebody's phone dies mid-knockout.
+
+      R87 fixed the case where a room waited forever on a member who had closed
+      their tab during genre picking -- reading "2 of 3 in" until the two-hour
+      TTL reaped it, which is the permanent stalemate this product's headline
+      denies. That fix is covered by unit tests on the transitions and by one on
+      the handler, and neither of those is a phone.
+
+      The failure this reproduces is specifically a *browser* one: the surviving
+      member is sitting on a screen, and the question is whether that screen
+      ever moves. A room can be correct in memory and still leave somebody
+      staring at a spinner, because nothing told them.
+    */
+    step('a second room, where one phone dies during the knockout');
+    const cyCtx = await browser.createBrowserContext();
+    const dotCtx = await browser.createBrowserContext();
+    const cy = await cyCtx.newPage();
+    const dot = await dotCtx.newPage();
+    for (const p of [cy, dot]) await p.setViewport(PHONE);
+
+    await cy.goto(URL, { waitUntil: 'domcontentloaded' });
+    await cy.waitForSelector('input', { timeout: 20_000 });
+    await cy.type('input', 'Cy', { delay: 10 });
+    await tap(cy, 'Create', 'Cy');
+    await waitForText(cy, (t) => /Room [A-Z0-9]{4}/.test(t), 'Cy to land in a room');
+    const room2 = (/Room ([A-Z0-9]{4})/.exec(await textOf(cy)) ?? [])[1];
+    if (!room2) throw new Error('could not read the second room code');
+    console.log(`  room ${room2}`);
+
+    await join(dot, room2, 'Dot');
+    await waitForText(cy, (t) => t.includes('Dot'), 'Cy to see Dot arrive');
+    await tap(cy, "I'm ready", 'Cy');
+    await tap(dot, "I'm ready", 'Dot');
+    await waitForText(cy, (t) => /what are you open to/i.test(t), 'Cy to reach the knockout');
+    await cy
+      .waitForSelector('button[aria-label^="Pick "]', { timeout: 30_000 })
+      .catch(() => {
+        throw new Error('Cy: the knockout never rendered a genre row');
+      });
+
+    // Cy answers. Dot never will.
+    for (const genre of ['Action', 'Comedy']) await tap(cy, `Pick ${genre}`, 'Cy');
+    await tap(cy, 'Lock in 2', 'Cy');
+    await waitForText(cy, (t) => /waiting/i.test(t) || /1 of 2/i.test(t), 'Cy to be waiting on Dot');
+    ok(/waiting|1 of 2/i.test(await textOf(cy)), 'Cy is told the room is waiting on Dot');
+
+    step('Dot closes her phone');
+    await dot.close();
+
+    // The whole point: Cy's screen must move on its own. Either the deck
+    // builds, or the room says something -- but it must not sit on "1 of 2".
+    const cyAfter = await withTimeout(
+      waitForText(
+        cy,
+        (t) => /\d+ \/ \d+/.test(t) || /still in/i.test(t) || /vote out/i.test(t) || /no deck/i.test(t),
+        'Cy to be released from the knockout',
+        60_000,
+      ),
+      70_000,
+      'the room to stop waiting on a phone that is gone',
+    );
+    ok(!/1 of 2/i.test(cyAfter), 'Cy is no longer waiting on a member who left');
+    ok(
+      /\d+ \/ \d+/.test(cyAfter) || /still in/i.test(cyAfter) || /vote out/i.test(cyAfter) || /no deck/i.test(cyAfter),
+      'the knockout resolved on the answers already given (R87)',
+    );
+
+    console.log(`\n${checks - failures}/${checks} checks passed. Rooms ${roomId} and ${room2}.`);
     if (failures > 0) throw new Error(`${failures} check(s) failed`);
   } finally {
     try {

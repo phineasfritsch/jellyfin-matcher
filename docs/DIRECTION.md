@@ -687,3 +687,14 @@ the state the wait left behind now.
 
 Verified by breaking it: making `broadcast` send to a single socket fails the harness
 immediately and by name.
+
+**A second room, for the failure that is only visible on a screen.** R87 fixed a room
+that waited forever on a member who had closed their tab during genre picking. That
+fix has unit tests on the transitions and on the handler, and neither of them is a
+phone: a room can be correct in memory and still leave somebody staring at "1 of 2"
+because nothing told them. So the harness runs a second room where one member answers
+and the other's phone dies, and asserts the survivor's screen moves on its own.
+
+Restoring the pre-R87 rule — resolving against every member rather than the connected
+ones — fails it with the sentence the bug deserves: *timed out waiting for Cy to be
+released from the knockout.*
