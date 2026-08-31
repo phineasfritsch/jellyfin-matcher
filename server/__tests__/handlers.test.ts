@@ -31,6 +31,9 @@ function harness() {
   const settled: Array<string | null> = [];
 
   const session: Session = {
+    // R112: seats are held by a socket, so the harness needs an identity it can
+    // change -- that is how a stale disconnect is expressed in a test.
+    id: 'socket-1',
     data: {},
     authedName: () => null,
     address: () => '10.0.0.1',
@@ -330,6 +333,42 @@ describe('a socket going away', () => {
     const h = harness();
     expect(() => handlers.disconnect(h.ctx)).not.toThrow();
     expect(h.broadcasts).toHaveLength(0);
+  });
+
+  it('ignores a disconnect from a socket that no longer holds the seat', () => {
+    /*
+      R112. socket.io declares a dropped connection dead only after its ping
+      timeout -- up to about 45 seconds -- so a phone moving from wifi to
+      cellular has usually reconnected and rejoined before the old socket is
+      reaped. Acting on that stale disconnect evicted somebody sitting right
+      there: their LOBBY seat deleted, or a present swiper marked disconnected,
+      which is the sole test of who can stall a room.
+    */
+    const h = harness();
+    const host = handlers.createRoom(h.ctx, { name: 'Ada' });
+    const room = h.store.getRoom(host.roomId)!;
+
+    // The phone comes back on a new socket and reclaims its seat.
+    h.ctx.session.id = 'socket-2';
+    handlers.joinRoom(h.ctx, { roomId: host.roomId, userId: host.userId, secret: host.secret });
+
+    // Now the ORIGINAL socket is finally declared dead.
+    h.ctx.session.id = 'socket-1';
+    handlers.disconnect(h.ctx);
+
+    expect(room.users[host.userId]).toBeDefined();
+    expect(room.users[host.userId]!.connected).toBe(true);
+  });
+
+  it('still lets the socket that does hold the seat give it up', () => {
+    const h = harness();
+    const host = handlers.createRoom(h.ctx, { name: 'Ada' });
+    handlers.joinRoom(h.ctx, { roomId: host.roomId, name: 'Bex' });
+    const room = h.store.getRoom(host.roomId)!;
+    const before = Object.keys(room.users).length;
+
+    handlers.disconnect(h.ctx);
+    expect(Object.keys(room.users).length).toBe(before - 1);
   });
 
   it('starts the round when the last unready member leaves the lobby', () => {

@@ -418,8 +418,55 @@ async function main() {
     await waitForText(eve, (t) => t.includes('Fin'), 'Eve to see Fin return');
     ok((await textOf(eve)).includes('Fin'), 'the room sees her come back');
 
+    /*
+      A brief blip, not a departure.
+
+      R112: socket.io declares a dropped connection dead only after its ping
+      timeout — up to about 45 seconds — so a phone that loses wifi for a moment
+      reconnects and rejoins long before the server reaps the old socket. That
+      stale disconnect used to evict the person sitting right there.
+
+      Short outage, then well past the server's timeout, then check they are
+      still in the room. The wait is the point: the eviction happens on the
+      server's clock, not on the phone's.
+    */
+    step('a fourth room, where a phone blips and comes straight back');
+    const gilCtx = await browser.createBrowserContext();
+    const hanCtx = await browser.createBrowserContext();
+    const gil = await gilCtx.newPage();
+    const han = await hanCtx.newPage();
+    for (const p of [gil, han]) await p.setViewport(PHONE);
+
+    await gil.goto(URL, { waitUntil: 'domcontentloaded' });
+    await gil.waitForSelector('input', { timeout: 20_000 });
+    await gil.type('input', 'Gil', { delay: 10 });
+    await tap(gil, 'Create', 'Gil');
+    await waitForText(gil, (t) => /Room [A-Z0-9]{4}/.test(t), 'Gil to land in a room');
+    const room4 = (/Room ([A-Z0-9]{4})/.exec(await textOf(gil)) ?? [])[1];
+    if (!room4) throw new Error('could not read the fourth room code');
+    console.log(`  room ${room4}`);
+
+    await join(han, room4, 'Han');
+    await waitForText(gil, (t) => t.includes('Han'), 'Gil to see Han arrive');
+
+    step('Han blips offline for five seconds');
+    await han.setOfflineMode(true);
+    await new Promise((r) => setTimeout(r, 5_000));
+    await han.setOfflineMode(false);
+
+    // Back on her own screen first: the rejoin has to have happened before the
+    // server reaps the stale socket, or this proves nothing.
+    await waitForText(han, (t) => /tonight/i.test(t), 'Han to be back in the lobby', 40_000);
+    ok(/tonight/i.test(await textOf(han)), 'Han is back in the room after a blip');
+
+    step('waiting out the server ping timeout');
+    await new Promise((r) => setTimeout(r, 55_000));
+
+    ok((await textOf(gil)).includes('Han'), 'the room still has Han once the old socket is reaped');
+    ok(/tonight/i.test(await textOf(han)), 'Han was never handed back to the join gate');
+
     console.log(
-      `\n${checks - failures}/${checks} checks passed. Rooms ${roomId}, ${room2} and ${room3}.`,
+      `\n${checks - failures}/${checks} checks passed. Rooms ${roomId}, ${room2}, ${room3} and ${room4}.`,
     );
     if (failures > 0) throw new Error(`${failures} check(s) failed`);
   } finally {

@@ -1226,3 +1226,34 @@ on their next action.
 Sign-out clears the server side too. Now that a live socket can adopt a token, it can
 also be left holding one the browser has forgotten: signed out here and signed in
 there.
+
+### R112 — A seat is held by a socket, not by a member.
+
+**Frozen:** the disconnect handler acted on whatever seat the dying socket
+remembered.
+
+**Built:** it acts only if that seat still belongs to that socket.
+
+**Why.** socket.io declares a dropped connection dead on its own clock — a 25s ping
+interval and a 20s timeout, so up to about forty-five seconds. A phone that moves from
+wifi to cellular, or loses signal for a moment, notices immediately and rejoins long
+before the server reaps the old socket. That stale disconnect then evicted somebody
+sitting right there: deleting their lobby seat, or marking a present swiper
+disconnected — and `connected` is the sole test of who can stall a room, so it could
+resolve a knockout or declare a points winner without them.
+
+Nothing bound a seat to a socket. `grep` for it and there was nothing to find.
+
+**Unknown seats answer true.** A room reaped by the TTL, or a socket predating the
+map, must still be able to clean itself up; the check exists to reject a *contested*
+seat, not to require registration.
+
+Kept off the `Room` for the same reason as the seat secrets (R86): `viewFor` builds a
+member's view by spreading the room, and which socket holds a seat is not the room's
+business.
+
+**Proved on real phones.** `npm run e2e:two` now runs a fourth room where a member
+goes offline for five seconds, comes straight back, and the harness then waits out the
+full server timeout before checking she is still there. The wait is the whole point —
+the eviction happens on the server's clock, not the phone's, so a test that checked
+immediately would have passed against the bug.

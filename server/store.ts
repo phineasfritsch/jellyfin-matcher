@@ -135,6 +135,23 @@ export class RoomStore {
    */
   private secrets = new Map<string, string>();
 
+  /**
+   * R112: which socket currently holds each seat.
+   *
+   * A disconnect used to act on whatever seat the dying socket remembered,
+   * with no check that the seat still belonged to it. socket.io notices a
+   * dropped connection only after its ping timeout -- up to about 45 seconds --
+   * so a phone that switches from wifi to cellular reconnects and rejoins long
+   * before the old socket is declared dead. That stale disconnect then evicted
+   * a member who was sitting right there: deleting their LOBBY seat, or marking
+   * a present swiper disconnected, which is the sole test of who can stall a
+   * room, so it could settle without them.
+   *
+   * Kept off the Room for the same reason as the secrets: viewFor builds a
+   * member's view by spreading the room, and this is not the room's business.
+   */
+  private seatSockets = new Map<string, string>();
+
   constructor(private now: () => number = Date.now) {}
 
   /** Live room count, for /healthz. Read-only; safe to poll from anywhere. */
@@ -156,6 +173,26 @@ export class RoomStore {
     return `u_${++this.userSeq}`;
   }
 
+  /** Record that this socket now holds this seat, displacing any older one. */
+  claimSeat(roomId: string, userId: string, socketId: string): void {
+    this.seatSockets.set(this.seatKey(roomId.toUpperCase(), userId), socketId);
+  }
+
+  /**
+   * Whether this socket still holds this seat.
+   *
+   * Unknown seats answer true: a room reaped by the TTL, or a socket from
+   * before this map existed, must still be able to clean itself up (R112).
+   */
+  ownsSeat(roomId: string, userId: string, socketId: string): boolean {
+    const held = this.seatSockets.get(this.seatKey(roomId.toUpperCase(), userId));
+    return held === undefined || held === socketId;
+  }
+
+  private releaseSeat(roomId: string, userId: string): void {
+    this.seatSockets.delete(this.seatKey(roomId.toUpperCase(), userId));
+  }
+
   private seatKey(roomId: string, userId: string): string {
     return `${roomId}:${userId}`;
   }
@@ -170,6 +207,9 @@ export class RoomStore {
   private forgetSecrets(roomId: string): void {
     for (const key of this.secrets.keys()) {
       if (key.startsWith(`${roomId}:`)) this.secrets.delete(key);
+    }
+    for (const key of this.seatSockets.keys()) {
+      if (key.startsWith(`${roomId}:`)) this.seatSockets.delete(key);
     }
   }
 
@@ -220,6 +260,7 @@ export class RoomStore {
     if (room.status === 'LOBBY') {
       delete room.users[userId];
       this.secrets.delete(this.seatKey(room.roomId, userId));
+      this.releaseSeat(room.roomId, userId);
     } else {
       const user = room.users[userId];
       if (user) user.connected = false; // mid-game: keep votes, allow reconnect

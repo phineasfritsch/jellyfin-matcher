@@ -412,6 +412,7 @@ io.on('connection', (socket) => {
   const ctx: Ctx = {
     store,
     session: {
+      id: socket.id,
       get data() {
         return socket.data as { roomId?: string; userId?: string; made?: number };
       },

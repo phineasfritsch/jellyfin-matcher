@@ -49,6 +49,8 @@ import {
 
 /** Per-socket state, and the few things only a real socket can answer. */
 export interface Session {
+  /** This socket's id. Seats are held by a socket, not by a member (R112). */
+  id: string;
   data: { roomId?: string; userId?: string; made?: number };
   /** The signed-in Jellyfin name, or null for a guest. */
   authedName(): string | null;
@@ -114,6 +116,7 @@ export function createRoom(ctx: Ctx, payload: unknown) {
 
   const seat = ctx.store.createRoom(asName(name, 'Host'), Boolean(ctx.session.authedName()));
   ctx.session.data = { roomId: seat.room.roomId, userId: seat.userId, made: made + 1 };
+  ctx.store.claimSeat(seat.room.roomId, seat.userId, ctx.session.id);
   ctx.session.joinChannel(seat.room.roomId);
   ctx.fx.broadcast(seat.room);
   // The secret goes to the member who owns the seat and nowhere else: it rides
@@ -162,6 +165,9 @@ export function joinRoom(ctx: Ctx, payload: unknown) {
 
   ctx.joinLimiter.clear(who);
   ctx.session.data = { ...ctx.session.data, roomId: seat.room.roomId, userId: seat.userId };
+  // This socket now holds the seat. A slower disconnect from the socket that
+  // held it before must not evict the person sitting in it (R112).
+  ctx.store.claimSeat(seat.room.roomId, seat.userId, ctx.session.id);
   ctx.session.joinChannel(seat.room.roomId);
   ctx.fx.broadcast(seat.room);
   return { roomId: seat.room.roomId, userId: seat.userId, secret: seat.secret };
@@ -322,6 +328,19 @@ export async function requestWinner(ctx: Ctx) {
 export function disconnect(ctx: Ctx): void {
   const { roomId, userId } = ctx.session.data;
   if (!roomId || !userId) return;
+
+  /*
+    R112: only the socket that still holds this seat may give it up.
+
+    socket.io declares a dropped connection dead only after its ping timeout --
+    up to about 45 seconds -- so a phone moving from wifi to cellular has
+    usually reconnected and rejoined before the old socket is reaped. Acting on
+    that stale disconnect evicted somebody who was sitting right there: deleting
+    their LOBBY seat, or marking a present swiper disconnected, which is the
+    sole test of who can stall a room and so let it settle without them.
+  */
+  if (!ctx.store.ownsSeat(roomId, userId, ctx.session.id)) return;
+
   const current = ctx.store.leaveRoom(roomId, userId);
   if (!current) return;
 
