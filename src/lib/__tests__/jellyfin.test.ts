@@ -124,3 +124,81 @@ describe('poster URLs never leak the media server', () => {
     );
   });
 });
+
+/**
+ * R144: the library is fetched a page at a time.
+ *
+ * It was one un-paginated `/Items` call for every movie on the server. The U10
+ * benchmark measured that at a 28 MB body for a 50,000-title library, and R132
+ * had just established that a slow BODY is the half that escapes a timeout
+ * unnamed -- headers come back fast from a loaded server, the body does not. So
+ * the biggest libraries were the ones asking a single request to carry the most
+ * and most likely to lose all of it when it ran long.
+ */
+describe('getMovies pages through a large library', () => {
+  /** A server holding `total` movies, answering StartIndex/Limit honestly. */
+  function server(total: number, opts: { reportCount?: boolean } = {}) {
+    const seen: Array<{ start: number; limit: number }> = [];
+    const fetchFn = vi.fn(async (url: string | URL | Request) => {
+      const q = new URL(String(url));
+      const start = Number(q.searchParams.get('StartIndex') ?? 0);
+      const limit = Number(q.searchParams.get('Limit') ?? total);
+      seen.push({ start, limit });
+      const items = Array.from({ length: Math.max(0, Math.min(limit, total - start)) }, (_, i) => ({
+        Id: `id-${start + i}`,
+        Name: `Film ${start + i}`,
+        ProductionYear: 2001,
+        RunTimeTicks: 100 * 600_000_000,
+        Genres: ['Action'],
+        ProviderIds: { Tmdb: String(start + i) },
+      }));
+      return jsonResponse(
+        opts.reportCount === false ? { Items: items } : { Items: items, TotalRecordCount: total },
+      );
+    });
+    return { fetchFn, seen };
+  }
+
+  it('asks for a bounded page rather than the whole library', async () => {
+    const { fetchFn, seen } = server(10);
+    await getMovies({}, defaultConfig({ ...cfgBase, fetchFn }));
+    expect(seen[0]?.limit, 'the first request had no Limit at all').toBeGreaterThan(0);
+    expect(seen[0]?.start).toBe(0);
+  });
+
+  it('collects every title across pages', async () => {
+    // 1200 with a 500 page is three requests: two full, one short.
+    const { fetchFn, seen } = server(1200);
+    const movies = await getMovies({}, defaultConfig({ ...cfgBase, fetchFn }));
+    expect(movies).toHaveLength(1200);
+    expect(seen.length).toBe(3);
+    expect(seen.map((s) => s.start)).toEqual([0, 500, 1000]);
+  });
+
+  it('stops on a short page even when the server states no count', async () => {
+    // Not every Jellyfin version returns TotalRecordCount, and a missing count
+    // must not turn into an extra request or an endless one.
+    const { fetchFn } = server(600, { reportCount: false });
+    const movies = await getMovies({}, defaultConfig({ ...cfgBase, fetchFn }));
+    expect(movies).toHaveLength(600);
+  });
+
+  it('stops rather than spinning when a server keeps answering', async () => {
+    /*
+      The guard that matters. A server that reports a total far larger than it
+      will ever return -- or reports one and then hands back nothing -- would
+      otherwise loop for ever inside a deck build, which the room experiences as
+      the skeleton that never resolves.
+    */
+    const fetchFn = vi.fn(async () => jsonResponse({ Items: [], TotalRecordCount: 999_999 }));
+    const movies = await getMovies({}, defaultConfig({ ...cfgBase, fetchFn }));
+    expect(movies).toHaveLength(0);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('still filters what it collected', async () => {
+    const { fetchFn } = server(600);
+    const movies = await getMovies({ genres: ['Nothing'] }, defaultConfig({ ...cfgBase, fetchFn }));
+    expect(movies).toHaveLength(0);
+  });
+});

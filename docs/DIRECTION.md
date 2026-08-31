@@ -2262,3 +2262,38 @@ Three things kept deliberately:
   buy every rating again against a metered key — there is a test named for that
   case, because it is the one that would be most expensive to get wrong and the
   least likely to be noticed in review.
+
+### R144 — One request carried the whole library
+
+`getMovies` asked for every movie on the server in a single un-paginated
+`/Items` call. The U10 benchmark measured that at a **28 MB body** for a
+50,000-title library, and R132 had just established that a slow *body* is
+precisely the half that escapes a deadline unnamed — headers come back quickly
+from a healthy-but-loaded server, the body does not.
+
+Put together: the largest libraries were the ones asking a single request to
+carry the most, and therefore the ones most likely to lose all of it at once,
+with the least useful message. A page that runs long costs a page.
+
+500 titles per request. An ordinary library is one or two calls; a big one is a
+sequence of small ones, none of which is the thing that times out.
+
+**The better half of this ruling is the ceiling, and it came from a mutation
+behaving badly.** Deleting the short-page guard did not turn the suite red — it
+made it *hang*. Every stopping condition the loop had trusted the server to be
+honest about something: a short page, an empty page, an accurate
+`TotalRecordCount`. A server that reports a large total and keeps answering
+would spin for ever, and an endless loop inside a deck build is not an abstract
+fault: it is the skeleton that never resolves, on five phones, with the room
+waiting.
+
+So the loop is bounded at 1000 pages — 500,000 titles, far past anything this
+is for, and a number rather than a promise. Termination is now our decision
+instead of the server's, and the same mutation fails cleanly at the ceiling
+instead of hanging.
+
+**A hang is a worse failure than a red test**, and it is worth saying why in a
+repository that runs mutations on every gate: a red test names its cause in one
+line, while a hang looks like a slow machine until something times out and
+reports a mystery. The harness would have called this `ERROR` after 120 seconds
+and been right to, but only the shape of the fix makes the next one legible.

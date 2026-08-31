@@ -95,15 +95,67 @@ export function filterMovies(movies: JellyfinMovie[], filter: MovieFilter): Jell
  * Jellyfin's Genres query param has ambiguous AND/OR semantics across
  * versions, and HomeLab libraries are small enough to fetch whole.
  */
+/**
+ * Titles per request. Big enough that an ordinary library is one or two calls,
+ * small enough that no single body is the thing that times out (R144).
+ */
+const PAGE_SIZE = 500;
+
+/**
+ * A hard ceiling on pages, so termination is our decision rather than the
+ * server's.
+ *
+ * Every other stopping condition trusts the server to be honest about
+ * something -- a short page, an empty page, an accurate `TotalRecordCount`. A
+ * server that reports a huge total and keeps answering would loop this for
+ * ever, and the room experiences an endless loop inside a deck build as the
+ * skeleton that never resolves. Found by deleting the short-page guard and
+ * watching the test suite hang rather than fail, which is the worse outcome of
+ * the two.
+ *
+ * 1000 pages is 500,000 titles: far past any library this is for, and still a
+ * number rather than a promise.
+ */
+const MAX_PAGES = 1000;
+
 export async function getMovies(
   filter: MovieFilter = {},
   cfg: JellyfinConfig = defaultConfig(),
 ): Promise<JellyfinMovie[]> {
-  const data = (await jellyfinGet(
-    cfg,
-    '/Items?IncludeItemTypes=Movie&Recursive=true&Fields=Genres,ProviderIds,ProductionYear,Overview',
-  )) as { Items?: JellyfinItemDto[] };
-  const movies = (data.Items ?? []).map((item) => mapItem(item, cfg));
+  /*
+    R144: paged, because one response for the whole library is one response the
+    deadline has to survive.
+
+    This asked for every movie in a single un-paginated `/Items` call. The U10
+    benchmark measured that at a **28 MB body** for a 50,000-title library, and
+    R132 had just found that a slow BODY is exactly what escapes a timeout
+    unnamed -- headers arrive fast from a loaded server, the body does not. So
+    the largest libraries, which is to say the ones this matters for, were the
+    ones asking a single request to carry the most and most likely to lose the
+    lot when it ran long.
+
+    A page that runs long costs a page. `TotalRecordCount` tells us when to
+    stop; the guard on an empty page is there so a server that omits or
+    miscounts it cannot spin this for ever.
+  */
+  const movies: JellyfinMovie[] = [];
+  for (let page_n = 0; page_n < MAX_PAGES; page_n += 1) {
+    const start = page_n * PAGE_SIZE;
+    const data = (await jellyfinGet(
+      cfg,
+      '/Items?IncludeItemTypes=Movie&Recursive=true' +
+        '&Fields=Genres,ProviderIds,ProductionYear,Overview' +
+        `&StartIndex=${start}&Limit=${PAGE_SIZE}`,
+    )) as { Items?: JellyfinItemDto[]; TotalRecordCount?: number };
+
+    const page = data.Items ?? [];
+    for (const item of page) movies.push(mapItem(item, cfg));
+
+    // Three ways to be done, because a server only has to be honest about one:
+    // a short page, an empty page, or the count it told us.
+    if (page.length < PAGE_SIZE) break;
+    if (typeof data.TotalRecordCount === 'number' && movies.length >= data.TotalRecordCount) break;
+  }
   return filterMovies(movies, filter);
 }
 

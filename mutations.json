@@ -463,6 +463,18 @@
         "src/lib/__tests__/mdblist.test.ts"
       ],
       "note": "U10 measured the old behaviour at 65 nights and 1.36 GB written to warm a 50,000-title library, because the request budget admits a few dozen titles a night while the write was the whole cache. Quadratic in the library."
+    },
+    {
+      "id": "R144-library-fetched-unpaged",
+      "ruling": "R144",
+      "claim": "the library is fetched a page at a time, and the loop terminates on our terms",
+      "file": "src/lib/jellyfin.ts",
+      "find": "    if (page.length < PAGE_SIZE) break;",
+      "replace": "    void page;",
+      "expect": [
+        "src/lib/__tests__/jellyfin.test.ts"
+      ],
+      "note": "Removing this guard used to HANG the suite rather than fail it, because termination depended on the server being honest about TotalRecordCount. MAX_PAGES makes it fail cleanly at the ceiling instead -- a hang is a worse failure than a red test, and in a deck build it is the skeleton that never resolves."
     }
   ]
 }

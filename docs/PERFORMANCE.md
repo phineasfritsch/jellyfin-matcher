@@ -7,6 +7,13 @@
 > has grown to the size of the base, so each entry is rewritten about twice
 > over the life of the cache rather than once per night. The measurements
 > below are of the old behaviour and are kept as the record of why it changed.
+>
+> **The un-paginated `/Items` fetch is fixed too (R144).** It is 500 titles per
+> request now, so the 28 MB body measured below is a sequence of small ones and
+> a page that runs long costs a page rather than the build. The loop is bounded
+> at 1000 pages, because every other stopping condition trusted the server to
+> be honest and an endless loop inside a deck build is the skeleton that never
+> resolves.
 
 Gate **U10** in [UPSTREAM.md](UPSTREAM.md) reads:
 
