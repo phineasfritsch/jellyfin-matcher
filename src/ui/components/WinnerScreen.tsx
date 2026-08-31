@@ -53,20 +53,28 @@ export function WinnerScreen({
       />
 
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
-        <div className="gel mx-3 mt-3 flex items-start gap-3.5 rounded-[var(--radius-card)] p-3.5">
+        {/*
+          The poster at full width, not a 96px thumbnail beside a paragraph
+          (R79). This is the screen the whole night was for -- the room spent
+          twenty minutes arriving at this film -- and it was laid out like a
+          search result. The deck gives a poster the whole card; the payoff
+          should not give it less.
+        */}
+        <div className="gel mx-3 mt-3 overflow-hidden rounded-[var(--radius-card)]">
           {winner.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={winner.posterUrl}
               alt={`${winner.title} poster`}
-              className="w-24 shrink-0 rounded-[var(--radius-control)] object-cover ring-1 ring-[var(--color-hairline)]"
+              className="max-h-[46dvh] w-full object-cover"
             />
           ) : null}
-          <div className="min-w-0">
+          <div className="min-w-0 p-4">
             <h1
               ref={heading}
               tabIndex={-1}
-              className="text-title font-semibold leading-tight tracking-[-0.015em] outline-none"
+              data-app-focus
+              className="text-display font-semibold leading-tight tracking-[-0.015em] outline-none"
             >
               {winner.title}
             </h1>

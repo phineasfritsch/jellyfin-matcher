@@ -258,3 +258,68 @@ runs her OS at 200% text, where every fixed height in the table is wrong at once
 A floor plus `flex-1` produces the same result on a 360×640 phone and degrades
 honestly everywhere else. R21 — that the deck is physically incapable of scrolling —
 is unchanged and is the part that actually mattered.
+
+### R80 — Suppress a focus ring by marking the element, not by describing the markup.
+
+**Frozen:** `h1[tabindex='-1']:focus, [role='dialog'][tabindex='-1']:focus { outline: none }`.
+
+**Built:** `[data-app-focus]:focus, [data-app-focus]:focus-visible { outline: none }`,
+with `data-app-focus` on the winner heading and the details sheet.
+
+**Why.** The frozen selector matched nothing for the sheet. `role="dialog"` is on the
+fixed positioning wrapper and `tabIndex={-1}` is on the panel inside it, so the two
+conditions were never true of one element. The rule was present, readable and
+plausible, and it addressed no element in the app — a ring kept appearing around a
+sheet nobody had tabbed to.
+
+A selector that restates the markup breaks the next time the markup moves, and it
+breaks invisibly. A pin on the rule would also have stayed green, because the rule
+was there. So the guard is the join: `src/ui/__tests__/focus.test.ts` asserts that
+every element with `tabIndex={-1}` in `src/ui` carries the mark, and that the
+stylesheet acts on the mark. Both halves, or neither is worth anything.
+
+### R81 — The details sheet renders into `document.body`.
+
+**Frozen:** the sheet rendered where it is written, inside `SwipeDeck`.
+
+**Built:** `createPortal(..., document.body)`.
+
+**Why.** A frosted pane blurs what its nearest *backdrop root* painted, and an
+ancestor with a filter, an opacity below 1, or a `will-change` becomes one. The
+sheet is written inside a stack of animated, overflowing, translucent panes, so it
+was translucent over the poster without blurring it. Chasing which ancestor was to
+blame fixes it until somebody adds another; a portal has no ancestors.
+
+The focus effect had to move with it. The portal only exists from the second render,
+so an ungated effect finds a null ref and silently no-ops — no focus move, and a
+focus trap closed over nothing. R31 would have been dead with every test green.
+
+### R82 — Vendor prefix first, standard property last. The order is load-bearing.
+
+**Frozen:** `backdrop-filter` then `-webkit-backdrop-filter`, the order most people
+write and the order that reads better.
+
+**Built:** the prefix first, the standard property last.
+
+**Why.** This is the worst bug this project has shipped, measured by how long it was
+visible to nobody. Lightning CSS — which builds this stylesheet through
+`@tailwindcss/postcss` — treats a prefixed alias written *after* the standard
+property as superseding it, and emits only `-webkit-backdrop-filter`. Chrome
+supports `backdrop-filter` and does **not** support the prefixed form.
+
+So every frosted pane in the app — the whole material the redesign is built on —
+rendered as a flat translucent rectangle on every Chrome. The details sheet showed
+the card's title and the vote row's No/Maybe/Yes reading straight through the
+synopsis. It was correct in dev, correct in Safari, and the `@supports not
+(backdrop-filter: ...)` fallback correctly declined to fire, because Chrome does
+support the feature; it was the *emitted CSS* that lacked it. Nothing was red.
+
+Two guards, because the cause and the symptom live in different files.
+`src/ui/__tests__/css.test.ts` checks the declaration order, so `--fast` catches it.
+Gate **G7** greps the built stylesheet in `.next/static/css` for the standard
+property, because the only file that proves anything is the one that gets served.
+
+**What this says about the rest.** Every visual claim in this repo rests on a
+screenshot or an eye, and both were satisfied by a build that had silently dropped
+its central effect. The lesson is not "check backdrop-filter". It is that a
+stylesheet is compiled, and the compiler is entitled to change what ships.

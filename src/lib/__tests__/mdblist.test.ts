@@ -126,7 +126,7 @@ describe('the cost of a deck build', () => {
     const s = stub(0);
     const cfg = defaultConfig({
       fetchFn: s.fetchFn,
-      cacheFile: 'no-such-cache.json',
+      cacheFile: path.join(cacheDir, 'cost.json'),
       requestBudget: 10,
     });
     await getMoviesByTmdbIds([1, 2, 3], cfg);
@@ -139,7 +139,7 @@ describe('the cost of a deck build', () => {
     const s = stub(0);
     const cfg = defaultConfig({
       fetchFn: s.fetchFn,
-      cacheFile: 'no-such-cache.json',
+      cacheFile: path.join(cacheDir, 'cost.json'),
       requestBudget: 2,
     });
     // 50 ids is five batches of ten; only two are affordable.
@@ -155,7 +155,7 @@ describe('the cost of a deck build', () => {
     const s = stub(0);
     const cfg = defaultConfig({
       fetchFn: s.fetchFn,
-      cacheFile: 'no-such-cache.json',
+      cacheFile: path.join(cacheDir, 'cost.json'),
       requestBudget: 0,
     });
     await getMoviesByTmdbIds([1, 2, 3], cfg);

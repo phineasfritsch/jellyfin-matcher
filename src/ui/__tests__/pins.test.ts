@@ -21,11 +21,15 @@
  *     property survives. Never weaken one to something a blank page passes.
  */
 import { describe, expect, it } from 'vitest';
-import { appHaystack, readDoc } from '../../../scripts/lib/source-scan';
+import { appHaystack, readDoc, stripCssComments } from '../../../scripts/lib/source-scan';
 
 const APP = appHaystack();
-/** globals.css is not TypeScript, so the token pins need their own haystack. */
-const CSS = readDoc('app/globals.css');
+/**
+ * globals.css is not TypeScript, so the token pins need their own haystack --
+ * comment-stripped like the other one, or a comment naming a property keeps a
+ * pin green after the declaration it protects is gone.
+ */
+const CSS = stripCssComments(readDoc('app/globals.css'));
 const README = readDoc('README.md');
 
 type Pin = { id: string; why: string; find: string };
@@ -150,6 +154,11 @@ const LATESHOW: Pin[] = [
   { id: 'T37', why: 'The screen that first demands an opinion offers a way to decline it, rather than only the screen after', find: 'No preference — go with the room' },
   { id: 'T32', why: 'Each member is sent their own view of the room. Broadcasting the whole Room put everyone’s votes, deck position and ballots on every phone, while three screens promised otherwise (R61)', find: 'export function viewFor' },
   { id: 'T33', why: 'The broadcast is per-socket rather than one payload to the channel, which is what makes the redaction possible at all', find: "sock.emit('room:state', viewFor(room, data.userId))" },
+  { id: 'T63', why: 'The winner screen gives the poster the whole card. It was a 96px thumbnail beside a paragraph -- the screen the room spent the night arriving at, laid out like a search result (R79)', find: 'max-h-[46dvh] w-full object-cover' },
+  { id: 'T64', why: 'Focus the app moved on the reader’s behalf draws no ring. Adjudicated: the property is intact, the form changed. It was matched by markup shape ([role=dialog][tabindex=-1]) which addressed no element at all for the details sheet -- role on the wrapper, tabindex on the panel -- so it is now an explicit data-app-focus mark, and src/ui/__tests__/focus.test.ts asserts every programmatically focused element carries one (R80)', find: '[data-app-focus]:focus-visible' },
+  { id: 'T65', why: 'Someone who actually navigated still gets a ring. The suppression above is narrow by construction: weaken it to a blanket outline:none and this goes red', find: 'outline: 3px solid var(--color-maybe)' },
+  { id: 'T66', why: 'The details sheet renders into document.body. Written in place it sits inside the deck -- animated, overflowing, translucent panes -- and a frosted pane only blurs what its nearest backdrop root painted, so the sheet was translucent over the poster without blurring it (R81)', find: 'createPortal(' },
+  { id: 'T67', why: 'The sheet is frosted glass, not a flat translucent rectangle. This shipped broken for a while: the build emitted only -webkit-backdrop-filter, which Chrome does not support, so every pane in the app rendered flat in Chrome while dev and Safari looked right (R82). Order is guarded in css.test.ts, presence here', find: 'backdrop-filter: blur(22px) saturate(165%)' },
   { id: 'T58', why: 'Failed logins are rate limited per address. This endpoint forwards credentials to Jellyfin, so with nothing in front of it Matcher is a rate-limit-free amplifier for guessing passwords against the media server (R77)', find: 'const loginLimiter = new RateLimiter' },
   { id: 'T59', why: 'A successful sign-in clears the address, so a fumbled password does not cost anyone ten minutes', find: 'loginLimiter.clear(who)' },
   { id: 'T60', why: 'Sockets are same-origin unless explicitly configured. cors origin true reflects whatever Origin arrives, so any page on the internet could open a socket into a household room (R77)', find: 'MATCHER_ALLOWED_ORIGINS' },

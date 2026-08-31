@@ -299,16 +299,52 @@ async function main() {
     await new Promise((r) => setTimeout(r, 4000)); // let posters land
     await shoot(page, '05-deck');
 
-    // The same deck, at 200% text. This is the screen the reflow comment is
-    // about, so it is the one worth photographing.
+    // The deck at 200% text, captured before anything else moves: this is the
+    // screen where the vote row used to reflow off the bottom.
     step('re-shooting the deck at 200% text');
     await page.evaluate((px: number) => {
       document.documentElement.style.fontSize = `${px}px`;
     }, TEXT_200);
     await new Promise((r) => setTimeout(r, 1200));
     await shoot(page, '06-deck-200-percent');
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = '';
+    });
+    await new Promise((r) => setTimeout(r, 600));
 
-    await page.goto(`${URL}/room/${host.roomId}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+    // The details sheet: the screen that carries every fact the card does not.
+    step('opening the details sheet');
+    await clickButton(page, `Ratings, synopsis and trailer for ${st.deck[0].title}`);
+    await page.waitForSelector('[role="dialog"]', { visible: true, timeout: 20_000 });
+    await new Promise((r) => setTimeout(r, 900));
+    await shoot(page, '07-details');
+    await page.keyboard.press('Escape');
+    await new Promise((r) => setTimeout(r, 600));
+
+    // The winner. The room spent the whole night arriving at this screen and
+    // nobody had ever photographed it.
+    step('driving both members to a unanimous yes');
+    const card = st.deck[0];
+    const declared = withTimeout(
+      on(host.a, 'match:declared', () => true),
+      30_000,
+      'the room to land on a film',
+    );
+    await ack(host.a, 'swipe:vote', { cardId: card.id, points: 2 });
+    await clickButton(page, `Vote yes on ${card.title}, +2`);
+    await declared;
+    await page.waitForSelector('h1[tabindex="-1"]', { visible: true, timeout: 20_000 });
+    await new Promise((r) => setTimeout(r, 1800)); // poster + confetti
+    await shoot(page, '08-winner');
+
+    // The same deck, at 200% text. This is the screen the reflow comment is
+    // about, so it is the one worth photographing.
+    step('re-shooting at 200% text');
+    await page.evaluate((px: number) => {
+      document.documentElement.style.fontSize = `${px}px`;
+    }, TEXT_200);
+    await new Promise((r) => setTimeout(r, 1200));
+    await shoot(page, '09-winner-200-percent');
 
     console.log(`
 Wrote to docs/screenshots. Room ${host.roomId}, ${st.deck.length} cards.`);

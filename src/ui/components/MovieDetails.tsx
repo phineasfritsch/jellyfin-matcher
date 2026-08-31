@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { ExternalLink, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { MovieCandidate } from '../../lib/types';
 
 /** Human labels for MDBList rating sources. */
@@ -30,6 +31,23 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
   const embed = card.trailerUrl ? youtubeEmbedUrl(card.trailerUrl) : null;
   const sheetRef = useRef<HTMLDivElement>(null);
   const [playTrailer, setPlayTrailer] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  /**
+   * R81: the sheet renders into <body>, not where it is written.
+   *
+   * It is written inside the deck, which is a stack of animated, overflowing,
+   * translucent panes. A frosted pane only blurs what its nearest *backdrop
+   * root* painted -- and an ancestor with a filter, an opacity below 1 or a
+   * will-change becomes one. So the sheet was translucent over the poster
+   * without blurring it: the card's title and the vote row's No/Maybe/Yes read
+   * straight through the synopsis, as legible words competing with it.
+   *
+   * That is the same class of bug as the focus ring above (R80) -- correct CSS
+   * that addresses the wrong element -- and chasing which ancestor is at fault
+   * fixes it until someone adds another. A portal has no ancestors.
+   */
+  useEffect(() => setMounted(true), []);
 
   /**
    * R31: focus is trapped while the sheet is open and handed back to the
@@ -38,6 +56,10 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
    * reader user loses the rest of the deck.
    */
   useEffect(() => {
+    // The portal only exists from the second render, so until then sheetRef is
+    // null and every line below would silently no-op: no focus move, and a
+    // trap closed over nothing.
+    if (!mounted) return;
     const opener = document.activeElement as HTMLElement | null;
     const sheet = sheetRef.current;
     sheet?.focus();
@@ -68,9 +90,11 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
       window.removeEventListener('keydown', onKey);
       opener?.focus?.();
     };
-  }, [onClose]);
+  }, [onClose, mounted]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-40 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={`${card.title} details`}>
       <button
         type="button"
@@ -81,6 +105,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
       <motion.div
         ref={sheetRef}
         tabIndex={-1}
+        data-app-focus
         initial={reducedMotion ? { opacity: 0 } : { y: '100%' }}
         animate={reducedMotion ? { opacity: 1 } : { y: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 38 }}
@@ -179,6 +204,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
           </p>
         )}
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   );
 }

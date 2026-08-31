@@ -10,7 +10,7 @@
  * gate. Raise them in the same commit that legitimately adds tests or pins.
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -112,7 +112,43 @@ else {
   if (code !== 0) console.log(text.split('\n').slice(-25).join('\n'));
 }
 
-// G5 -- the deployed app. Opt in, because a red gate you cannot fix locally
+// G7 -- what the stylesheet actually ships, not what it says.
+//
+// The source said `backdrop-filter` and the build emitted only
+// `-webkit-backdrop-filter`, because Lightning CSS treats a later prefixed
+// alias as superseding the earlier standard property. Chrome supports the
+// standard one and not the prefix, so every frosted pane in the app rendered
+// flat -- in Chrome only, in production only. Dev was fine. Safari was fine.
+// The @supports fallback correctly declined to fire. Nothing was red (R82).
+//
+// The only place that bug is visible is the file that gets served.
+if (fast) skip('G7', 'shipped stylesheet', '--fast (no build to inspect)');
+else {
+  const cssDir = join(ROOT, '.next', 'static', 'css');
+  let shipped = '';
+  try {
+    for (const f of readdirSync(cssDir)) {
+      if (f.endsWith('.css')) shipped += readFileSync(join(cssDir, f), 'utf8');
+    }
+  } catch {
+    shipped = '';
+  }
+  // Unprefixed means preceded by something that is not a hyphen.
+  const standard = (shipped.match(/[^-]backdrop-filter:\s*blur\(/g) ?? []).length;
+  const prefixed = (shipped.match(/-webkit-backdrop-filter:\s*blur\(/g) ?? []).length;
+  const ok = shipped.length > 0 && standard >= prefixed && standard > 0;
+  record(
+    'G7',
+    'shipped stylesheet',
+    ok,
+    shipped.length === 0
+      ? 'no built CSS found to inspect'
+      : `backdrop-filter: ${standard} standard, ${prefixed} prefixed` +
+        (ok ? '' : ' -- the build dropped the property Chrome actually reads'),
+  );
+}
+
+// G6 -- the deployed app. Opt in, because a red gate you cannot fix locally
 // teaches people to ignore the gate.
 if (!wantProd) skip('G6', 'production health', 'not requested (--prod)');
 else if (!process.env.MATCHER_URL) skip('G6', 'production health', 'MATCHER_URL unset');

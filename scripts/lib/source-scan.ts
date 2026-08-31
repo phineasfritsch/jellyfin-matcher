@@ -76,6 +76,41 @@ export function appHaystack(): string {
   return appSources().map((f) => f.code).join('\n');
 }
 
+/**
+ * Comment-stripped CSS.
+ *
+ * The pin haystack is comment-stripped for exactly one reason: a deleted line
+ * quoted in the comment explaining its deletion must not satisfy the test
+ * protecting it. That guarantee held for the TypeScript half and quietly did
+ * not hold for globals.css, which was read raw -- so a long comment naming a
+ * property could keep a token pin green after the declaration was gone.
+ *
+ * Separate from stripComments because CSS has no // comment: treating one as a
+ * comment would eat the rest of any line containing url(https://...).
+ */
+export function stripCssComments(input: string): string {
+  let out = '';
+  let i = 0;
+  let quote: string | null = null;
+  while (i < input.length) {
+    const c = input[i];
+    if (quote) {
+      if (c === '\\') { out += c + (input[i + 1] ?? ''); i += 2; continue; }
+      if (c === quote) quote = null;
+      out += c; i += 1; continue;
+    }
+    if (c === '"' || c === "'") { quote = c; out += c; i += 1; continue; }
+    if (c === '/' && input[i + 1] === '*') {
+      i += 2;
+      while (i < input.length && !(input[i] === '*' && input[i + 1] === '/')) i += 1;
+      i += 2;
+      continue;
+    }
+    out += c; i += 1;
+  }
+  return out;
+}
+
 export function readDoc(name: string): string {
   return readFileSync(join(ROOT, name), 'utf8');
 }
