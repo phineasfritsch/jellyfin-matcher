@@ -4,14 +4,68 @@ Notable changes, newest first. Versions follow [semantic versioning](https://sem
 
 ## Unreleased
 
-Ten commits from a board review, adversarially verified before any of it was built.
-Every item the board raised that code could reach is closed. The version is
-deliberately not bumped here: cutting a release is a decision for whoever runs this
-server, and the notes are ready when they want it.
+Twenty-three commits from two rounds of board review, each finding adversarially
+verified before any of it was built. Every item either round raised that code could
+reach is closed. The version is deliberately not bumped here: cutting a release is a
+decision for whoever runs this server, and the notes are ready when they want it.
 
 **Upgrading changes one thing on the wire.** Reconnecting to a room now requires a
 seat secret that older clients never stored, so a session saved by 0.9.0 will be
 refused once and the member rejoins by name. Nothing else about a room is affected.
+
+### Added — the app remembers the household
+
+- **What the room lands on stays out of the deck for 30 days.** The deck builder is
+  deterministic — same two genres, same library, same fifty cards in the same order —
+  so the film you agreed on last Tuesday was card one again this Tuesday. Winners are
+  now written to `.cache/history.json`. `MATCHER_HISTORY_DAYS` changes the window and
+  `0` turns it off without discarding the record.
+
+  It remembers what the room *agreed on*, not what anyone played: nothing tells this
+  app whether you pressed play, and a room that picked a film and then went to bed
+  still does not want it dealt first next week. A preference rather than a rule — if
+  honouring it would leave no deck at all, it is dropped, because a repeat is a worse
+  evening than a fresh film and no deck is not an evening.
+
+  **If you run in Docker, keep the `./cache` volume**, or the household forgets every
+  time the container is replaced.
+
+### Fixed — the room could be told the wrong thing
+
+- **A film every single person voted No on could be declared the winner**, and
+  captioned "Nobody agreed outright, so the points decided." A rating is 0–100 and a
+  unanimous no is about −5 per person, so the vote term could never outweigh the
+  rating term. Unanimous-no films are now out of the running; if that leaves nothing,
+  the room is told there is no winner rather than handed the least-hated film.
+- **A slow Jellyseerr request could become two downloads.** The browser gave up
+  waiting after 10s while the server waits 15, so a request that was still in flight
+  was reported as failed — and the button came straight back with nothing refusing
+  the retry. Asking is now recorded on the room, refused a second time, and shown to
+  everyone rather than only to whoever pressed it.
+- **"Not this one — keep swiping" promised something that did not happen.** On a
+  points winner the deck is already finished, so rejecting settles again immediately
+  and nobody swipes anything. Both the button and the confirmation now say which of
+  the two will happen.
+- **A failed deck build stranded every phone in the house.** The server put the room
+  back to genre picking; the panel explaining the failure hid that, had no control on
+  it, and was never cleared — so the only way out was reloading each phone by hand.
+- **A phone that dropped out of the lobby was left holding a room it could not
+  hear.** It is handed back to the join screen now, and told why.
+
+### Fixed — you could not read it
+
+- **Three of the four vote weights were below readable contrast** — "−5" at 2.82:1 —
+  on the screen a person reads fifty times an evening, often in a dark room. Now
+  above 5:1, measured from the rendered screenshots rather than calculated.
+- **At 200% text the deck card gave the film about 53px of poster** and spent 41% of
+  the screen on the vote buttons. The buttons lay out in a line when they are wide,
+  and the poster is back to about 430px.
+- **The details button grew to 96px at 200% text** on a card that could not hold it,
+  clipping the icon away entirely and shrinking the tap target below the 44px
+  minimum. A thumb does not get bigger when you raise the font size, so it no longer
+  does either.
+- Four-character row labels (`DECK`, `BACK`, `FROM`) were clipped at large text
+  sizes.
 
 ### Fixed — security
 
@@ -78,7 +132,14 @@ refused once and the member rejoins by name. Nothing else about a room is affect
 - `docs/BOARD.md` records the review board — its mandates, how a round runs, and the
   rule that the product is finished only when all five vote finished. It had existed
   only inside chat sessions.
-- The gate is 8 checks: 415 test cases in 27 files, 150 pinned claims.
+- The gate is 8 checks: 462 test cases in 29 files, 167 pinned claims.
+- `npm run e2e:two` drives **two real browsers through three rooms** — a whole night,
+  a knockout where one phone dies, and a lobby drop that recovers. Until it existed,
+  every harness here drove a single page, so the product's central claim — that the
+  room lands on one film on *everybody's* phone — was checked by nothing.
+- `npm run contrast` measures a colour pair out of a committed screenshot, because
+  two contrast bugs in a row were arithmetic that was correct about the wrong
+  surface.
 
 ## 0.9.0 — 2026-08-31
 
