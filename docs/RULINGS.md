@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-121 rulings. 86 argued in a design document; the rest are
+123 rulings. 88 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -60,7 +60,7 @@ defined at their first citation.
 | **R43** | _at its citation_ | `src/ui/components/Lobby.tsx:19` +1 |
 | **R44** | _at its citation_ | `server/store.ts:17` |
 | **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:77` |
-| **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:211` +1 |
+| **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:218` +1 |
 | **R47** | _at its citation_ | `src/lib/knockout.ts:18` +1 |
 | **R48** | _at its citation_ | `server/handlers.ts:232` +2 |
 | **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
@@ -136,5 +136,7 @@ defined at their first citation.
 | **R123** | `docs/DIRECTION.md:1530` | — |
 | **R124** | `docs/DIRECTION.md:1555` | — |
 | **R125** | `docs/DIRECTION.md:1594` | — |
+| **R126** | `docs/DIRECTION.md:1637` | — |
+| **R127** | `docs/DIRECTION.md:1654` | — |
 
 No ruling is orphaned.

@@ -109,6 +109,24 @@ describe('the runtime slider', () => {
     expect(container.querySelector('label[for="runtime"]')).not.toBeNull();
     expect(container.textContent).toMatch(/max runtime/i);
   });
+
+  it('sets its title on the same step of the scale as every other row', () => {
+    /*
+      R126. It was `text-body` — 0.875rem — where `Listing.tsx`'s row titles and
+      the deck-size rows directly below it in this same list are all `text-row`
+      at 1rem, inside a grid with the identical gutter and column widths. One
+      row quietly smaller than its neighbours reads as a rendering accident
+      rather than a decision, which is what it was.
+
+      Scoped honestly: this asserts the one row the defect was in. It does not
+      prove the other rows are right — they are checked by being the thing this
+      one is compared against, in a comment, by a person.
+    */
+    const { container } = render(<Lobby roomHook={hook(room())} />);
+    const label = container.querySelector('label[for="runtime"]');
+    expect(label?.className).toContain('text-row');
+    expect(label?.className).not.toContain('text-body');
+  });
 });
 
 describe('the scope choice', () => {

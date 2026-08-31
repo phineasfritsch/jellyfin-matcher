@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 594 test cases, 37 files, 190 pinned claims, all green.
+**Today's numbers:** 595 test cases, 37 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
@@ -34,16 +34,6 @@ reading this after another round, edit it.
 None of this reopens the verdict. Round six's chair filed it while verifying,
 and every mandate agreed none of it names a defect a household would meet.
 
-- [ ] **Two documentation lines that describe something other than what ships.**
-      `CHANGELOG.md:30` tells a Docker reader to keep the `./cache` volume — the
-      exact bind-mount form the README spends a paragraph warning is broken on a
-      Linux host, where both writers fail open so nothing looks wrong and the
-      household is simply never remembered. And the README's alt text for
-      `08-winner.png` says the play button sits *beside* the escape hatch; the
-      capture has them stacked, escape hatch on top. The one reader who depends
-      on that sentence gets both the arrangement and the order wrong.
-      Files: `CHANGELOG.md`, `README.md`.
-
 - [ ] **Re-shoot 10, 11 and 12.** The request branch is three capture runs
       behind its own fix. `WinnerScreen.tsx` has had `gap-2` since `4aaadd7`,
       but `12-request-confirm.png` was last written in `13cbc7d` and still shows
@@ -54,9 +44,8 @@ and every mandate agreed none of it names a defect a household would meet.
       environment. Run with `MATCHER_AUTH=off`, per the note already in the
       harness. Files: via `scripts/screenshots.ts`.
 
-- [ ] **The runtime row's title is one step off the type scale.** Design
-      Director, filed explicitly as not blocking. Files:
-      `src/ui/components/Lobby.tsx`.
+This is the only item left here. It is the one that needs a machine, not a
+decision.
 
 ## Next
 
@@ -132,8 +121,26 @@ itself, which had been silently missing R100 onward because its citation regex
 was two digits wide and the gate that guards it looks through that same regex.
 
 Round six voted 5/5 finished. The three claims that went to verification all
-survived and all were filed by their own authors as non-blocking; they are the
-housekeeping in Now above.
+survived and all were filed by their own authors as non-blocking.
+
+### After the verdict
+
+- **R125** — the details sheet rendered, the last component with no test, plus
+  the measurement that matters more than the tests: restoring the exact pre-R83
+  effect leaves all seventeen green, because jsdom self-corrects the focus order
+  a real browser does not. The file says what it actually guards and does not
+  claim R83.
+- **R126** — the runtime row's title moved onto the shared type scale.
+- **R127** — vitest was counting agent worktrees. `.claude/worktrees/` holds a
+  full checkout per agent, so a run of one file reported 9 files and 82 cases
+  while a workflow was live. `.claude/` is gitignored, so nothing reached a
+  commit — but G4 enforces these counts as floors and `sync-counts` writes them
+  into four tracked documents, which is the whole argument of this repository
+  pointed at its own foot. Now excluded.
+- **The two documentation lines** that described something other than what
+  ships: the changelog recommending the bind mount the README warns about, and
+  the winner screen's alt text saying "beside" where the buttons stack. The
+  packaging test now covers every doc that gives cache advice.
 
 Newest first. Every entry shipped with `npm run gate` green and is deployed;
 ruling numbers are indexed in [docs/RULINGS.md](docs/RULINGS.md).

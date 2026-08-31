@@ -125,7 +125,14 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
               MAX
             </span>
             <div className="flex flex-col justify-center gap-2 py-3.5 pr-4">
-              <label htmlFor="runtime" className="text-body font-semibold leading-tight">
+              {/*
+                R126: the row title is `text-row`, like every other row title.
+                This one was `text-body` — one step down the scale and missing
+                the tracking — which made it the only settings row in the app
+                whose title was smaller than its neighbours', in a grid whose
+                gutter and column widths are otherwise identical to theirs.
+              */}
+              <label htmlFor="runtime" className="text-row font-semibold leading-snug tracking-[-0.01em]">
                 Max runtime — {runtimeLabel}
               </label>
               <input

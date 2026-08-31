@@ -1633,3 +1633,46 @@ checker that shared its subject's blind spot; this is the same error one step
 earlier — a test whose comment claimed more than the test could see. The
 difference between them is one mutation run, and it is the cheapest honesty
 available in this repository.
+
+### R126 — One row was a step smaller than every other row
+
+The lobby's runtime title was `text-body`, 0.875rem. Every other row title in
+the app — `Listing.tsx`'s, and the deck-size rows immediately below it in the
+same list — is `text-row` at 1rem with `tracking-[-0.01em]`, inside a grid with
+the identical `grid-cols-[3.625rem_1fr]` gutter. So the one row that carries the
+only continuous control in the app announced itself in a smaller voice than its
+neighbours, and nothing about the layout explained why.
+
+Filed by the design director in round six as explicitly not blocking, and it is
+not. It is here because a scale with one exception is not a scale, and because
+the exception is cheaper to remove than to remember.
+
+The test asserts the class rather than a computed size, and says in its own
+comment that it covers one row and does not prove the others right. That
+scoping note is R125's rule applied at the moment of writing rather than after.
+
+### R127 — A git worktree inside the repo is a test file the gate will count
+
+Found by accident while mutation-testing R126: a run of one test file reported
+**9 files and 82 cases**. Eight agents were working in isolated worktrees, and
+the harness puts them at `.claude/worktrees/`, inside the repository. Those are
+full checkouts. Vitest's default exclude covers `node_modules` and `dist` and
+has no reason to know about this one, so every test file existed nine times.
+
+`.claude/` is gitignored, so nothing reaches a commit — which is exactly why
+this is worth writing down rather than shrugging at. Gate G4 reads these counts
+and enforces them as floors, and `sync-counts` writes them into four tracked
+documents. Run either while a workflow is live and the number that lands in the
+README is a multiple of the truth, in a repository whose entire argument is that
+a gate stops false counts from shipping.
+
+And the copies are not inert. An agent mid-mutation is holding a deliberately
+broken checkout, so its copy of a test fails and vitest reports the failure
+against a path that reads like the real one. The first mutation run for R126
+showed two failures; exactly one was mine. Attributing the other cost more time
+than the fix.
+
+`exclude` now names `.claude/**` explicitly. The general form: **anything that
+materialises a second copy of the tree inside the tree is indistinguishable from
+the tree, to every tool that globs.** Worktrees, backup directories, a `cp -r`
+left behind by a script. If the counts are load-bearing, the glob has to be.

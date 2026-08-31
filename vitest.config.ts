@@ -26,6 +26,24 @@ export default defineConfig({
   test: {
     environment: 'node',
     /*
+      R127: git worktrees live inside the repo, and vitest's default exclude
+      does not know that.
+
+      An agent workflow that isolates its agents gets one worktree per agent
+      under `.claude/worktrees/`. Those are full checkouts, so every test file
+      appears N+1 times: a run of a single file reported 9 files and 82 cases
+      while eight agents were working. `.claude/` is gitignored, so nothing
+      reaches a commit -- but gate G4 reads these counts and enforces them as
+      floors, and sync-counts writes them into four tracked documents. Run
+      either while a workflow is live and the number that lands in the README
+      is a multiple of the truth.
+
+      Worse, the copies are not idle: an agent mid-mutation has a deliberately
+      broken checkout, so its copy of a test fails and the failure is reported
+      against a path that looks like the real one.
+    */
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/.claude/**'],
+    /*
       A real origin rather than about:blank, so anything that reasons about the
       page's URL sees something plausible.
 
