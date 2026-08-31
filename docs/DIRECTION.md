@@ -323,3 +323,34 @@ property, because the only file that proves anything is the one that gets served
 screenshot or an eye, and both were satisfied by a build that had silently dropped
 its central effect. The lesson is not "check backdrop-filter". It is that a
 stylesheet is compiled, and the compiler is entitled to change what ships.
+
+### R83 — The sheet remembers who opened it once, on mount.
+
+**Frozen:** `const opener = document.activeElement` inside the effect that also
+installs the focus trap.
+
+**Built:** a `useRef` set by a mount-only effect, restored by that effect's cleanup.
+
+**Why.** The trap effect depends on `onClose`, which the deck passes as an inline
+arrow (`SwipeDeck.tsx:168`) — a new identity on every parent render. So every
+re-render tore the effect down and set it up again, and on setup it re-read
+`document.activeElement`. By then the active element was the sheet, focused by the
+previous run. The sheet recorded *itself* as its own opener and, on close, handed
+focus to the element it was unmounting. Focus fell to `<body>` and a keyboard or
+screen reader user lost the rest of the deck at the moment they pressed Escape.
+
+A live room re-renders the deck constantly — every other member's progress arrives
+over the socket — so this fires in the case that matters and not in a quiet one.
+
+**How it surfaced, and what that says about the harness.** `scripts/screenshots.ts`
+now asserts focus behaviour while it is in each state, because it is the only thing
+in this repo that reaches these screens in a real browser. It reported focus falling
+to `<body>` — but for its own reason: it drove the app with `HTMLElement.click()`,
+which dispatches a click without moving focus, so the app was handed a document with
+nothing focused and nothing to return to. That was the harness driving the app in a
+way no person can, and it is fixed to focus before it clicks.
+
+So the failing check was an artifact, and the bug it sent us looking at was real but
+separate. Both are worth recording: a harness that drives an app unlike a user
+produces failures that are true of nothing, and they cost exactly as much to chase
+as real ones.

@@ -133,6 +133,12 @@ async function clickButton(page: Page, name: string) {
       );
     }
     target.scrollIntoView({ block: 'center' });
+    // Focus first. HTMLElement.click() dispatches the event without moving
+    // focus, which a real tap does -- so without this the app is handed a
+    // document with nothing focused, and anything that remembers "the control
+    // that opened me" has nothing to remember. That is not the app being
+    // wrong, it is this harness driving it in a way no person can.
+    target.focus();
     target.click();
     return true;
   }, name);
@@ -167,6 +173,8 @@ async function shoot(page: Page, name: string) {
 }
 
 async function main() {
+  // Behavioural checks made while the browser is already in each state.
+  let failures = 0;
   if (!CHROME) {
     console.error('No Chrome found. Set CHROME_PATH to a Chrome or Chromium binary.');
     process.exit(2);
@@ -318,8 +326,39 @@ async function main() {
     await page.waitForSelector('[role="dialog"]', { visible: true, timeout: 20_000 });
     await new Promise((r) => setTimeout(r, 900));
     await shoot(page, '07-details');
+
+    /*
+      This harness is the only thing in the repo that reaches this state with a
+      real browser, so it checks two invariants while it is here. Both are
+      invisible in the picture it just took.
+
+      R31: focus moves into the sheet, and Escape hands it back to the control
+      that opened it. The sheet now renders through a portal (R81), which exists
+      only from the second render -- an effect that does not wait for it finds a
+      null ref and silently does nothing, leaving the focus trap closed over
+      nothing while every test stays green.
+    */
+    const focusedInSheet = await page.evaluate(() => {
+      const sheet = document.querySelector('[data-app-focus]');
+      const active = document.activeElement;
+      return Boolean(sheet && active && (sheet === active || sheet.contains(active)));
+    });
+    if (!focusedInSheet) {
+      console.log('  WARNING: opening the details sheet did not move focus into it (R31)');
+      failures += 1;
+    }
+
     await page.keyboard.press('Escape');
     await new Promise((r) => setTimeout(r, 600));
+
+    const focusReturned = await page.evaluate(() => {
+      const active = document.activeElement;
+      return Boolean(active && active !== document.body && active.tagName === 'BUTTON');
+    });
+    if (!focusReturned) {
+      console.log('  WARNING: closing the details sheet dropped focus to <body> (R31)');
+      failures += 1;
+    }
 
     // The winner. The room spent the whole night arriving at this screen and
     // nobody had ever photographed it.
@@ -348,6 +387,11 @@ async function main() {
 
     console.log(`
 Wrote to docs/screenshots. Room ${host.roomId}, ${st.deck.length} cards.`);
+    if (failures > 0) {
+      // Non-zero, because the pictures being correct is not the same as the app
+      // being correct, and this is the only place the difference is visible.
+      throw new Error(`${failures} behavioural check(s) failed -- see WARNING lines above`);
+    }
   } finally {
     for (const s of sockets) s.close();
     // Windows holds the crashpad file in the temp profile open, so close()

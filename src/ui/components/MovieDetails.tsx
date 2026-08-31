@@ -50,6 +50,28 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
   useEffect(() => setMounted(true), []);
 
   /**
+   * R83: who opened this is remembered once, on mount, and never re-read.
+   *
+   * This used to live in the effect below, which depends on `onClose` -- an
+   * inline arrow from the deck, so a new identity on every parent render. Each
+   * re-render therefore tore the effect down and set it up again, and on setup
+   * it re-read document.activeElement. By then the active element was the
+   * sheet, so the sheet recorded *itself* as its own opener and, on close,
+   * handed focus to the element it was in the middle of unmounting. Focus fell
+   * to <body>: a keyboard or screen reader user lost the rest of the deck at
+   * the moment they pressed Escape.
+   *
+   * Empty deps, so it runs exactly once each way. Found by the behavioural
+   * check in scripts/screenshots.ts, which is the only thing in this repo that
+   * reaches this state in a real browser -- every unit test was green.
+   */
+  const openerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    openerRef.current = document.activeElement as HTMLElement | null;
+    return () => openerRef.current?.focus?.();
+  }, []);
+
+  /**
    * R31: focus is trapped while the sheet is open and handed back to the
    * control that opened it on close, by every route -- Escape, the backdrop,
    * or the close button. Focus dropped to <body> is how a keyboard or screen
@@ -60,7 +82,6 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
     // null and every line below would silently no-op: no focus move, and a
     // trap closed over nothing.
     if (!mounted) return;
-    const opener = document.activeElement as HTMLElement | null;
     const sheet = sheetRef.current;
     sheet?.focus();
 
@@ -88,7 +109,6 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
-      opener?.focus?.();
     };
   }, [onClose, mounted]);
 
