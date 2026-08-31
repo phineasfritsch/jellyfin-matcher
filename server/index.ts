@@ -8,6 +8,13 @@ import { getLimits, lastRatingsCost } from '../src/lib/mdblist';
 import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
 import { diagnoseDeckFailure, diagnoseThinDeck } from './diagnose';
+import {
+  LOGIN_ATTEMPTS,
+  LOGIN_WINDOW_MS,
+  MAX_ROOMS,
+  RateLimiter,
+  ROOMS_PER_SOCKET,
+} from './limits';
 import { viewFor } from './roomView';
 import {
   asBoolean,
@@ -148,6 +155,12 @@ app.get('/healthz', (_req, res) =>
     // What the last deck build cost, and what the key has left. Both are the
     // host's problem and neither was visible from anywhere.
     ratings: { quota, lastBuild: lastRatingsCost() },
+    // The numbers on the things that used to have none.
+    limits: {
+      rooms: `${store.roomCount()}/${MAX_ROOMS}`,
+      loginBlocked: loginLimiter.size(),
+      corsOrigins: allowedOrigins.length > 0 ? allowedOrigins : 'same-origin only',
+    },
     auth: authConfig(),
   }),
 );
@@ -187,16 +200,37 @@ app.get('/api/auth-config', (_req, res) => res.json(authConfig()));
 
 // Exchange Jellyfin credentials for a matcher session token. The server's
 // admin API key never reaches the browser; only real server accounts pass.
+/**
+ * Failed logins per address (R77). This endpoint forwards credentials to
+ * Jellyfin's own authenticate endpoint, so with nothing in front of it Matcher
+ * is a rate-limit-free amplifier for guessing passwords against the media
+ * server. Successful logins clear the counter: a fumbled password should not
+ * cost anyone ten minutes.
+ */
+const loginLimiter = new RateLimiter(LOGIN_ATTEMPTS, LOGIN_WINDOW_MS);
+setInterval(() => loginLimiter.sweep(), 5 * 60 * 1000).unref();
+
 app.post('/api/login', async (req, res) => {
+  const who = req.ip ?? 'unknown';
+  if (loginLimiter.isLimited(who)) {
+    const wait = loginLimiter.retryAfterSec(who);
+    res.setHeader('Retry-After', String(wait));
+    return res.status(429).json({
+      error: `Too many failed sign-ins. Try again in ${Math.ceil(wait / 60)} minute(s).`,
+    });
+  }
+
   const { username, password } = (req.body ?? {}) as { username?: string; password?: string };
-  if (!username || !password) {
+  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
   try {
     const user = await authenticateWithJellyfin(username, password);
     const token = auth.issue(user);
+    loginLimiter.clear(who);
     res.json({ token, name: user.name });
   } catch (err) {
+    loginLimiter.record(who);
     res.status(401).json({ error: err instanceof Error ? err.message : 'Login failed' });
   }
 });
@@ -204,7 +238,21 @@ app.post('/api/login', async (req, res) => {
 app.use((req, res) => void nextHandler(req, res));
 
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: { origin: true } });
+/*
+  Same-origin by default (R77). `cors: { origin: true }` reflects whatever
+  Origin arrives, so any page on the internet could open a socket into a
+  household's rooms. The UI is served by this same process, so it needs no
+  cross-origin allowance at all; MATCHER_ALLOWED_ORIGINS exists for the person
+  who really is serving the front end from somewhere else.
+*/
+const allowedOrigins = (process.env.MATCHER_ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const io = new Server(
+  httpServer,
+  allowedOrigins.length > 0 ? { cors: { origin: allowedOrigins } } : {},
+);
 
 // Anyone may connect; auth is enforced per action (create vs join) so that
 // account-less guests can still join a room. The token rides in the handshake
@@ -322,11 +370,17 @@ io.on('connection', (socket) => {
         throw new Error('Sign in with your Jellyfin account to create a room');
       }
       const { name } = (payload ?? {}) as { name?: unknown };
+      // Ceilings, not budgets: a household needs one room (R77).
+      if (store.roomCount() >= MAX_ROOMS) {
+        throw new Error('This server is full. Ask the host to restart it.');
+      }
+      const made = (socket.data as { made?: number }).made ?? 0;
+      if (made >= ROOMS_PER_SOCKET) throw new Error('Too many rooms from this device');
       const { room, userId } = store.createRoom(
         asName(name, 'Host'),
         Boolean(authedName(socket)),
       );
-      socket.data = { roomId: room.roomId, userId };
+      socket.data = { roomId: room.roomId, userId, made: made + 1 };
       void socket.join(room.roomId);
       ack?.({ ok: true, roomId: room.roomId, userId });
       broadcast(room);

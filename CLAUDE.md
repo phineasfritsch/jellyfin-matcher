@@ -5,10 +5,10 @@
 The condensed version, for anyone who will not:
 
 - **The gate is `npm run gate -- --fast`.** Types, tests, counts, pins.
-  Today: 321 cases in 19 files, 124 pinned claims. Floors in `gates.json`.
+  Today: 334 cases in 20 files, 129 pinned claims. Floors in `gates.json`.
 - **`npm run gate` is not something a worker runs on its own work.** A verifier
   runs it afterwards, serially.
-- **124 claims are pinned** in `src/ui/__tests__/pins.test.ts` — accessibility
+- **129 claims are pinned** in `src/ui/__tests__/pins.test.ts` — accessibility
   hooks, honesty copy, README promises. If one fails, read the rendered page
   before touching the pin, and never weaken a pin to something a blank page
   would pass.

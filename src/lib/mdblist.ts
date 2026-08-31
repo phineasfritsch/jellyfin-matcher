@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { MdblistMedia } from './types';
 import { withDeadline } from './deadline';
@@ -51,15 +51,41 @@ type CacheFile = Record<string, CacheEntry>;
 
 async function loadCache(file: string): Promise<CacheFile> {
   try {
-    return JSON.parse(await readFile(file, 'utf8')) as CacheFile;
+    const parsed = JSON.parse(await readFile(file, 'utf8')) as unknown;
+    // A file that is valid JSON but not a cache is as useless as a missing
+    // one, and should cost a re-fetch rather than a crash.
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
+    return parsed as CacheFile;
   } catch {
     return {};
   }
 }
 
+/**
+ * Write the cache atomically, and never let it fail a deck that already built.
+ *
+ * This was a plain writeFile: a crash or a container stop partway through left
+ * truncated JSON on disk, and every later run silently fell back to an empty
+ * cache -- so the punishment for one bad moment was re-fetching the entire
+ * library against a metered key, on every night after (R78).
+ *
+ * Write beside it, then rename. Rename is atomic on the same filesystem, so a
+ * reader sees either the old cache or the new one and never half of one. And
+ * if the write fails at all, the deck is already assembled: log it and let the
+ * night carry on rather than throwing away a build over a cache miss.
+ */
 async function saveCache(file: string, cache: CacheFile): Promise<void> {
-  await mkdir(path.dirname(file), { recursive: true });
-  await writeFile(file, JSON.stringify(cache), 'utf8');
+  const temp = `${file}.${process.pid}.tmp`;
+  try {
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(temp, JSON.stringify(cache), 'utf8');
+    await rename(temp, file);
+  } catch (err) {
+    console.warn(
+      `Could not write the ratings cache (${err instanceof Error ? err.message : err}). ` +
+        'The deck is fine; the next build will re-fetch.',
+    );
+  }
 }
 
 /** Retry 429/5xx with exponential backoff (1s, 2s, 4s). */
