@@ -208,6 +208,26 @@ async function main() {
     await page.locator('::-p-text(Tonight)').setTimeout(20_000).waitHandle();
     await shoot(page, '03-lobby');
 
+    /*
+      The lobby at 200% text.
+
+      Every screen built on the listings grid pays a 58px label gutter, and the
+      only 200% captures this project had were the deck and the winner -- both
+      of which use the grid barely or not at all. So the one dimension in the
+      app that constrains content rather than flooring it had never been
+      photographed at the size it constrains hardest (R102).
+    */
+    step('re-shooting the lobby at 200% text');
+    await page.evaluate((px: number) => {
+      document.documentElement.style.fontSize = `${px}px`;
+    }, TEXT_200);
+    await new Promise((r) => setTimeout(r, 900));
+    await shoot(page, '03b-lobby-200-percent');
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = '';
+    });
+    await new Promise((r) => setTimeout(r, 500));
+
     await ack(host.a, 'room:ready', { ready: true });
     await clickButton(page, "I'm ready");
     /*
@@ -231,11 +251,21 @@ async function main() {
         throw new Error('the knockout never rendered a genre row (still the skeleton, or genres came back empty)');
       });
     await new Promise((r) => setTimeout(r, 400));
-    await shoot(page, '04-knockout');
 
+    /*
+      Photograph a choice being made, not the form before anyone touched it.
+
+      This shot sat before the pick loop below, so every 04-knockout.png the
+      README has ever shipped above the fold shows every row unpicked, the
+      header reading "0 of 2 in", and a disabled 50%-opacity "Lock in 0". The
+      lead image of a product about deciding together was nobody having decided
+      anything. Moved after the picks (R103).
+    */
     const genres = await ack<{ genres: string[] }>(host.a, 'genres:list', {});
     const picked = genres.genres.slice(0, 4);
     for (const g of picked) await clickButton(page, `Pick ${g}`);
+    await new Promise((r) => setTimeout(r, 500));
+    await shoot(page, '04-knockout');
 
     // Assert the picks actually landed. A dispatched click on a disabled
     // button is a silent no-op, and "Lock in" is disabled until something is
@@ -427,6 +457,156 @@ async function main() {
     }, TEXT_200);
     await new Promise((r) => setTimeout(r, 1200));
     await shoot(page, '09-winner-200-percent');
+
+    /*
+      A second room, in Any Movie scope, to photograph the download disclosure.
+
+      Every capture before this ran in local scope, where a card's
+      jellyfinItemId comes from a required string and so is never null. `notHeld`
+      was therefore false for every card in every screenshot ever committed --
+      which means the chip on the poster, the cost line under the deck, and the
+      request confirmation on the winner screen had never been seen rendered.
+      That is the honesty copy: the sentences that tell a person voting yes can
+      spend the host's disk, including the one R91 rewrote to stop promising a
+      size the app cannot know (R103).
+
+      NOTHING HERE PRESSES SEND. "Request via Jellyseerr" only opens the
+      confirmation; the send is the "Yes, ask" button inside it, and this script
+      must never touch that control -- it fires a real request that lands in the
+      host's Radarr as a real download. The confirmation state is the picture
+      worth having anyway: it is where the cost is stated.
+    */
+    step('a second room in Any Movie scope, for the disclosure copy');
+
+    /*
+      Any Movie needs an account under the default auth mode.
+
+      MATCHER_AUTH defaults to "requests", not "off", so wideRequires is true
+      and tapping the scope row raises a sign-in gate. This script will not
+      handle anybody's Jellyfin password, so when the gate is up it says what is
+      missing and skips -- rather than driving a login, and rather than
+      committing a picture of the wrong screen.
+
+      To refresh 10-deck-not-on-server.png:
+        MATCHER_AUTH=off npm start     # in one terminal
+        npm run shots                  # in another
+
+      The capture is unaffected by the mode: the chip and the cost line are
+      about a card having no jellyfinItemId, which is a fact about the library,
+      not about who is signed in.
+    */
+    const wideGated = await fetch(`${URL}/healthz`)
+      .then((r) => r.json() as Promise<{ auth?: { wideRequires?: boolean } }>)
+      .then((h) => h.auth?.wideRequires === true)
+      .catch(() => true);
+
+    if (wideGated) {
+      console.log(
+        '  skipped 10-deck-not-on-server: Any Movie needs an account under MATCHER_AUTH=requests.\n' +
+          '            Re-run against a server started with MATCHER_AUTH=off to refresh it.',
+      );
+    } else {
+      /*
+        Two members, because a room of one never leaves the lobby -- the app
+        refuses to start a movie night for one person, which is correct and is
+        what the first attempt at this capture ran into.
+
+        Both members submit the SAME two genres, so the overlap is exactly two
+        and the checkbox round resolves straight to DONE. That sidesteps the
+        elimination loop in the main flow above, which carries four separate
+        race fixes and is not worth duplicating here.
+      */
+      const wide = await hostRoom();
+      sockets.push(wide.a);
+      await ack(wide.a, 'room:settings', { scope: 'wide' });
+
+      await open(page, `${URL}/room/${wide.roomId}`, '#join-name');
+      await page.type('#join-name', 'Bex', { delay: 10 });
+      await clickButton(page, 'Join Room');
+      await page.locator('::-p-text(Tonight)').setTimeout(20_000).waitHandle();
+
+      await ack(wide.a, 'room:ready', { ready: true });
+      await clickButton(page, "I'm ready");
+      await page
+        .locator('button[aria-label^="Pick "]')
+        .setTimeout(30_000)
+        .waitHandle()
+        .catch(async () => {
+          const seen = await page.evaluate(() => document.body.innerText).catch(() => '');
+          throw new Error(`the Any Movie knockout never rendered a genre row. On screen:
+${seen.slice(0, 400)}`);
+        });
+
+      const two = (await ack<{ genres: string[] }>(wide.a, 'genres:list', {})).genres.slice(0, 2);
+      for (const g of two) await clickButton(page, `Pick ${g}`);
+      await ack(wide.a, 'knockout:submit_genres', { genres: two });
+      await clickButton(page, 'Lock in 2');
+
+      step('waiting for an Any Movie deck');
+      await page
+        .locator('button[aria-label^="Vote yes on"]')
+        .setTimeout(90_000)
+        .waitHandle()
+        .catch(async () => {
+          const seen = await page.evaluate(() => document.body.innerText).catch(() => '');
+          throw new Error(`the Any Movie deck never built. On screen:
+${seen.slice(0, 400)}`);
+        });
+
+      /*
+        Walk to a film the server does not have. Any Movie mixes owned and
+        unowned titles and only an unowned one carries the disclosure, so this
+        looks rather than assuming the first card is the interesting one. It
+        votes "maybe", which cannot settle the room on a film nobody has agreed
+        to and costs nothing.
+
+        NOTHING HERE PRESSES SEND. The request button on the winner screen only
+        opens a confirmation; the send is "Yes, ask" inside it, and this script
+        must never touch that control -- it fires a real Jellyseerr request that
+        lands in the host's Radarr as a real download.
+      */
+      let found = false;
+      for (let i = 0; i < 12 && !found; i += 1) {
+        /*
+          Look at the TOP card only.
+
+          The cards behind it are still in the DOM -- that is why SwipeCard uses
+          an opaque surface rather than a translucent one -- so
+          document.body.innerText matched a chip four cards down and this
+          committed a picture of a film the server does have, with no disclosure
+          on it anywhere. Exactly the failure R85 was about, reproduced inside
+          the harness written to prevent it, one screen along.
+
+          The active card is the one that is not aria-hidden.
+        */
+        found = await page.evaluate(() => {
+          const top = document.querySelector('[aria-hidden="false"]');
+          return (top instanceof HTMLElement ? top.innerText : '').includes('Not on your server');
+        });
+        if (found) break;
+        const top = await page.evaluate(() => {
+          for (const b of document.querySelectorAll('button')) {
+            const m = /^Vote maybe on (.+), \+1$/.exec(b.getAttribute('aria-label') ?? '');
+            if (m) return m[1];
+          }
+          return null;
+        });
+        if (!top) break;
+        await clickButton(page, `Vote maybe on ${top}, +1`);
+        await new Promise((r) => setTimeout(r, 700));
+      }
+
+      if (found) {
+        await new Promise((r) => setTimeout(r, 500));
+        await shoot(page, '10-deck-not-on-server');
+      } else {
+        // Say so rather than committing a picture of the wrong thing. Every
+        // capture here that quietly showed the wrong state got there by a step
+        // that failed silently.
+        console.log('  WARNING: no unowned film in the first cards of the Any Movie deck; 10 not captured');
+        failures += 1;
+      }
+    }
 
     console.log(`
 Wrote to docs/screenshots. Room ${host.roomId}, ${st.deck.length} cards.`);

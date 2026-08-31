@@ -56,7 +56,7 @@ defined at their first citation.
 | **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:97` +2 |
 | **R40** | _at its citation_ | `src/ui/components/Listing.tsx:16` +3 |
 | **R41** | _at its citation_ | `src/ui/components/Listing.tsx:19` +2 |
-| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:189` +1 |
+| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:206` +1 |
 | **R43** | _at its citation_ | `src/ui/components/Lobby.tsx:19` +1 |
 | **R44** | _at its citation_ | `server/store.ts:17` |
 | **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:77` |
@@ -84,7 +84,7 @@ defined at their first citation.
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:169` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:146` |
-| **R74** | _at its citation_ | `src/ui/components/VoteRow.tsx:53` |
+| **R74** | _at its citation_ | `src/ui/components/Listing.tsx:142` +1 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:476` |
 | **R77** | _at its citation_ | `server/handlers.ts:108` +3 |
@@ -95,13 +95,13 @@ defined at their first citation.
 | **R82** | `docs/DIRECTION.md:297` | `scripts/gate.ts:132` +1 |
 | **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:53` |
 | **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:178` +1 |
-| **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:78` +1 |
+| **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:78` +2 |
 | **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:120` +11 |
 | **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:307` +9 |
 | **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:91` +2 |
 | **R89** | `docs/DIRECTION.md:509` | `app/globals.css:37` |
 | **R90** | `docs/DIRECTION.md:536` | `server/handlers.ts:294` +9 |
-| **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:196` +1 |
+| **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:213` +2 |
 | **R92** | `docs/DIRECTION.md:590` | — |
 | **R93** | `docs/DIRECTION.md:609` | `server/handlers.ts:22` +2 |
 | **R94** | `docs/DIRECTION.md:651` | — |

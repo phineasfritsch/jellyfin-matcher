@@ -127,8 +127,25 @@ function RowBody({
  * card's own overflow. It stays at full strength: it is the only thing saying
  * where one control ends and the next begins (R41).
  */
+/*
+  R102: the label gutter is a rem, so it is the same multiple of its own text at
+  every size the reader picks.
+
+  It was a hard 58px holding text-caption, which is 0.75rem -- the only fixed
+  dimension left in the app that constrains content rather than flooring it.
+  At a 32px root the caption doubles and the track does not, so a four-character
+  label (DECK, BACK, FROM) needs about 65px in a 58px track and is clipped on
+  the left by the card's overflow. 3.625rem is 58px at the default root, so
+  nothing moves for most readers, and it stays 4.8x the caption size for the
+  rest.
+
+  This is the same lesson as R74 from the other direction. There, a `ch` track
+  grew with the text and broke a layout that needed a fixed budget. Here a px
+  track stayed put while its own contents grew. The question is never rem or px
+  -- it is whether the thing being measured is type.
+*/
 const GRID =
-  'grid w-full grid-cols-[58px_1fr] items-stretch [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border';
+  'grid w-full grid-cols-[3.625rem_1fr] items-stretch [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border';
 
 /** A row that only reports. Not focusable, because there is nothing to do to it. */
 export function Row(props: {

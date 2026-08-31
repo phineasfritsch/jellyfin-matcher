@@ -900,3 +900,72 @@ defaults mean a dead connection is not noticed for up to forty-five: the seat wa
 never deleted, the rejoin succeeded, and the check timed out waiting for a recovery
 nothing needed. It waits the real duration now. Shortening the server's timeouts to
 suit a test would have changed how long a household's room survives a tunnel.
+
+### R102 — Measure type in type's units.
+
+**Frozen:** the listings label gutter was a hard `58px`, in three places, holding
+`text-caption` at `0.75rem`.
+
+**Built:** `3.625rem` — the same 58px at the default root, and the same multiple of
+its own text at every other.
+
+**Why.** It was the last fixed dimension in the app that constrained content rather
+than flooring it: every other pixel literal is a `min-h-` that grows. At a 32px root
+the caption doubles and the track does not, so a four-character label — `DECK`,
+`BACK`, `FROM` — needs about 65px in a 58px track and is clipped on the left by the
+card's overflow.
+
+This is R74 from the other direction. There, a `ch` track grew with the text and
+broke a layout that needed a fixed budget. Here a `px` track stayed put while its own
+contents grew. The question is never rem-or-px; it is whether the thing being
+measured is type. A gutter sized to hold a word is.
+
+**Photographed, because it had never been.** Every screen built on the listings grid
+pays this gutter, and the only 200% captures were the deck and the winner, which use
+the grid barely or not at all. `03b-lobby-200-percent.png` is the first look at the
+row layout at the size it constrains hardest, and it is what settled the value.
+
+**Left unresolved, deliberately.** At a 32px root the gutter is 116px of a 402px
+viewport — 29% of the line, for a three-letter label — and the content column wraps
+harder for it. A better answer at that size is probably to stack: label above
+content, both full width, the way the vote row reflows under R51. That is a change to
+every row in the app and it should be judged on its own evidence rather than folded
+into a clipping fix. The clipping is gone; the crowding is a design question with a
+picture attached now.
+
+### R103 — Photograph the state the copy is about.
+
+**Frozen:** `04-knockout` was shot before anyone picked anything, and no capture had
+ever rendered the download disclosure.
+
+**Built:** the knockout is shot after four genres are chosen, and a second room runs
+in Any Movie scope to photograph a film the server does not have.
+
+**Why.** Two different versions of the same mistake.
+
+The knockout shot sat *before* the pick loop, so the lead image of a product about
+deciding together showed every row unpicked, a header reading "0 of 2 in", and a
+disabled "Lock in 0". The screen worked; the picture was of nobody having decided
+anything.
+
+And the honesty copy had never been rendered at all. Every capture ran in local
+scope, where a card's `jellyfinItemId` comes from a required string and so is never
+null — `notHeld` is false for every card in every screenshot this project has ever
+committed. The chip on the poster, the cost line under the deck, and the sentence
+R91 rewrote to stop promising a size the app cannot know had all been reviewed as
+source and never once seen on a screen.
+
+**Three things this cost to get right, each worth keeping.** Any Movie needs an
+account under the default `MATCHER_AUTH=requests`, so the script detects the gate and
+says how to refresh the shot rather than handling anybody's password. A room of one
+never leaves the lobby — the app refuses to start a movie night for one person — so
+the pass runs two members. And both submit the *same* two genres, which resolves the
+round straight to DONE and avoids duplicating the elimination loop above, which
+carries four separate race fixes.
+
+**The first capture was wrong, in the exact way R85 was about.** The check asked
+whether `document.body.innerText` contained "Not on your server", and the cards
+behind the top one are still in the DOM — so it matched a chip four cards down and
+committed a picture of a film the server *does* have, with no disclosure visible
+anywhere. R85's lesson reproduced inside the harness written to prevent it. It reads
+the active card only now.

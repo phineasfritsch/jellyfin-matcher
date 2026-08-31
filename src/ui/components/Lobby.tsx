@@ -120,7 +120,7 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
             current and available values are announced, and it is one target
             rather than eight taps.
           */}
-          <div className="grid w-full grid-cols-[58px_1fr] items-stretch border-b border-border">
+          <div className="grid w-full grid-cols-[3.625rem_1fr] items-stretch border-b border-border">
             <span className="flex items-center justify-center py-3.5 text-caption font-bold uppercase tracking-[0.05em] text-muted-fg">
               MAX
             </span>
@@ -160,7 +160,7 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
                   role="radio"
                   aria-checked={room.settings.deckLimit === n}
                   onClick={() => void updateSettings({ deckLimit: n })}
-                  className={`grid min-h-[60px] w-full cursor-pointer grid-cols-[58px_1fr] items-stretch border-b border-border text-left ${
+                  className={`grid min-h-[60px] w-full cursor-pointer grid-cols-[3.625rem_1fr] items-stretch border-b border-border text-left ${
                     room.settings.deckLimit === n ? 'bg-white/[0.09]' : 'active:bg-white/[0.06]'
                   }`}
                 >
