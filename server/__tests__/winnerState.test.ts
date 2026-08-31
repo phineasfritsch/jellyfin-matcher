@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RoomStore } from '../store';
+import type { Room } from '../store';
 import { declare, rejectWinner } from '../transitions';
 import { viewFor } from '../roomView';
 
