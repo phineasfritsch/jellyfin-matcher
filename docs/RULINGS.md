@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-93 rulings. 58 argued in a design document; the rest are
+94 rulings. 59 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -35,7 +35,7 @@ defined at their first citation.
 | **R18** | `docs/REDESIGN.md:143` | `src/ui/components/SwipeCard.tsx:145` |
 | **R19** | `docs/DIRECTION.md:111` | — |
 | **R20** | `docs/DIRECTION.md:112` | — |
-| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:52` +1 |
+| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:72` +1 |
 | **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:114` |
 | **R23** | `docs/DIRECTION.md:115` | — |
 | **R24** | `docs/DIRECTION.md:116` | — |
@@ -77,13 +77,13 @@ defined at their first citation.
 | **R62** | _at its citation_ | `server/validate.ts:73` +2 |
 | **R63** | _at its citation_ | `server/settlement.ts:65` +3 |
 | **R65** | _at its citation_ | `src/lib/deadline.ts:8` |
-| **R66** | _at its citation_ | `src/ui/useRoom.ts:73` |
+| **R66** | _at its citation_ | `src/ui/useRoom.ts:78` |
 | **R67** | _at its citation_ | `server/index.ts:144` |
 | **R68** | _at its citation_ | `server/index.ts:78` +1 |
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:161` |
-| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:113` |
+| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:135` |
 | **R74** | _at its citation_ | `src/ui/components/VoteRow.tsx:53` |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:486` |
@@ -108,5 +108,6 @@ defined at their first citation.
 | **R95** | `docs/DIRECTION.md:702` | `src/ui/components/VoteRow.tsx:72` +1 |
 | **R96** | `docs/DIRECTION.md:731` | `src/ui/components/SwipeCard.tsx:119` |
 | **R97** | `docs/DIRECTION.md:750` | `server/settlement.ts:77` +1 |
+| **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:48` +3 |
 
 No ruling is orphaned.

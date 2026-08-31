@@ -43,6 +43,26 @@ export function RoomClient({ roomId }: { roomId: string }) {
     not take the room over -- it sits above the deck as a strip instead.
   */
   const { diagnosis } = roomHook;
+
+  /*
+    R98: a failure explains the screen, and then gets out of the way.
+
+    `blocked` is right -- a build failure really does leave nothing else to
+    render, and the panel carries the upstream and the technical line a
+    self-hosting reader needs. What was missing was the way out.
+
+    On this path the panel is permanent by construction. beginDeckBuild empties
+    the deck before the attempt, so the size handed to diagnoseDeckFailure is
+    always 0 and `recoverable: deckSize > 0` is always false; nothing ever
+    clears a diagnosis; so the panel stayed up for the rest of the session,
+    hiding the KNOCKOUT that deckBuildFailed had already restored on the server
+    -- whose comment says in as many words that it exists so the room can retry
+    "rather than being stranded on a skeleton". The room was recovered and every
+    phone was still stranded, and the only way out was reloading each one.
+
+    So the panel now carries a control, and the server has already done the
+    work behind it: dismissing reveals the genre picker the room is in.
+  */
   const blocked = diagnosis != null && !diagnosis.recoverable;
 
   // h-dvh and overflow-hidden, not min-h-dvh: the whole point of the listings
@@ -57,12 +77,14 @@ export function RoomClient({ roomId }: { roomId: string }) {
           {error}
         </p>
       )}
-      {diagnosis && diagnosis.recoverable && (
+      {diagnosis && !blocked && (
         <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35">
           {diagnosis.headline} — {diagnosis.fix}
         </p>
       )}
-      {blocked && <DiagnosisPanel diagnosis={diagnosis} />}
+      {blocked && (
+        <DiagnosisPanel diagnosis={diagnosis} onDismiss={roomHook.clearDiagnosis} />
+      )}
       {!blocked && room.status === 'LOBBY' && <Lobby roomHook={roomHook} />}
       {!blocked && room.status === 'KNOCKOUT' && <Knockout roomHook={roomHook} />}
       {!blocked && room.status === 'SWIPING' && <SwipeDeck roomHook={roomHook} />}

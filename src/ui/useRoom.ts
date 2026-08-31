@@ -10,6 +10,11 @@ export interface RoomHook {
   match: MatchDeclaredPayload | null;
   /** Named account of a deck failure or a thin deck, when there is one. */
   diagnosis: Diagnosis | null;
+  /**
+   * Put the diagnosis away. Nothing used to, so a failure panel outlived the
+   * failure and hid the recovered room behind it (R98).
+   */
+  clearDiagnosis: () => void;
   error: string | null;
   /** True while an automatic reconnect attempt is running. */
   connecting: boolean;
@@ -143,11 +148,20 @@ export function useRoom(roomId: string): RoomHook {
     await emitAck('swipe:vote', { cardId, points });
   }, []);
 
+  /**
+   * R98: the panel's way out. The server has already put the room back to
+   * genre picking by the time this is reachable -- deckBuildFailed runs before
+   * the diagnosis is emitted -- so there is nothing to ask it for. Putting the
+   * panel away reveals the room the phone is already in.
+   */
+  const clearDiagnosis = useCallback(() => setDiagnosis(null), []);
+
   return {
     room,
     userId,
     match,
     diagnosis,
+    clearDiagnosis,
     error,
     connecting,
     join,

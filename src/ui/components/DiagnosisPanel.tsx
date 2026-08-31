@@ -1,7 +1,7 @@
 'use client';
 
 import type { Diagnosis } from '../types';
-import { Bar, Group, Row } from './Listing';
+import { Bar, BigButton, Dock, Group, Row } from './Listing';
 
 /**
  * What the room sees when something upstream went wrong, or when the library
@@ -17,9 +17,17 @@ import { Bar, Group, Row } from './Listing';
 export function DiagnosisPanel({
   diagnosis,
   children,
+  onDismiss,
 }: {
   diagnosis: Diagnosis;
   children?: React.ReactNode;
+  /**
+   * R98: the way out. Every row here is a Listing `Row`, which is deliberately
+   * not interactive, so this panel used to explain a dead end and then be one --
+   * while its own FIX row said to pick genres again, which the server had
+   * already made possible and no control here could reach.
+   */
+  onDismiss?: () => void;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -41,6 +49,13 @@ export function DiagnosisPanel({
         </Group>
       </div>
       {children}
+      {onDismiss && (
+        <Dock>
+          <BigButton onClick={onDismiss} tone="go">
+            Pick genres again
+          </BigButton>
+        </Dock>
+      )}
     </div>
   );
 }

@@ -780,3 +780,35 @@ The pin went in before the code and was red until the code existed. That is the
 opposite of the practice OPERATING.md warns about — a pin written from a diff can
 only find what has already gone — because here the property is new and the pin is
 the specification.
+
+### R98 — A failure explains the screen. It does not become the screen forever.
+
+**Frozen:** `DiagnosisPanel` took the whole room whenever a diagnosis was not
+`recoverable`, and nothing ever cleared a diagnosis.
+
+**Built:** the panel carries a control that puts it away.
+
+**Why.** On the deck-build path the panel was permanent by construction, and the
+construction is worth stating because every part of it looks reasonable alone:
+
+- `beginDeckBuild` empties `room.deck` *before* the attempt, so the room shows
+  skeletons rather than the last deck.
+- The failure handler passes `room.deck.length` to `diagnoseDeckFailure`, which is
+  therefore always `0`.
+- `recoverable: deckSize > 0` is therefore always `false`.
+- `RoomClient` blocks on any non-recoverable diagnosis, and nothing clears one.
+
+So `deckBuildFailed` put the room back to `KNOCKOUT` on the server — its comment says
+it exists so the room can retry *"rather than being stranded on a skeleton"* — and
+every phone in the house stayed on a panel hiding that. The room was recovered and
+the people in it were not. The only way out was reloading each phone by hand, on the
+one code path whose entire purpose is to stop a room being stranded.
+
+The panel's own FIX row said to pick genres again. Every row in it is a Listing
+`Row`, which is deliberately not interactive, so it printed the instruction and was
+simultaneously the thing preventing it. The advice was right, the server had already
+done its half, and there was no control on screen to meet it.
+
+Blocking is still correct — a build failure genuinely leaves nothing else to draw,
+and the panel carries the upstream and the technical line a self-hosting reader
+needs to fix their server. What was missing was only the way out.
