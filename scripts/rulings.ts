@@ -29,7 +29,7 @@ function definedInDocs(): Map<number, string> {
   for (const doc of ['docs/DIRECTION.md', 'docs/REDESIGN.md']) {
     const lines = readDoc(doc).split('\n');
     lines.forEach((line, i) => {
-      const m = /^(?:### R(\d{2})|- \*\*R(\d{2})\*\*|\*\*R(\d{2})\*\*)/.exec(line);
+      const m = /^(?:### R(\d{2,3})|- \*\*R(\d{2,3})\*\*|\*\*R(\d{2,3})\*\*)/.exec(line);
       const n = m?.[1] ?? m?.[2] ?? m?.[3];
       if (n) out.set(Number(n), `${doc}:${i + 1}`);
     });

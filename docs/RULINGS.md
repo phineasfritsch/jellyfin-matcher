@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-95 rulings. 60 argued in a design document; the rest are
+120 rulings. 85 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -110,5 +110,30 @@ defined at their first citation.
 | **R97** | `docs/DIRECTION.md:750` | `server/settlement.ts:77` +1 |
 | **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:50` +3 |
 | **R99** | `docs/DIRECTION.md:816` | `server/handlers.ts:87` +5 |
+| **R100** | `docs/DIRECTION.md:849` | — |
+| **R101** | `docs/DIRECTION.md:876` | — |
+| **R102** | `docs/DIRECTION.md:904` | — |
+| **R103** | `docs/DIRECTION.md:936` | — |
+| **R104** | `docs/DIRECTION.md:973` | — |
+| **R105** | `docs/DIRECTION.md:991` | — |
+| **R106** | `docs/DIRECTION.md:1031` | — |
+| **R107** | `docs/DIRECTION.md:1051` | — |
+| **R108** | `docs/DIRECTION.md:1085` | — |
+| **R109** | `docs/DIRECTION.md:1101` | — |
+| **R110** | `docs/DIRECTION.md:1134` | — |
+| **R111** | `docs/DIRECTION.md:1192` | — |
+| **R112** | `docs/DIRECTION.md:1230` | — |
+| **R113** | `docs/DIRECTION.md:1261` | — |
+| **R114** | `docs/DIRECTION.md:1283` | — |
+| **R115** | `docs/DIRECTION.md:1306` | — |
+| **R116** | `docs/DIRECTION.md:1359` | — |
+| **R117** | `docs/DIRECTION.md:1388` | — |
+| **R118** | `docs/DIRECTION.md:1421` | — |
+| **R119** | `docs/DIRECTION.md:1441` | — |
+| **R120** | `docs/DIRECTION.md:1457` | — |
+| **R121** | `docs/DIRECTION.md:1479` | — |
+| **R122** | `docs/DIRECTION.md:1505` | — |
+| **R123** | `docs/DIRECTION.md:1530` | — |
+| **R124** | `docs/DIRECTION.md:1555` | — |
 
 No ruling is orphaned.

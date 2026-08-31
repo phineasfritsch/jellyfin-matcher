@@ -8,31 +8,69 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 564 test cases, 35 files, 190 pinned claims, all green.
+**Today's numbers:** 577 test cases, 36 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
-only when all five vote finished in the same round. Two rounds have run, both
-0/5. Every code-reachable item from both is now closed.
+only when all five vote finished in the same round.
+
+**Six rounds have run. Round six was 5/5: the product is finished at 1.0.**
+Rounds one and two were 0/5, three was 0/5, four 1/5, five 4/5. Every
+code-reachable item from all six is closed. What is left below is post-1.0
+housekeeping and four things only a real household can answer.
+
+This paragraph used to say two rounds had run and that there was nothing open
+that code could close. That was wrong through three further rounds which found
+and shipped a dozen code-reachable defects, including a 15px touch target on the
+only runtime control. The one line in this file that stayed correct was the
+count of tests — because a script writes it and a gate checks it. Prose in a
+maintained-looking file is the most expensive kind of stale, so if you are
+reading this after another round, edit it.
 
 ---
 
-## Now
+## Now — post-1.0 housekeeping
 
-_(nothing open that code can close — see Blocked, then call a third round)_
+None of this reopens the verdict. Round six's chair filed it while verifying,
+and every mandate agreed none of it names a defect a household would meet.
+
+- [ ] **Two documentation lines that describe something other than what ships.**
+      `CHANGELOG.md:30` tells a Docker reader to keep the `./cache` volume — the
+      exact bind-mount form the README spends a paragraph warning is broken on a
+      Linux host, where both writers fail open so nothing looks wrong and the
+      household is simply never remembered. And the README's alt text for
+      `08-winner.png` says the play button sits *beside* the escape hatch; the
+      capture has them stacked, escape hatch on top. The one reader who depends
+      on that sentence gets both the arrangement and the order wrong.
+      Files: `CHANGELOG.md`, `README.md`.
+
+- [ ] **Re-shoot 10, 11 and 12.** The request branch is three capture runs
+      behind its own fix. `WinnerScreen.tsx` has had `gap-2` since `4aaadd7`,
+      but `12-request-confirm.png` was last written in `13cbc7d` and still shows
+      zero device pixels between the cost panel's ring and the "Yes, ask" fill.
+      The harness jumps the whole wide-scope branch when `MATCHER_AUTH` makes
+      Any Movie need an account, so two later runs skipped it too. Nothing false
+      ships — the README embeds only 04, 05 and 08 — so this waits for an
+      environment. Run with `MATCHER_AUTH=off`, per the note already in the
+      harness. Files: via `scripts/screenshots.ts`.
+
+- [ ] **The runtime row's title is one step off the type scale.** Design
+      Director, filed explicitly as not blocking. Files:
+      `src/ui/components/Lobby.tsx`.
 
 ## Next
 
-- [ ] **Reconvene the board for round three.** Round two's queue is empty of
-      code-reachable work, and four of its five blocking reasons were fixed
-      after the votes were cast. The fifth — no memory between nights — was
-      closed by R105. A third round is the only thing that can move the verdict
-      off 0/5. Owner: whoever runs it. See docs/BOARD.md for the shape.
+- [ ] **The details sheet is the last component with no rendering test.**
+      R115–R124 covered the winner, the controls, the screen chooser, the
+      socket, the knockout, the deck and the lobby. `MovieDetails.tsx` is what
+      remains, and R81 and R83 both lived in it. Files:
+      `src/ui/__tests__/details.render.test.tsx`.
 
 - [ ] **The stacked row layout at 200% text.** R102 made the label gutter scale
       rather than clip, and deliberately left the crowding it exposed as an open
       question with a picture attached
-      (`docs/screenshots/03b-lobby-200-percent.png`): at a 32px root the gutter
+      (`docs/screenshots/03c-lobby-200-percent-settings.png`, which R120 shot
+      for exactly these rows): at a 32px root the gutter
       is 116px of a 402px line, for a three-letter label. Stacking — label above
       content, both full width, the way the vote row reflows under R51 and R104
       — is probably right, and it changes every row in the app, so it wants its
@@ -72,6 +110,28 @@ who are not the maintainer, for more than one night.
       That decision belongs to a household that has one.
 
 ## Done
+
+### Board rounds three to six — every code-reachable item
+
+Round three closed the false approval gate (R107), the unknowable download size
+(R91), and the silence about whether the household was being remembered at all.
+Round four closed the sign-in that destroyed the seat it was signing in for
+(R111) and the stale disconnect that evicted a member sitting right there
+(R112), and gave the request confirms focus with a name (R113). Round five
+closed the 15px slider (R118) — a 44px box with a 28px thumb, on the one control
+that made the README's "nothing you tap is under 44px" false — joined
+`CHANGELOG.md` to the synced counts (R119), and unstuck a confirmation panel
+that touched its own buttons at zero pixels.
+
+Between and after them the gate learned to execute the client: R115 the winner,
+R116 the controls, R117 the screen chooser, R121 the socket, R122 the knockout,
+R123 the deck, R124 the lobby — and, in the same ruling, the rulings index
+itself, which had been silently missing R100 onward because its citation regex
+was two digits wide and the gate that guards it looks through that same regex.
+
+Round six voted 5/5 finished. The three claims that went to verification all
+survived and all were filed by their own authors as non-blocking; they are the
+housekeeping in Now above.
 
 Newest first. Every entry shipped with `npm run gate` green and is deployed;
 ruling numbers are indexed in [docs/RULINGS.md](docs/RULINGS.md).

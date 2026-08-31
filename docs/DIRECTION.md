@@ -1551,3 +1551,42 @@ first time; both now fail in a quarter of a second.
 
 Every screen a person meets during a night — home, join, lobby, knockout, deck,
 details, winner — is now either rendered under the gate or driven by two real browsers.
+
+### R124 — A guard cannot see a blind spot it is looking through
+
+Two things, and the second is why this ruling is worth reading.
+
+**The lobby, rendered.** R115 through R123 put the client under the gate one
+screen at a time. The lobby was last and had the most at stake: it is the screen
+with the most settings on it, and two of this project's defects lived there.
+R118 — the runtime slider that took the user agent's default, about 15 CSS px,
+against the app's own 44px floor — and R111, where tapping the control that
+needs an account destroyed the seat that raised the login. Nine tests. The R118
+one asserts the class that sizes the thumb is applied and the colour-only class
+that replaced it is not; a rendering test cannot measure a thumb, but it can
+insist on the cause. The R111 one taps "Any Movie" and asserts `updateSettings`
+was **not** called: the tap must raise the gate, not quietly change the setting.
+
+**The rulings index had been lying for twenty-four rulings.** `scripts/rulings.ts`
+generates `docs/RULINGS.md`, and gate G8 regenerates it and compares. Its
+citation pattern was `\bR(\d{2})\b`. "R120" matches "R12" and then fails the word
+boundary on the trailing zero — so every ruling from R100 on was absent from a
+document that stated a total and closed with the sentence "No ruling is
+orphaned." The index said 95. There were 119.
+
+G8 passed every single time, because generate and `--check` share that regex.
+The check compared a blind generator against its own blind output and found them
+identical, which they were. This is the same failure as R110's unscannable pins
+and the same as the README that agreed with itself: a guard whose corpus is
+defined by the thing it is guarding cannot report on what falls outside it.
+
+So the fix is not only the wider pattern. `docs.test.ts` now counts the `### Rnnn`
+headings with a pattern written separately — deliberately `\d+`, not `\d{2,3}`,
+so a ruling numbered past 999 is found rather than silently dropped again — and
+insists the index contains every one, and reaches the highest that exists. Put
+the two-digit regex back and G8 still passes while those tests name all
+twenty-four missing rulings. That difference is the whole ruling.
+
+The rule this generalises to: **when a generator and its checker share a
+pattern, the pattern is unguarded.** Cross-check it from outside, with code
+written at a different moment, or do not claim the thing is complete.

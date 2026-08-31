@@ -485,3 +485,53 @@ All three items closed in `4aaadd7`.
 Nothing was struck this round, for the first time in five: all three claims survived
 verification, each with a correction attached, and each correction changed the item
 rather than killing it.
+
+## Round 6 — 2026-08-31 — **5/5 FINISHED**
+
+Five of five voted finished in the same round. The standing rule is met and the
+question is closed: Jellyfin Matcher is 1.0.
+
+Every mandate verified its own prior blocker at HEAD rather than trusting the
+brief. R118 — the 15px slider — was checked in the source, in the *built*
+stylesheet, and in both captures, by Access and Honesty, who withheld last round
+and was right to. R111 and R112, the sign-in that destroyed its own seat and the
+stale disconnect that evicted a member sitting right there. R107 and R113, the
+download disclosure that agrees with itself, on confirms that take focus with a
+name. `a049c4d`, the named volume, guarded by a packaging test. R119, the
+changelog joined to the synced counts.
+
+Nobody withheld on the four items recorded as unreachable by code. All five had
+already said in round five that none of them blocks a 1.0, and three cannot be
+answered without shipping.
+
+Three claims went to verification and all three survived; none was struck, for
+the second round running. But every one was filed by its own author as
+explicitly non-blocking, and the verifier agreed: one stale task file, one stale
+screenshot of a panel that is already fixed, one 2px type step. Not one names a
+defect a household meets. That is what a finished product's claim list looks
+like.
+
+### What happened next
+
+Closed in the commit that follows this record:
+
+- **The rulings index had been missing twenty-four rulings** — found by the
+  chair while checking the round brief's own citation of it, raised by no
+  mandate, and the most interesting thing in the round. `docs/RULINGS.md` stated
+  95 and ended "No ruling is orphaned"; R100 onward were absent because the
+  citation regex was two digits wide. G8 passed throughout, because generate and
+  `--check` look through the same regex. Fixed, and cross-checked from outside
+  by a pattern written separately (R124).
+- **QUEUE.md**, which had told three rounds' worth of readers there was "nothing
+  open that code can close" while those rounds found and shipped a dozen
+  code-reachable defects. Its one accurate line was the test count, because a
+  script writes it and a gate checks it.
+- **The changelog's Docker advice**, which recommended the exact bind mount the
+  README warns about, in the release note announcing the feature that bind mount
+  silently disables. Now guarded by the packaging test.
+- **The README's alt text for the winner screen**, which said beside where the
+  buttons are stacked, and named them in the wrong order.
+
+Two remain open and neither is code: re-shooting captures 10–12 needs an
+environment where `MATCHER_AUTH=off`, and `prod:read` has still never been
+pointed at the real deployment, whose address is not in this repository.

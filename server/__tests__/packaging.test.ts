@@ -102,6 +102,29 @@ describe('the image itself', () => {
     expect(readDoc('README.md')).toContain('chown -R 10001:10001 cache');
   });
 
+  it('is not contradicted by the release notes', () => {
+    /*
+      R124. The compose file, the README and the health check all said named
+      volume; CHANGELOG.md told a Docker reader to "keep the `./cache` volume" --
+      naming the exact bind-mount form the README spends a paragraph warning is
+      broken, in the release note announcing the feature that bind mount
+      silently disables.
+
+      Every file that gives Docker cache advice is checked here, because the way
+      this went wrong was one of them being outside the list. That is the third
+      time a file drifted for sitting outside a list -- after the README badges
+      and QUEUE.md -- and the third time the fix was to widen the list.
+    */
+    for (const doc of ['CHANGELOG.md', 'README.md']) {
+      const text = readDoc(doc);
+      if (!/cache/i.test(text)) continue;
+      expect(text, `${doc} recommends the bind mount R109 is about`).not.toMatch(
+        /keep the `\.\/cache` volume/,
+      );
+    }
+    expect(readDoc('CHANGELOG.md')).toMatch(/a \*named\* one, not/);
+  });
+
   it('defaults to a named volume, not a bind mount', () => {
     // The bind mount is what broke it. It stays documented as the opt-in, with
     // the chown that makes it work (R109).

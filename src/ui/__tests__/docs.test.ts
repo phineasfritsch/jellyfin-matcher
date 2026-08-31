@@ -319,3 +319,43 @@ describe('the settings a host can actually find', () => {
     expect(row('PORT')).toContain('`3000`');
   });
 });
+
+/**
+ * R124: the rulings index is cross-checked by a pattern written separately.
+ *
+ * `scripts/rulings.ts` generates that index and gate G8 regenerates it and
+ * compares — which catches a stale file and cannot catch a blind generator.
+ * Its citation regex was `\bR(\d{2})\b`, so "R120" matched "R12" and then
+ * failed the word boundary on the trailing zero: twenty-four rulings were
+ * missing from a document that closed by saying no ruling is orphaned, and G8
+ * passed every time because generate and check share the regex.
+ *
+ * A guard cannot see a blind spot it is looking through. So this counts the
+ * headings a different way and insists the index agrees.
+ */
+describe('every ruling that exists is in the index', () => {
+  const index = readDoc('docs/RULINGS.md');
+  const argued = [readDoc('docs/DIRECTION.md'), readDoc('docs/REDESIGN.md')].join('\n');
+
+  // Deliberately not the generator's pattern: any digits, so a ruling numbered
+  // past 999 would still be found rather than silently dropped again.
+  const headings = [...argued.matchAll(/^### (R\d+)/gm)].map((m) => m[1]!);
+
+  it('finds the rulings that are argued in a design document', () => {
+    expect(headings.length).toBeGreaterThan(30);
+  });
+
+  it('lists every one of them', () => {
+    const missing = headings.filter((r) => !index.includes(`**${r}**`));
+    expect(missing, `absent from docs/RULINGS.md: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('reaches the highest ruling actually written down', () => {
+    // The specific shape of the bug: the index stopped at 95 while R123
+    // existed, and said nothing was orphaned.
+    const highest = headings
+      .map((r) => Number(r.slice(1)))
+      .reduce((a, b) => Math.max(a, b), 0);
+    expect(index).toContain(`**R${highest}**`);
+  });
+});

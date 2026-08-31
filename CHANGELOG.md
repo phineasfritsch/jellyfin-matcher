@@ -27,8 +27,11 @@ refused once and the member rejoins by name. Nothing else about a room is affect
   honouring it would leave no deck at all, it is dropped, because a repeat is a worse
   evening than a fresh film and no deck is not an evening.
 
-  **If you run in Docker, keep the `./cache` volume**, or the household forgets every
-  time the container is replaced.
+  **If you run in Docker, keep the cache volume** — a *named* one, not
+  `-v ./cache:/app/.cache` — or the household forgets every time the container is
+  replaced. The bind-mount form is the trap README.md describes: the image runs
+  as non-root, Docker creates an absent bind-mount source owned by root, both
+  writers fail open, and nothing looks broken while nothing is remembered.
 
 ### Fixed — signing in destroyed the room you signed in for
 
@@ -152,7 +155,7 @@ refused once and the member rejoins by name. Nothing else about a room is affect
 - `docs/BOARD.md` records the review board — its mandates, how a round runs, and the
   rule that the product is finished only when all five vote finished. It had existed
   only inside chat sessions.
-- The gate is 8 checks: 564 test cases in 35 files, 190 pinned claims.
+- The gate is 8 checks: 577 test cases in 36 files, 190 pinned claims.
 - `npm run e2e:two` drives **two real browsers through four rooms** — a whole night,
   a knockout where one phone dies, a lobby drop that recovers, and a network blip that
   must not evict anybody. Until it existed, every harness here drove a single page, so

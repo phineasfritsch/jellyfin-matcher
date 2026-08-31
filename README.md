@@ -3,7 +3,7 @@
 [![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
 [![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-564%20in%2035%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![tests](https://img.shields.io/badge/tests-577%20in%2036%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
 [![pinned claims](https://img.shields.io/badge/pinned%20claims-190-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
 
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
@@ -17,7 +17,7 @@ through the whole deck without agreeing and the points decide, so you still get 
 <p align="center">
   <img src="docs/screenshots/04-knockout.png" alt="The genre knockout: a list of genres with checkboxes to pick everything you would watch, a note explaining that overlap decides the deck, and a no-preference option" width="270">
   <img src="docs/screenshots/05-deck.png" alt="The swipe deck: a full-bleed film poster with its year, runtime and ratings named by source, and four vote buttons showing their point weights" width="270">
-  <img src="docs/screenshots/08-winner.png" alt="The winner screen: a full-size poster under confetti, the words Everyone said yes, and a Play in Jellyfin button beside a keep swiping escape hatch" width="270">
+  <img src="docs/screenshots/08-winner.png" alt="The winner screen: a full-size poster under confetti, the words Everyone said yes, and and stacked beneath it a Not this one, keep swiping escape hatch above a Play in Jellyfin button" width="270">
 </p>
 
 <p align="center">
@@ -234,7 +234,7 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 564 cases across 35 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 577 cases across 36 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
