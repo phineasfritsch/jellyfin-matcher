@@ -270,11 +270,27 @@ const io = new Server(
   allowedOrigins.length > 0 ? { cors: { origin: allowedOrigins } } : {},
 );
 
-// Anyone may connect; auth is enforced per action (create vs join) so that
-// account-less guests can still join a room. The token rides in the handshake
-// and is re-sent on reconnect, so it stays current after a mid-session login.
+/*
+  Anyone may connect; auth is enforced per action (create vs join) so that
+  account-less guests can still join a room.
+
+  R111: a token can also arrive on a live socket, and that is not a nicety.
+
+  The token used to ride only in the handshake, so signing in mid-session meant
+  tearing the socket down and reconnecting to carry it -- and the server sees
+  that teardown as a member leaving. In the LOBBY a leaver is deleted outright,
+  along with their seat secret, so a person who tapped "Any Movie" (which needs
+  an account on the default auth mode) lost the room they had just read the code
+  for. If they were alone, the room went with them.
+
+  The handshake is still read, because a genuine reconnect must carry the token
+  too. This map is only for the mid-session case, and it is keyed by socket id
+  rather than kept in socket.data, which several handlers replace wholesale.
+*/
+const liveTokens = new Map<string, string>();
+
 function authedName(socket: Socket): string | null {
-  const token = (socket.handshake.auth as { token?: string })?.token;
+  const token = liveTokens.get(socket.id) ?? (socket.handshake.auth as { token?: string })?.token;
   return auth.validate(token)?.name ?? null;
 }
 
@@ -452,7 +468,24 @@ io.on('connection', (socket) => {
   socket.on('swipe:vote', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.vote(ctx, payload)));
   socket.on('swipe:undo', (_payload: unknown, ack?: Ack) => wrap(ack, () => handlers.undo(ctx)));
   socket.on('winner:reject', (_payload: unknown, ack?: Ack) => wrap(ack, () => handlers.reject(ctx)));
-  socket.on('disconnect', () => handlers.disconnect(ctx));
+  /*
+    R111: adopt a token on the socket that is already here, rather than making
+    the client reconnect to deliver it. Spelled out like the others because
+    validate.test.ts reads this file as text.
+  */
+  socket.on('auth:token', (payload: unknown, ack?: Ack) =>
+    wrap(ack, () => {
+      const { token } = (payload ?? {}) as { token?: unknown };
+      if (typeof token === 'string' && token.length > 0) liveTokens.set(socket.id, token);
+      else liveTokens.delete(socket.id);
+      return { name: authedName(socket) };
+    }),
+  );
+
+  socket.on('disconnect', () => {
+    liveTokens.delete(socket.id);
+    handlers.disconnect(ctx);
+  });
 
   socket.on('genres:list', async (_payload: unknown, ack?: Ack) => {
     try {

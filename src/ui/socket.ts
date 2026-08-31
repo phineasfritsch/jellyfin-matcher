@@ -30,10 +30,23 @@ export function setAuth(token: string, name: string): void {
   } catch {
     /* private mode: token just won't persist across reloads */
   }
-  // Reconnect so the handshake carries the new token.
+  /*
+    R111: hand the token to the socket that is already connected.
+
+    This used to be `socket.disconnect().connect()`, so the handshake would
+    carry the new token -- and the server sees that teardown as the member
+    leaving. In the LOBBY a leaver is deleted outright along with their seat
+    secret, so signing in to unlock "Any Movie" destroyed the seat that raised
+    the login, and destroyed the whole room if the signer was alone. The rejoin
+    was then refused, the phone was told the room was gone, and the settings
+    change that started it all was refused as "You are not in a room".
+
+    socket.auth is still updated, because a genuine reconnect later must carry
+    the token in its handshake.
+  */
   if (socket) {
     socket.auth = { token };
-    socket.disconnect().connect();
+    socket.emit('auth:token', { token });
   }
 }
 
@@ -43,6 +56,13 @@ export function clearAuth(): void {
     localStorage.removeItem(AUTH_NAME_KEY);
   } catch {
     /* ignore */
+  }
+  // R111: tell the socket too. Now that a live socket can adopt a token, it can
+  // also still be holding one after the browser has forgotten it -- signed out
+  // on this side and signed in on the other.
+  if (socket) {
+    socket.auth = {};
+    socket.emit('auth:token', {});
   }
 }
 

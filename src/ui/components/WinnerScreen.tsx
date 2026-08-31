@@ -138,7 +138,7 @@ export function WinnerScreen({
         {!held && (
           <CostLine
             headline="This one is not on the server yet."
-            detail="Nothing has been downloaded. Asking sends it to Jellyseerr for the host to approve."
+            detail="Nothing has been downloaded yet. Asking sends it to Jellyseerr, and whether that starts the download straight away depends on your host's settings."
           />
         )}
 

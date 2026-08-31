@@ -1188,3 +1188,41 @@ description of its own corpus, and the failure prints it: a lost DOCS pin says
 sentence all three mistakes needed, at the moment each of them happened, and it costs
 one string per group.
 
+
+### R111 — Signing in must not destroy the seat that asked for it.
+
+**Frozen:** `setAuth` ended with `socket.disconnect().connect()`, so the handshake
+would carry the new token.
+
+**Built:** the token is handed to the socket that is already connected, over an
+`auth:token` event.
+
+**Why.** On the default `MATCHER_AUTH=requests`, "Any Movie" — the mode the README
+leads with — is reachable only through a sign-in raised from the lobby. Signing in
+tore the socket down. The server sees that as the member leaving, and a lobby leaver
+is deleted outright along with their seat secret. So the person who tapped the
+feature lost the room they had just read the code out for; if they were alone, the
+room went with them, and the client was told *"This room is gone — the server
+restarted."* The `updateSettings({ scope: 'wide' })` that started it was then refused
+as "You are not in a room" and swallowed.
+
+**And R108 made it worse.** With other members already ready, the fix that stopped a
+lobby drop stranding a room now started the knockout on the signer's "departure" —
+locking them out for good, with the second rejoin refused as "Room already started".
+A correct fix to one bug amplifying another is the ordinary way a system gets worse
+while every commit gets better.
+
+**Reproduced before fixing, and after.** A probe against the running server tore a
+socket down and back up, then tried to reclaim the seat: *"Room PSBK not found"* —
+the room was gone, not just the seat. After the change, the same socket adopts a
+token and keeps both its seat and its settings.
+
+**Two details worth keeping.** The handshake is still read, because a genuine
+reconnect must carry the token. And the live token is held in a map keyed by socket
+id rather than in `socket.data`, which several handlers replace wholesale — storing
+it there would have made signing in work and then silently un-authenticate the member
+on their next action.
+
+Sign-out clears the server side too. Now that a live socket can adopt a token, it can
+also be left holding one the browser has forgotten: signed out here and signed in
+there.

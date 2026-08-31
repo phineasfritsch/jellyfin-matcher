@@ -219,7 +219,7 @@ export function RowButton({
  * release, which happens after the request and after approval.
  *
  * So the honest disclosure is the one the copy already gives: that this spends
- * the host's disk, that the host approves it first, and that how much is not
+ * the host's disk, that it goes to the host's Jellyseerr, and that how much is not
  * knowable yet. A number invented to satisfy a ruling would be worse than the
  * sentence that says nobody knows.
  */

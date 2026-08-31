@@ -143,6 +143,9 @@ describe('the socket contract', () => {
     'swipe:undo',
     'winner:request',
     'winner:reject',
+    // R111: a token can arrive on a live socket, so signing in mid-session no
+    // longer needs a reconnect that the server reads as the member leaving.
+    'auth:token',
   ];
   const OUTBOUND = ['room:state', 'room:error', 'room:diagnosis', 'match:declared'];
 
