@@ -1,0 +1,210 @@
+# Frozen Design Direction — Matcher
+
+**One Poster, One Tap**
+Status: frozen. Supersedes all sixteen bracket entries. Rulings R19–R38 are additive to R01–R18 in `docs/REDESIGN.md` and are cited the same way.
+
+---
+
+## The direction, in one paragraph
+
+Rooms are slow because the card hands you a comparison problem — a 7.4, a Letterboxd number, a runtime — at the exact instant it wants a gut reaction. So the card carries a poster, a title, and the one fact that changes what a vote costs, and every other fact is one deliberate tap away in a sheet you can vote from without losing your place. Everything else in this document follows from that sentence: the metadata strip comes off the card and pays for a taller, worded vote row; the sheet becomes the most-used surface in the app, so it opens with zero network and casts votes itself; the single surviving chip on the card says *Not on your server*, because that is the only fact that turns a Like into a real download; and nothing that was removed from the face is removed from the app — it is spoken, printed in the sheet, or both.
+
+---
+
+## Screen by screen
+
+### 1. SwipeDeck — the vertical budget
+
+The whole layout is derived from 360×640 usable. Fixed, no-scroll:
+
+| Band | Height |
+|---|---|
+| top safe / pad | 12 |
+| status strip | 24 |
+| gap | 8 |
+| card | 490 |
+| gap | 8 |
+| vote row | 82 |
+| bottom safe / pad | 16 |
+| **total** | **640** |
+
+The card column is `max-w-md` minus `px-4`, which is 328px at a 360 viewport. A 2:3 poster at 328 wide is 492 tall, so the full-bleed card is a poster with about two pixels of crop — the card *is* the artwork, not a frame around it.
+
+Replace `style={{ minHeight: '55dvh' }}` on the stack with `flex-1 min-h-[420px]` so the card absorbs slack on taller phones and the vote row is never pushed off. Card stack and vote row are siblings under `overflow-hidden`. Poster prefetch (`PREFETCH_AHEAD = 8`) stays exactly as it is.
+
+### 2. SwipeDeck — the card face (`SwipeCard.tsx`, the core cut)
+
+Delete the entire meta block below the poster: the composite badge, the `year · runtime · In library` line, the `Letterboxd / IMDb / RT` line. The poster becomes full-bleed `object-cover` across the whole 328×490 card (`rounded-2xl overflow-hidden`, no border strip). The `alt={\`${card.title} poster\`}` stays — pin A18 is not negotiable and the poster is now the entire card.
+
+The title moves onto the poster: a bottom scrim (`bg-gradient-to-t from-black/95 via-black/70 to-transparent`, 96px, `pointer-events-none` on the gradient itself), an `<h2>` at 20px/700 with `line-clamp-2` and a 16px inset, and a 44×44 info button (ⓘ) flush right in the same row. No-poster fallback: the existing centred-title panel on `bg-primary`, unchanged.
+
+One chip, top-left, and only when `room.settings.scope === 'wide' && card.jellyfinItemId == null`: **Not on your server**, `border-super text-super bg-black/60`, 12px semibold, 28px tall. The `Both genres` hybrid badge is cut from the card and reappears in the sheet as the line `Tagged both genres`.
+
+Two routes into the sheet, both real buttons: the ⓘ, and the whole card face wrapped as `<button type="button" aria-label={\`Details for ${card.title} — ratings, synopsis, trailer\`}>`. Keep that literal opening fragment; pin A22 matches on it. Drop the `onPointerDownCapture` stopPropagation from the face so the whole card stays draggable, and separate tap from drag by hand (R23).
+
+### 3. SwipeDeck — status strip, vote row, keyboard
+
+The three-row header collapses to one 24px row: locked genres left at 11px uppercase tracking-widest, `7/30` right, tabular. Beneath it a 3px rail keeping `role="progressbar"` and `aria-label="Deck progress"` (A03/A04) with your own fill in `bg-secondary`. The peer text line is replaced by 6px dots absolutely positioned on that same rail at `left: peerIndex / deckLength * 100%`, `bg-muted-fg` with a 1px `ring-background` so overlaps stay countable, and an `sr-only` list carrying the identical text.
+
+VoteRow keeps its structure and both pinned hooks (`aria-label="Vote"`, `aria-label={label}`) verbatim. Buttons grow 56 → 64px and gain an 11px uppercase word under each icon — NOPE / MAYBE / LIKE / SUPER — in the button's own colour. 4×64 + 3×12 = 292 in a 328 column; row height 64 + 4 + 14 = 82. The row stays outside `AnimatePresence`, so a pressed button keeps DOM identity and focus across the card change.
+
+New: a window `keydown` handler, no-op while the sheet is open or focus is in an input — ArrowLeft → DISLIKE, ArrowUp → MAYBE, ArrowRight → LIKE, ArrowDown or `s` → SUPER, `i` or Enter on the focused card → details, Escape → close. New: one `aria-live="polite"` `sr-only` region that emits, on top-card change, `Card 7 of 30. Blade Runner, 1982, 117 minutes, not on your server.` and, on every vote, `Liked Blade Runner.`
+
+### 4. MovieDetails — becomes load-bearing
+
+Three changes, no cosmetic ones.
+
+1. A sticky `VoteRow` pinned to the sheet's bottom edge above the safe-area inset. A vote cast there casts *and* closes, in one action.
+2. The YouTube iframe stops auto-mounting. A 56px **Play trailer** button swaps it in on tap. `description`, `allRatings`, `scores` and `genres` already ship in the deck payload, so the sheet opens with zero network — which matters on a LAN with no WAN, where the current auto-embed is a dead grey rectangle.
+3. Focus is trapped while the sheet is open and returned, on close by any route (Escape, backdrop, close button, or a vote), to the control that opened it.
+
+Header gains one line: `Tagged both genres` when `card.isHybrid`. `No ratings found for this one.` (C05) and the `role="dialog"` / `aria-modal` / `aria-label="Close details"` hooks (A10–A12) are untouched.
+
+### 5. Lobby
+
+One new line, 12px, under the deck-size radio group: **Best-rated first — the deck is already ranked, so the top of the stack is the good stuff.** This is literally true (`src/lib/deck.ts` puts hybrids first, then sorts composite-descending inside each tier), and it is how ranking gets communicated now that no card prints a score.
+
+The two scope cards keep `On the server now` and `Winner gets requested` exactly as written (C03/C02). The runtime slider, deck-size radiogroup, member list and their pinned labels (A08, A09, A15, A17, A21) are unchanged. The only structural change: `I'm ready` becomes sticky to the bottom of the viewport rather than the end of the scroll.
+
+### 6. Knockout
+
+Structural parity only. Genre chips go to 56px min-height in a 2-column grid so the thumb meets the same reach zone and touch scale as the vote row. `aria-label="Genres"`, `aria-label="Surviving genres"` and `aria-pressed={on}` (A05–A07) are untouched. The `Waiting` component gains `role="status"` so "Picks locked in — waiting on Ferb" reaches someone who is not looking at the spinner. No new ideas land here.
+
+### 7. WinnerScreen
+
+The argument is over and nobody is waiting on you, so this is the one screen where the numbers get full display: poster, title, and the `year · runtime · Score` line stay as they are, as does the `Final ranking` list (A16) and `Play in Jellyfin`.
+
+In wide scope, above the Jellyseerr button: **This downloads to your server — about {runtime} min of video.** in `text-super`, wired as the button's `aria-describedby`. The request itself becomes a two-tap confirm: the first tap swaps the button for an inline `Request {title}?  [Yes, download]  [Cancel]` row. `No winner could be determined.` (C06) stays.
+
+### 8. Home and AuthGate
+
+Untouched apart from inheriting the ≥56px primary-control scale. AuthGate keeps `Sign in with your Jellyfin account` and `Sign in to search any movie` (C04/C01) and stays capability-gated, so a guest still lands in JoinGate with a name field and swipes without an account. Every optional gate keeps passing `onCancel`.
+
+---
+
+## What was grafted in from the losers
+
+**B's huge drag verdict — accepted, whole.** Past ~40px of travel: the word NOPE / MAYBE / LIKE at 34px/900 dead centre, plus a 12% full-card wash in that vote's colour. Two channels, never colour alone. The winner did all its work on the tap path and left the tiny rotated corner badges alone; but the one-thumb path *is* the drag, and at arm's length a 24px badge in the corner is not a verdict. Taken with its reduced-motion behaviour: snap at threshold rather than track the finger.
+
+**B's MovieDetails focus handling — accepted, whole.** A real focus trap while the sheet is open, focus returned to the opener on close. This direction makes the sheet the most-repeated interaction in the app; one unspecified focus transition becomes thirty focus losses per deck, which would undo the vote row's otherwise excellent focus discipline.
+
+**B's confirmation step on "Request via Jellyseerr" — accepted in substance, rejected in mechanism.** See below.
+
+**The sticky VoteRow inside the sheet and the deferred trailer iframe** were already this direction's own and are now frozen as R30 and R29 rather than absorbed.
+
+## What was rejected, and why
+
+- **The 800ms press-and-hold on the request button.** The disclosure argument is right and is taken (R36); the timed press is not. A hold communicates its own progress by animation, which is exactly what R18/C8 forbid; it is a gesture with no button, which is what R06 forbids; and it is hostile to a shaky hand and invisible to a screen reader. The confirmation survives as a two-tap inline row that is identical for touch, keyboard and switch users (R37). Nobody loses a confirmation step; everybody gets the same one.
+- **Printing the composite score on the card face.** This is the single thing the direction removes, and it is also the direction's named retreat if the bet fails — it cannot be both at once and shipped on day one. Held in reserve, one number in the title row and nothing else.
+- **Live peer voting tension (Match Point Live's contribution).** "Ferb is two cards behind you" and "three of four liked this" make you read someone else's screen state, which priority 2 exists to prevent. Peer presence survives as dots that say *the room is alive* and nothing else (R24).
+- **A per-card reason line or blurb (Every Card Argues, Programme Notes).** It re-fills the face that R19 just cleared, and it costs a read at the precise moment the card wants a reaction. It belongs in the sheet, where it already is.
+- **A TV / second-screen stage (Stage and Controller).** Two surfaces to keep in sync, a second device to set up, and a room where one person's screen is the source of truth. C5, C6, and priority 2.
+- **Deck reordering driven by other people's votes (Hot Deck's live re-rank).** Your position in the deck stops being your own, `progress[userId]` stops meaning what it means, and R03 breaks.
+- **Swipe-down for super-like.** Down-drag collides with pull-to-refresh in mobile browsers, and the highest-weight vote should cost a deliberate act (R27).
+
+---
+
+## Rulings
+
+**SwipeDeck and the card**
+
+- **R19** The card face carries exactly three things: the poster, the title on its scrim, and at most one chip. A fourth element on the face is a change of direction, not a tweak, and must cite the retreat named in "The bet" below.
+- **R20** There is one chip and it means one thing: `Not on your server`, rendered only when scope is `wide` and `jellyfinItemId == null`. In `local` scope no chip renders on any card, because everything is on the server and a chip that is always true is noise.
+- **R21** SwipeDeck is physically incapable of scrolling. The card stack and the vote row are siblings under `overflow-hidden`, the stack is `flex-1 min-h-[420px]`, and no descendant of the deck sets `overflow-y-auto`. The 640px budget table above is the authority when something no longer fits.
+- **R22** Nothing is deleted from the card, only relocated. Every fact the face stops printing appears in two places: the details sheet, and the deck's polite live region, which announces `Card N of M. Title, year, runtime, [not on your server].` on each new top card and `Liked {title}.` on each vote. That announcement is also the non-animation confirmation C8 requires.
+- **R23** Tap and drag are separated by hand, not by the animation library: on `pointerup`, open details only if `Math.hypot(dx, dy) < 8 && Date.now() - t < 500`. Only the active card is interactive; depth 1 and 2 are `aria-hidden` and `pointer-events-none`.
+- **R24** Peer progress is a position, never a number you can compare yourself against. Dots on the shared rail plus an `sr-only` text list. No visible per-peer counters return to this screen.
+- **R25** A vote control is legible without knowing what its icon means: every vote button prints its word as well as its icon, in the button's own colour. Icon-only is no longer sufficient labelling on the deck.
+- **R26** The drag verdict is unmissable and two-channel: past 40px of travel, the word at 34px/900 dead centre plus a 12% full-card wash in that vote's colour. Colour is never the only channel. Under reduced motion the card snaps at threshold instead of tracking the finger.
+- **R27** The super-like has no gesture. Three drag directions, four buttons, four keys. The vote that most distorts the outcome is reachable only by a deliberate press.
+- **R28** The deck is fully operable from the keyboard — ArrowLeft/Up/Right/Down, `s`, `i`, Enter, Escape — and a vote never moves focus. The vote row lives outside `AnimatePresence` so a pressed button keeps DOM identity across the card change.
+
+**MovieDetails**
+
+- **R29** The sheet opens with zero network. The trailer mounts only on tap of a named `Play trailer` button; no other field in the sheet may be fetched at open time. If a field is not already in the deck payload, it does not belong in the sheet.
+- **R30** The sheet is votable. A sticky VoteRow sits at its bottom edge and a vote cast there casts the vote and closes the sheet in one action: one tap in, zero taps out. Curiosity may never cost a place in the deck.
+- **R31** The sheet traps focus while open and returns focus to the control that opened it — the ⓘ or the card face — on close by every route, including a vote cast from inside.
+
+**Lobby**
+
+- **R32** Deck ordering is stated once, in the Lobby, in one sentence, and never re-communicated by printing a score on a card. The sentence is true only while `deck.ts` sorts hybrids first and composite-descending within each tier; if that sort changes, this sentence changes in the same commit.
+- **R33** The cost of `Any Movie` is disclosed three times, in three different tenses, on three screens: the Lobby says what the scope will do, the card chip says whether *this* film is one of them, the winner says how big the thing you are about to download is. No one of the three may be the only one carrying it.
+
+**Knockout**
+
+- **R34** Knockout receives no new ideas this cycle. Permitted changes are size, spacing, and live regions — 56px chips in a 2-column grid, matching the vote row's touch scale and reach zone. Anything else is a separate decision with its own ruling.
+- **R35** A screen that waits on other people names them and announces itself: waiting states carry `role="status"` and the names of who is outstanding, never a bare spinner. (R04, made checkable.)
+
+**WinnerScreen**
+
+- **R36** The irreversible control states the size of what it commits: `This downloads to your server — about {runtime} min of video.`, in `text-super`, immediately above the button and wired as its `aria-describedby`.
+- **R37** The request is confirmed by a second tap, never by a timed hold: the first tap swaps the button for an inline `Request {title}?  [Yes, download]  [Cancel]` row, identical for touch, keyboard and switch users.
+
+**Home / AuthGate**
+
+- **R38** A guest never meets a login they cannot decline. Any `LoginScreen` mounted from an optional gate passes `onCancel`; a `LoginScreen` without one must be guarding a genuinely mandatory capability, and that is a reviewable claim.
+
+---
+
+## Pins to add before any of this is written
+
+Per the repo contract, these go in `src/ui/__tests__/pins.test.ts` *before* the port, not after, and `gates.json` floors move with them (38 → 44 claims).
+
+| Pin | Fragment | Why |
+|---|---|---|
+| C09 | `Not on your server` | The card's only cost disclosure; deletable without any other test going red |
+| C10 | `Play trailer` | The deferred-iframe affordance; a "fix" that re-auto-mounts the iframe silently removes it |
+| C11 | `downloads to your server` | Third and last cost disclosure, immediately before the irreversible tap |
+| C12 | `Yes, download` | The confirm step; a "simplify the button" pass deletes it in one line |
+| C13 | `Best-rated first` | The only place deck ordering is communicated once scores leave the cards |
+| A23 | `aria-live="polite"` in SwipeDeck | The non-animation vote confirmation required by R22/C8 |
+
+Two properties here are behaviour, not copy, and need real tests rather than pins: focus returns to the opener when the sheet closes (R31), and no descendant of SwipeDeck sets `overflow-y-auto` (R21).
+
+---
+
+## The bet, and its one named retreat
+
+The first three cards will feel like a downgrade. A poster with no number on it reads as *missing information* before it reads as *removed noise*, and the instinct is to tap ⓘ on every card — which would make this direction strictly slower than what it replaces, converting a glance into a modal round-trip. The whole thing rides on that habit decaying by about card five, and it only decays because the sheet opens instantly with no network (R29) and can be voted from (R30), so an exploratory tap costs one tap total instead of three.
+
+If it does not decay, the retreat is exactly one change: print the composite as a single number in the title row and nothing else. Not a redesign, not the meta strip back, not the ratings line. This app has no telemetry and R17 says it never will, so the tell is not a measured rate — it is one person watching one real room and counting sheet opens on cards six through fifteen. That is a human's call, and it is listed below.
+
+---
+
+## What still needs human eyes
+
+Everything here was settled against the constraints and the five priorities. None of the following can be:
+
+1. **The scrim.** 96px at `from-black/95 via-black/70` is a guess. Title legibility over a bright or busy poster, and whether the scrim eats too much of the art, is a look-at-it question on real posters from a real library.
+2. **Chip contrast over arbitrary artwork.** `border-super text-super bg-black/60` has to survive being laid over a white poster, a yellow one, and a poster whose top-left corner is already text. No rule settles this; a screenshot does.
+3. **The 12% drag wash.** Enough to register at arm's length, not so much it looks like a rendering bug. The number is a starting point, not a finding.
+4. **Motion character.** Spring stiffness on card exit, whether the reduced-motion snap reads as decisive or as punitive, whether the confetti still fits a screen that is otherwise this quiet.
+5. **The vote words.** NOPE / MAYBE / LIKE / SUPER is the current tone. "SUPER" under a star may read as childish, or as exactly right for a couch at 11pm. That is a voice decision.
+6. **`Not on your server` as the phrasing.** Versus "Not in your library", "Needs downloading", "Will be requested". All are honest; only one sounds like this app.
+7. **Whether the peer dots read as information or as decoration.** If nobody notices them, they are 6px of nothing and the `sr-only` list is doing all the work.
+8. **The bet itself.** Whether a poster-only card reads as confident or as broken, and whether tapping decays by card five. One room, one evening, one person counting.
+9. **Palette overall.** Nothing in this document repalettes anything, deliberately — a density and hierarchy verdict is not licence to repalette, and the panel was never asked about colour.
+10. **The stale colours on `app/guide/page.tsx`.** Still last in the cut list, still where nobody is looking, still somebody's eventual thirty seconds.
+---
+
+## Provenance and its holes
+
+Produced by a 16-direction bracket judged by five personas. Read the following before
+treating this document as settled:
+
+- **Only 12 of 16 directions reached the bracket.** Four — *Lights Down*, *The Thumb
+  Arc*, *One Question Per Screen*, *Verdict Pad First* — died at the constraint-screening
+  stage when the session hit its usage limit, and were dropped without ever being judged
+  on merit. That is a coverage gap, not a verdict.
+- **Constraint screening eliminated nothing.** All 12 directions that were screened
+  passed. The stage cost 12 agents and removed only the four it lost to failure.
+- **The final rounds were close.** *One Poster, One Tap* beat *Hot Deck* 3-2 and
+  *Couch Mode* 3-2. Two persona votes the other way in either round and this is a
+  different document.
+
+So: a plausible winner, not a decisive one. The direction is coherent and worth
+building, but nobody should cite "it won the bracket" as though the bracket were
+exhaustive. Recovering the four lost directions would cost roughly what the whole
+bracket cost; it is not obviously worth it, and that is a judgement call for a person.
+
+Cost of this document: 88 agents, 4.66M tokens, 21 minutes.

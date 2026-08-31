@@ -79,6 +79,15 @@ verdict is not licence to repalette.
 
 ---
 
+## Stage 01 result
+
+The bracket ran. Winner: **One Poster, One Tap** — the card carries a poster, a title
+and at most one chip; every other fact is one deliberate tap away in a sheet you can
+vote from without losing your place. The frozen direction, rulings R19-R38, and an
+honest account of what the bracket missed are in [DIRECTION.md](DIRECTION.md).
+
+Rulings R01-R18 below still stand; R19-R38 are additive and cited the same way.
+
 ## Stage 02 — Rulings
 
 Numbered because a ruling has to be citable from a code comment six weeks later
