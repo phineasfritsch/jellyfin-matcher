@@ -29,6 +29,11 @@ const EDITS: Array<[string, RegExp, string]> = [
   ['OPERATING.md', /pinned claims still pinned \| \d+ \|/g, `pinned claims still pinned | ${g.pinnedClaims} |`],
   ['OPERATING.md', /holds \d+ claims/g, `holds ${g.pinnedClaims} claims`],
   ['OPERATING.md', /today's numbers\*\*: \d+ cases, \d+ files, \d+ pins\./g, `today's numbers**: ${g.testCases} cases, ${g.testFiles} files, ${g.pinnedClaims} pins.`],
+  // The README badges state the same numbers in a third format. A badge is a
+  // claim a stranger reads before anything else, so it is held to the same
+  // standard as the prose.
+  ['README.md', /tests-\d+%20in%20\d+%20files/g, `tests-${g.testCases}%20in%20${g.testFiles}%20files`],
+  ['README.md', /pinned%20claims-\d+-/g, `pinned%20claims-${g.pinnedClaims}-`],
   // QUEUE.md sat outside this list and drifted three waves behind, which is
   // the same class of stale claim G4 exists to stop.
   ['QUEUE.md', /\*\*Today's numbers:\*\* \d+ test cases, \d+ files, \d+ pinned claims/g, `**Today's numbers:** ${g.testCases} test cases, ${g.testFiles} files, ${g.pinnedClaims} pinned claims`],

@@ -1,5 +1,11 @@
 # Jellyfin Matcher
 
+[![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
+[![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
+[![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
+[![tests](https://img.shields.io/badge/tests-334%20in%2020%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![pinned claims](https://img.shields.io/badge/pinned%20claims-129-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
+
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
 No stalemates — that's the whole point.
 
@@ -107,7 +113,7 @@ Ratings cache lands in `.cache/` next to the app and survives restarts on its ow
 
 A prebuilt `linux/amd64` image gets published to GHCR on every push, so no local build needed. It's a multi-stage image: no test runner, no compiler, no dev dependencies, and it runs as a non-root user with a `HEALTHCHECK` against `/healthz`, so `docker ps` tells you whether the app can actually answer rather than just that it started. (arm64 is not published: building it under QEMU tripled CI times. On a Pi, uncomment `build: .` in the compose file and it builds locally.)
 
-Compose pins `:latest` for convenience, but tagged releases publish `:1.2.3` and `:1.2` too — pin one of those if you'd rather choose when you upgrade. Grab `docker-compose.yml`, put your URLs and keys straight into its `environment:` block, then:
+Compose pins `:latest` for convenience, but tagged releases publish `:0.9.0` and `:0.9` too — pin one of those if you'd rather choose when you upgrade. See [CHANGELOG.md](CHANGELOG.md) for what is in each. Grab `docker-compose.yml`, put your URLs and keys straight into its `environment:` block, then:
 
 ```bash
 docker compose up -d
