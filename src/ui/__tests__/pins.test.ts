@@ -135,6 +135,12 @@ const LATESHOW: Pin[] = [
   { id: 'T12', why: 'A thin deck is explained as a library fact rather than a fault, so nobody goes looking for a broken key', find: 'export function diagnoseThinDeck' },
   { id: 'T13', why: 'The request is confirmed by a second tap, never a timed hold: a hold behaves differently for a tremor, a switch and a thumb (R37)', find: "'idle' | 'confirm' | 'busy'" },
   { id: 'T14', why: 'The winner screen takes focus, since it replaces the deck outright and nothing announced that (R52)', find: 'heading.current?.focus()' },
+  { id: 'T15', why: 'The way out of a login is the same size and shape as the way in; a decline styled as the lesser option reads as a trial wall to a guest who will never make an account (R55)', find: 'Carry on without an account' },
+  { id: 'T16', why: 'The details sheet traps focus and hands it back to whatever opened it, by every route out (R31)', find: 'opener?.focus?.()' },
+  { id: 'T17', why: 'The trailer mounts only on tap, so the sheet opens with zero network on a LAN with no route out (R29)', find: 'playTrailer ?' },
+  { id: 'T18', why: 'A vote needs real travel, not just speed; velocity alone let a tremor or a nudge answer for you (R49)', find: 'VELOCITY_FLOOR' },
+  { id: 'T19', why: 'Members carry ACC or GST so the host knows who is in the room before reading the code aloud (R44)', find: "u.authed ? 'ACC' : 'GST'" },
+  { id: 'T20', why: 'Abstaining counts as voted but weighs nothing, so nobody has to invent an opinion or hold up the room (R47)', find: 'export const ABSTAIN' },
 ];
 
 /**

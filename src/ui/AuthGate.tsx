@@ -85,14 +85,17 @@ export function LoginScreen({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-8 px-6 py-12">
-      <header className="flex flex-col items-center gap-3 text-center">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-secondary">
-          <Clapperboard aria-hidden className="size-8 text-on-primary" />
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight">Jellyfin Matcher</h1>
-        <p className="flex items-center gap-1.5 text-sm text-muted-fg">
-          <Lock aria-hidden className="size-4" /> {reason ?? 'Sign in with your Jellyfin account'}
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
+      <header className="flex w-full flex-col gap-2 border-b border-border pb-4">
+        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-super">
+          Jellyfin Matcher
+        </p>
+        <h1 className="font-display text-2xl uppercase leading-tight">
+          {reason ?? 'Sign in with your Jellyfin account'}
+        </h1>
+        <p className="flex items-center gap-1.5 text-[12.5px] text-muted-fg">
+          <Lock aria-hidden className="size-3.5" /> Your Jellyfin server checks this. The
+          server key never reaches this page.
         </p>
       </header>
 
@@ -107,7 +110,7 @@ export function LoginScreen({
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"
             autoCapitalize="off"
-            className="h-12 rounded-xl border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
+            className="h-12 border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -120,29 +123,39 @@ export function LoginScreen({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
-            className="h-12 rounded-xl border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
+            className="h-12 border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
           />
         </div>
         <button
           type="submit"
           disabled={busy || !username.trim() || !password}
-          className="mt-2 flex h-14 cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent text-lg font-semibold text-background transition active:scale-95 disabled:opacity-50"
+          className="mt-2 flex min-h-[52px] cursor-pointer items-center justify-center gap-2 bg-accent px-4 py-3.5 font-mono text-sm font-bold uppercase tracking-[0.08em] text-on-primary transition active:scale-[0.99] disabled:opacity-50"
         >
           {busy && <Loader2 aria-hidden className="size-5 animate-spin" />}
           Sign in
         </button>
         {error && (
-          <p role="alert" className="text-center text-sm text-destructive">
+          <p role="alert" className="bg-destructive px-3 py-2 text-[15px] font-semibold text-on-primary">
             {error}
           </p>
         )}
+        {/*
+          R55: the way out is the same size and shape as the way in.
+
+          It was 14px grey underlined text called "Back", underneath a
+          full-width green button. A guest who will never make an account reads
+          that pairing as a trial wall -- the decline is styled as the lesser
+          option, which is the house style of software that does not really
+          mean to offer it -- and puts the phone down rather than reading the
+          screen. Nothing is gated here that a guest cannot simply skip.
+        */}
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="mt-1 cursor-pointer text-center text-sm text-muted-fg underline-offset-4 hover:underline"
+            className="flex min-h-[52px] cursor-pointer items-center justify-center border border-border bg-transparent px-4 py-3.5 font-mono text-sm font-bold uppercase tracking-[0.08em] text-foreground transition active:scale-[0.99]"
           >
-            Back
+            Carry on without an account
           </button>
         )}
       </form>

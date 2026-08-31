@@ -68,7 +68,7 @@ export function HomeActions() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Phineas"
           autoComplete="given-name"
-          className="h-12 rounded-xl border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
+          className="h-12 border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
         />
       </div>
 
@@ -76,14 +76,14 @@ export function HomeActions() {
         type="button"
         onClick={createRoom}
         disabled={busy !== null}
-        className="flex h-14 cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent text-lg font-semibold text-background transition active:scale-95 disabled:opacity-50"
+        className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 border-0 bg-accent px-4 py-3.5 font-mono text-sm font-bold uppercase tracking-[0.08em] text-on-primary transition active:scale-[0.99] disabled:opacity-50"
       >
         {busy === 'create' ? (
           <Loader2 aria-hidden className="size-5 animate-spin" />
         ) : (
           <Plus aria-hidden className="size-5" />
         )}
-        Create Room
+        Create room
       </button>
 
       <div className="flex items-center gap-3 text-xs text-muted-fg">
@@ -101,13 +101,13 @@ export function HomeActions() {
           autoCapitalize="characters"
           autoComplete="off"
           aria-label="Room code"
-          className="tabular h-14 min-w-0 flex-1 rounded-xl border border-border bg-muted px-4 text-center text-xl font-bold tracking-[0.4em] outline-none focus:ring-2 focus:ring-secondary"
+          className="tabular h-14 min-w-0 flex-1 border border-border bg-muted px-4 text-center font-mono text-xl font-bold tracking-[0.4em] outline-none focus:ring-2 focus:ring-secondary"
         />
         <button
           type="button"
           onClick={joinRoom}
           disabled={busy !== null}
-          className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-xl bg-secondary text-on-primary transition active:scale-95 disabled:opacity-50"
+          className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center bg-maybe text-on-primary transition active:scale-95 disabled:opacity-50"
           aria-label="Join room"
         >
           {busy === 'join' ? (
@@ -119,7 +119,7 @@ export function HomeActions() {
       </div>
 
       {error && (
-        <p role="alert" className="text-center text-sm text-destructive">
+        <p role="alert" className="bg-destructive px-3 py-2 text-[15px] font-semibold text-on-primary">
           {error}
         </p>
       )}
