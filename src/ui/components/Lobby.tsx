@@ -98,26 +98,39 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
           />
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-border bg-muted p-4">
-          <span className="text-sm font-medium">Deck size</span>
-          <div className="flex gap-2" role="radiogroup" aria-label="Deck size">
-            {[25, 50, 75].map((n) => (
-              <button
-                key={n}
-                type="button"
-                role="radio"
-                aria-checked={room.settings.deckLimit === n}
-                onClick={() => void updateSettings({ deckLimit: n })}
-                className={`tabular h-10 w-12 cursor-pointer rounded-lg text-sm font-semibold transition active:scale-95 ${
-                  room.settings.deckLimit === n
-                    ? 'bg-secondary text-on-primary'
-                    : 'bg-background text-muted-fg'
-                }`}
-              >
-                {n}
-              </button>
-            ))}
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Deck size</span>
+            <div className="flex gap-2" role="radiogroup" aria-label="Deck size">
+              {[25, 50, 75].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={room.settings.deckLimit === n}
+                  onClick={() => void updateSettings({ deckLimit: n })}
+                  className={`tabular h-10 w-12 cursor-pointer rounded-lg text-sm font-semibold transition active:scale-95 ${
+                    room.settings.deckLimit === n
+                      ? 'bg-secondary text-on-primary'
+                      : 'bg-background text-muted-fg'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
           </div>
+          {/*
+            R32: the deck's ordering is stated once, here, because no card
+            prints a score any more. Worded to match `buildDeck` exactly --
+            hybrids first, then each tier composite-desc -- rather than the
+            looser "top of the stack is the good stuff", because R12 forbids
+            a claim about ranking that does not say what it covers. If the
+            sort in src/lib/deck.ts changes, this sentence changes with it.
+          */}
+          <p className="text-xs text-muted-fg">
+            Best-rated first — both-genre picks lead, then each genre alternates, sorted by rating.
+          </p>
         </div>
       </section>
 
@@ -152,15 +165,24 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
         )}
       </section>
 
-      <button
-        type="button"
-        onClick={() => void setReady(!me?.ready)}
-        className={`mt-auto flex h-14 cursor-pointer items-center justify-center gap-2 rounded-xl text-lg font-semibold transition active:scale-95 ${
-          me?.ready ? 'bg-muted text-muted-fg' : 'bg-accent text-background'
-        }`}
-      >
-        {me?.ready ? 'Not ready' : "I'm ready"}
-      </button>
+      {/*
+        Sticky to the viewport, not to the end of the scroll. On a phone the
+        member list grows with the room, and the one control everybody is
+        waiting for was the first thing to fall below the fold. The negative
+        margin and padding let the button's own background cover content
+        passing underneath it.
+      */}
+      <div className="sticky bottom-0 -mx-4 mt-auto bg-background px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3">
+        <button
+          type="button"
+          onClick={() => void setReady(!me?.ready)}
+          className={`flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-lg font-semibold transition active:scale-95 ${
+            me?.ready ? 'bg-muted text-muted-fg' : 'bg-accent text-background'
+          }`}
+        >
+          {me?.ready ? 'Not ready' : "I'm ready"}
+        </button>
+      </div>
     </div>
   );
 }

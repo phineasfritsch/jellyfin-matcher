@@ -54,8 +54,14 @@ outcome and should be written down, not worked around.
 
 - [ ] **Screen ports, one screen per wave**, in this order. Each: run
       `npm run inventory -- <Screen>` first, add missed pins, confirm green,
-      then port. Lobby → Knockout → SwipeDeck → MovieDetails → WinnerScreen →
-      AuthGate. `app/guide/page.tsx` is last (cut list).
+      then port. ~~Lobby~~ → Knockout → SwipeDeck → MovieDetails →
+      WinnerScreen → AuthGate. `app/guide/page.tsx` is last (cut list).
+      SwipeDeck is the big one: R19-R28 rewrite the card face entirely.
+
+- [ ] **Look at the ported Lobby on a phone.** Not done — the browser
+      extension is not connected, so nobody has seen it rendered. Two things
+      to check: the sticky ready button against a long member list, and
+      whether the new ranking sentence reads as useful or as clutter.
 
 - [ ] **A tester routine, unattended.** `npm run gate -- --prod` on a schedule.
       Brief says, in these words: *do not fix what you find.* Reports and stops.

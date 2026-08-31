@@ -114,6 +114,23 @@ const SWEEP: Pin[] = [
 ];
 
 /**
+ * Lobby. Written before the Lobby port, so these guard the change rather than
+ * grade it. Every one of them is a property the port could drop while still
+ * looking correct on screen.
+ */
+const LOBBY: Pin[] = [
+  { id: 'L01', why: 'A guest can always back out of an optional login instead of being trapped (R38)', find: 'onCancel={() => setLoginForWide(false)}' },
+  { id: 'L02', why: 'The locked scope says why it is locked before it is pressed, not after (R10)', find: "'Sign in to use'" },
+  { id: 'L03', why: 'The QR is named, so it is not an unlabelled image to a screen reader', find: 'aria-label={`QR code to join room ${room.roomId}' },
+  { id: 'L04', why: 'Scope buttons report which scope is chosen, not just colour it (R14)', find: 'aria-pressed={active}' },
+  { id: 'L05', why: 'Deck size options are real radios, not styled buttons', find: 'role="radio"' },
+  { id: 'L06', why: 'A solo room explains the wait instead of showing an empty list (R13)', find: 'Waiting for at least one more person to join' },
+  { id: 'L07', why: 'The uncapped runtime is named, not shown as a blank or a max number (R12)', find: "'No cap'" },
+  { id: 'L08', why: 'You can find yourself in the member list', find: '(you)' },
+  { id: 'L09', why: 'Deck ordering is stated in the Lobby, since no card prints a score (R32)', find: 'both-genre picks lead' },
+];
+
+/**
  * Documented promises. The README is the only place several of these live, and
  * it is the thing people read before trusting the app with their server.
  */
@@ -148,12 +165,13 @@ describe('pinned live regions', () => {
 describe('pinned copy', () => check(COPY, APP));
 describe('pinned behaviour', () => check(BEHAVIOUR, APP));
 describe('pinned sweep claims', () => check(SWEEP, APP));
+describe('pinned lobby claims', () => check(LOBBY, APP));
 describe('pinned documentation promises', () => check(DOCS, README));
 
 describe('pin inventory', () => {
   it('reports how many claims are pinned', () => {
-    const total = A11Y.length + COPY.length + BEHAVIOUR.length + SWEEP.length + DOCS.length;
+    const total = A11Y.length + COPY.length + BEHAVIOUR.length + SWEEP.length + LOBBY.length + DOCS.length;
     expect(total).toBeGreaterThan(0);
-    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${SWEEP.length} sweep, ${DOCS.length} docs)`);
+    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${SWEEP.length} sweep, ${LOBBY.length} lobby, ${DOCS.length} docs)`);
   });
 });
