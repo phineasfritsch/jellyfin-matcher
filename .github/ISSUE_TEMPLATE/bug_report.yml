@@ -1,0 +1,43 @@
+name: Bug report
+description: Something behaves differently than it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: the failure screen in the app names which upstream misbehaved
+        (Jellyfin, Jellyseerr, MDBList) and who can act on it. Quoting that line is
+        usually the fastest path to a fix.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "The commit shown by /healthz, or the image tag you pulled."
+      placeholder: "ed99b6d, or ghcr.io/...:latest pulled today"
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How are you running it
+      options: [Docker Compose, docker run, Node directly, Development mode]
+    validations:
+      required: true
+  - type: textarea
+    id: healthz
+    attributes:
+      label: /healthz output
+      description: "curl http://your-host:3000/healthz — it reports which upstreams are configured. No keys are included in it."
+      render: json
+  - type: input
+    id: devices
+    attributes:
+      label: Devices in the room
+      placeholder: "3 phones, iOS 18 Safari and Android Chrome"

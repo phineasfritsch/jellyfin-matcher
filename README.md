@@ -161,4 +161,4 @@ The other 38 are *pinned claims* — accessibility hooks, the copy that tells yo
 
 ## License
 
-Do whatever you want with it. If you build something on top I'd genuinely like to hear about it.
+MIT — see [LICENSE](LICENSE). Do whatever you want with it. If you build something on top I'd genuinely like to hear about it.

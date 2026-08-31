@@ -1,0 +1,31 @@
+name: Feature request
+description: Something the app should be able to do
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The scope this project defends is: **a room of people decide on one film,
+        fast, with no stalemates.** Ideas that serve that get in easily. Ideas that
+        widen it need a stronger argument — which is worth making, just make it.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happens today
+      description: Describe the moment in a real session where this bites. Not the solution yet.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like instead
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: Who pays for it
+      description: >
+        Every screen costs someone something — a guest with no account, someone using a
+        screen reader, the person whose disk fills up, or the person who just wants the
+        film to start. Which of them does this cost, and is it worth it?
