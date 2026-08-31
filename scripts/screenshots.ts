@@ -396,6 +396,29 @@ async function main() {
     await new Promise((r) => setTimeout(r, 1800)); // poster + confetti
     await shoot(page, '08-winner');
 
+    /*
+      Reload on the winner screen and check the room still tells the same story.
+
+      viaFallback, the ranking and the play URL used to live only in the
+      transient match:declared event, so one refresh recomputed `held` as false
+      and the payoff screen reported a film sitting in the library as "Not on
+      your server", offering to download it (R90). Only a real reload shows it:
+      the state is correct right up until the event is the thing that is gone.
+    */
+    step('reloading the winner screen');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('h1[data-app-focus]', { visible: true, timeout: 20_000 });
+    await new Promise((r) => setTimeout(r, 1200));
+    const afterReload = await page.evaluate(() => document.body.innerText);
+    if (!afterReload.includes('On your server')) {
+      console.log('  WARNING: after a reload the winner screen no longer says the film is on the server (R90)');
+      failures += 1;
+    }
+    if (afterReload.includes('Not on your server')) {
+      console.log('  WARNING: after a reload the winner screen offers to download a film the server already has (R90)');
+      failures += 1;
+    }
+
     // The same deck, at 200% text. This is the screen the reflow comment is
     // about, so it is the one worth photographing.
     step('re-shooting at 200% text');

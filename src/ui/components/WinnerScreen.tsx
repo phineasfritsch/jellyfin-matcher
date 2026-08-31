@@ -36,7 +36,22 @@ export function WinnerScreen({
     return <EmptyState title="Session ended">No winner could be determined.</EmptyState>;
   }
 
-  const held = Boolean(match?.playUrl);
+  /*
+    R90: the event is how this screen is told, the room is where it is kept.
+
+    `match` is the transient match:declared payload, and it is null for anyone
+    who arrived after it fired -- which is everyone, one reload later. Every
+    fact below used to be read from it alone, so a refresh on the payoff screen
+    told the room a different story than the one it had just lived: "Not on
+    your server" for a film sitting in the library, a cost line insisting
+    nothing had been downloaded, a points winner captioned "Everyone said yes",
+    the ranking gone, and Play replaced by a request the server refuses with
+    "Already in the library".
+  */
+  const viaFallback = match?.viaFallback ?? room.winnerViaFallback;
+  const ranking = match?.ranking ?? room.winnerRanking;
+  const playUrl = match?.playUrl ?? room.winnerPlayUrl;
+  const held = Boolean(playUrl);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -47,7 +62,7 @@ export function WinnerScreen({
         film nobody owns, and that is a different screen (R53).
       */}
       <Bar
-        left={match?.viaFallback ? 'Points winner' : 'Locked in'}
+        left={viaFallback ? 'Points winner' : 'Locked in'}
         right={held ? 'On your server' : 'Not on your server'}
         tone={held ? 'go' : 'stop'}
       />
@@ -105,7 +120,7 @@ export function WinnerScreen({
               {winner.runtime != null && ` · ${winner.runtime} min`}
             </p>
             <p className="mt-1 text-label text-muted-fg">
-              {match?.viaFallback
+              {viaFallback
                 ? 'Nobody agreed outright, so the points decided.'
                 : 'Everyone said yes.'}
             </p>
@@ -119,9 +134,9 @@ export function WinnerScreen({
           />
         )}
 
-        {match?.viaFallback && match.ranking && (
+        {viaFallback && ranking && (
           <Group title="Final ranking" ariaLabel="Final ranking">
-            {match.ranking.map((r, i) => {
+            {ranking.map((r, i) => {
               const card = room.deck.find((c) => c.id === r.cardId);
               return (
                 <Row
@@ -182,9 +197,9 @@ export function WinnerScreen({
             Not this one — keep swiping
           </button>
         )}
-        {held && match?.playUrl ? (
+        {held && playUrl ? (
           <a
-            href={match.playUrl}
+            href={playUrl}
             className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary"
           >
             Play in Jellyfin

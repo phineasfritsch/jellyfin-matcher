@@ -307,7 +307,7 @@ function settleIfPossible(room: Room, justVoted: string | null): boolean {
   if (verdict.cardId === null) {
     // Nothing to win: an empty deck, or nobody voted for anything. Say so
     // rather than leaving the room on a spinner.
-    declare(room, null, store);
+    declare(room, null, store, { viaFallback: true, ranking: null, playUrl: null });
     io.to(room.roomId).emit('match:declared', {
       winner: null,
       viaFallback: true,
@@ -322,14 +322,13 @@ function settleIfPossible(room: Room, justVoted: string | null): boolean {
 }
 
 function declareWinner(room: Room, cardId: string, viaFallback: boolean): void {
-  declare(room, cardId, store);
   const card = room.deck.find((c) => c.id === cardId) ?? null;
-  io.to(room.roomId).emit('match:declared', {
-    winner: card,
-    viaFallback,
-    playUrl: card?.jellyfinItemId ? playbackUrl(card.jellyfinItemId) : null,
-    ranking: viaFallback ? rankFallback(room.deck, room.votes).slice(0, 3) : null,
-  });
+  const playUrl = card?.jellyfinItemId ? playbackUrl(card.jellyfinItemId) : null;
+  const ranking = viaFallback ? rankFallback(room.deck, room.votes).slice(0, 3) : null;
+  // Recorded on the room first, then announced. The event is how the room
+  // hears about it now; the room is where it lives (R90).
+  declare(room, cardId, store, { viaFallback, ranking, playUrl });
+  io.to(room.roomId).emit('match:declared', { winner: card, viaFallback, playUrl, ranking });
   broadcast(room);
 }
 

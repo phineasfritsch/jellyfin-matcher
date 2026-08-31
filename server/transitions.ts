@@ -21,6 +21,7 @@
  * the caller usually has to tell the room something about it.
  */
 import { createKnockout, reresolve, submitElimination, submitGenres } from '../src/lib/knockout';
+import type { FallbackResult } from '../src/lib/match';
 import type { MovieCandidate } from '../src/lib/types';
 import { activeUserIds, canSettle, type Settlement } from './settlement';
 import type { Room, RoomStore } from './store';
@@ -124,9 +125,24 @@ export function undoVote(room: Room, userId: string, store: RoomStore): string |
 }
 
 /** The room has landed on a film, or on nothing. */
-export function declare(room: Room, cardId: string | null, store: RoomStore): void {
+export function declare(
+  room: Room,
+  cardId: string | null,
+  store: RoomStore,
+  outcome: { viaFallback: boolean; ranking: FallbackResult[] | null; playUrl: string | null } = {
+    viaFallback: false,
+    ranking: null,
+    playUrl: null,
+  },
+): void {
   room.status = 'FINISHED';
   room.winner = cardId;
+  // R90: on the room, not only in the event. A rejoin gets room:state and
+  // nothing else, so anything that lives only in match:declared is gone the
+  // moment somebody reloads.
+  room.winnerViaFallback = outcome.viaFallback;
+  room.winnerRanking = outcome.ranking;
+  room.winnerPlayUrl = outcome.playUrl;
   store.touch(room);
 }
 
@@ -138,6 +154,11 @@ export function rejectWinner(room: Room, store: RoomStore): boolean {
   if (room.status !== 'FINISHED') return false;
   if (room.winner) room.rejected.push(room.winner);
   room.winner = null;
+  // The night is no longer over, so the account of how it ended must go too,
+  // or a later winner inherits this one's ranking (R90).
+  room.winnerViaFallback = false;
+  room.winnerRanking = null;
+  room.winnerPlayUrl = null;
   room.status = 'SWIPING';
   store.touch(room);
   return true;

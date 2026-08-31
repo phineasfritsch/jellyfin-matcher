@@ -1,4 +1,5 @@
 import type { KnockoutState } from '../lib/knockout';
+import type { FallbackResult } from '../lib/match';
 import type { MovieCandidate } from '../lib/types';
 
 /** Client view of the server Room object (broadcast on room:state). */
@@ -19,6 +20,13 @@ export interface ClientRoom {
   /** Only your own votes. */
   votes: Record<string, Record<string, number>>;
   winner: string | null;
+  /**
+   * How the night ended, carried on the room so a reload does not misreport it
+   * (R90). These used to live only in the transient match:declared event.
+   */
+  winnerViaFallback: boolean;
+  winnerRanking: FallbackResult[] | null;
+  winnerPlayUrl: string | null;
   /** Cards the room locked in and then turned down. */
   rejected: string[];
   /** How many other members have finished the deck. */

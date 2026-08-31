@@ -1,7 +1,7 @@
 import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import type { KnockoutState } from '../src/lib/knockout';
 import { createKnockout } from '../src/lib/knockout';
-import type { Votes } from '../src/lib/match';
+import type { FallbackResult, Votes } from '../src/lib/match';
 import type { MovieCandidate } from '../src/lib/types';
 
 export type RoomStatus = 'LOBBY' | 'KNOCKOUT' | 'SWIPING' | 'FINISHED';
@@ -44,6 +44,22 @@ export interface Room {
    */
   rejected: string[];
   winner: string | null;
+  /**
+   * R90: how the night ended, on the room rather than only in the event that
+   * announced it.
+   *
+   * viaFallback, the ranking and the play URL used to exist only inside the
+   * transient `match:declared` emit. Nothing replayed them on rejoin, so any
+   * reload on the winner screen recomputed `held` as false and the payoff
+   * screen misreported the night: "Not on your server", a cost line saying
+   * nothing had been downloaded, a points winner described as "Everyone said
+   * yes", no ranking, and a Play link replaced by a Jellyseerr request the
+   * server then refused with "Already in the library".
+   */
+  winnerViaFallback: boolean;
+  winnerRanking: FallbackResult[] | null;
+  /** Needs the server's Jellyfin base URL, so it cannot be derived on a phone. */
+  winnerPlayUrl: string | null;
   createdAt: number;
   lastActivity: number;
 }
@@ -151,6 +167,9 @@ export class RoomStore {
       votes: {},
       rejected: [],
       winner: null,
+      winnerViaFallback: false,
+      winnerRanking: null,
+      winnerPlayUrl: null,
       createdAt: this.now(),
       lastActivity: this.now(),
     };

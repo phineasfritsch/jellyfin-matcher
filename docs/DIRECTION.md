@@ -532,3 +532,29 @@ the wrong thing, so a second calculation would not have caught it.
 One correction to the finding that prompted this: the reported 2.12:1 against a
 pressed row was a different element — the teal callout card. Dividers in the resting
 list measure symmetrically against both neighbours, which is why one token clears it.
+
+### R90 — The event is how the room is told. The room is where it is kept.
+
+**Frozen:** `viaFallback`, the ranking and the play URL existed only inside the
+`match:declared` emit.
+
+**Built:** they are recorded on the room by `declare`, cleared by `rejectWinner`, and
+carried to every phone by `room:state`.
+
+**Why.** A rejoin receives `room:state` and nothing else. Nothing replayed the
+declaration, so one reload on the winner screen told the room a different story than
+the one it had just lived: `held` recomputed as false, so a film sitting in the
+library was reported as "Not on your server", a cost line insisted nothing had been
+downloaded, a points winner was captioned "Everyone said yes", the ranking vanished,
+and Play was replaced by a Jellyseerr request the server then refuses with "Already
+in the library" — an error on the payoff screen, about a film the household owns.
+
+This is the same shape as R61 and R82: state that is correct at the moment it is
+produced, and absent for anyone who was not listening then. A transient event is not
+a place to keep a fact that outlives the moment.
+
+**Verified by reproducing it, not by reasoning about it.** `scripts/screenshots.ts`
+now reloads the winner screen and asserts the page still says the film is on the
+server. Reverting the fix turns both assertions red in a real browser, which is the
+only place this bug was ever visible — every unit test was green throughout, because
+the state was correct right up until the event was the thing that was gone.
