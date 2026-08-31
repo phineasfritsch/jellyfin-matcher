@@ -292,3 +292,42 @@ rejected under R63. The item stays in Blocked, where it belongs.
 Nothing in the twelve items above needs a real household. The two that do are
 already in `QUEUE.md`'s Blocked section and stay there: memory of the household
 between nights, and a way for the room to say "fine, let's just watch that one".
+
+## Round 3 — 2026-08-31
+
+Convened after every code-reachable item from rounds 1 and 2 shipped, including all
+five of round 2's blocking reasons. The brief said plainly that a third 0/5 which
+could not name a material defect would be the board failing at its job, and so would
+a yes waved through to be agreeable. The adversarial verifiers were also told to
+refute a nice-to-have presented as a blocker, not only a false claim.
+
+**Result: 2 of 5 finished** — the first yes votes this project has had.
+
+| Mandate | Vote | Reason |
+| --- | --- | --- |
+| Product | **finished** | Nothing material left to ask for. |
+| Growth | not finished | The documented Docker quickstart produces a deployment that cannot write its own cache directory. `Dockerfile:36,47-48` creates a non-root `matcher` user, chowns `/app/.cache` to it, and runs as it; `docker-compose.yml:22` and `README.md:137` then bind-mount host `./cache` over that path. Docker creates an absent bind-mount source root-owned, and a bind mount does not inherit the image directory's ownership the way a named volume does, so on a Linux host every write into `.cache` fails EACCES. Both writers fail open (`src/lib/mdblist.ts:83-85`, `server/history.ts:104-106`) — so the app runs, and the only symptom is a console warning nobody is told to look for. The cost is that `README.md:143`'s "after that it's cached for a week" is false on the recommended install (a free-tier MDBList key re-fetches the whole library on every deck build), and R105 — the memory between nights that both prior rounds' Product blocker turned on, shipped in `d3ec21a` — silently never records anything. `docker-compose.yml:18-22` promises in a comment that this exact mount is what preserves the history; the mount is what breaks it. Nothing in the repo mentions host-side ownership: no `user:`, no PUID/PGID, no chown note in README, Dockerfile, or docs. |
+| Engineering | not finished | A member dropping out of the LOBBY is never re-checked against startKnockout, so a room whose remaining members are all ready sits forever showing "Everyone is in. Starting." — server/handlers.ts:302-323 branches only on KNOCKOUT and SWIPING, startKnockout is reachable only from setReady at server/handlers.ts:173, and src/ui/components/Lobby.tsx:216-222 renders the lie. |
+| Design Director | **finished** | Nothing material left to ask for. |
+| Access and Honesty | not finished | The download disclosure promises a human approval gate the code does not establish and the repo elsewhere denies: SwipeDeck.tsx:109 tells the room "The host is asked to approve it before anything is fetched" (and WinnerScreen.tsx:141, 292-293, 307 repeat it), while CLAUDE.md:19, OPERATING.md:111, BOARD.md:117 and pin T90 all warn that a request "lands in Radarr as an actual download" / "landed in Radarr as a second download", README.md:53 says it "lands in Radarr" with no approval, and app/guide/page.tsx:122-123 tells the household "That's it. It shows up in Jellyfin once it finishes downloading." Both cannot be true, and the version on the disclosure is the lenient one — which is the wrong direction to be wrong in on the one control that spends someone else's disk. |
+
+13 claims survived verification, 1 struck. The chair agent died mid-response
+(a connection error), so this record is written from the raw votes rather than from a
+synthesis — which is why this round has no ranked queue.
+
+### What happened next
+
+All three blocking reasons were closed in `6296900` and `a3aac7c`.
+
+- **Access and Honesty** was right that the download disclosure promised an approval
+  gate the app does not control: Jellyseerr auto-approves a request made with an admin
+  key. Wrong in the lenient direction, on the one control that spends somebody else's
+  disk. The app now reports what Jellyseerr actually did (R107).
+- **Engineering** was right that a lobby drop never re-checked whether the round could
+  start, so a room could sit on "Everyone is in. Starting." until the two-hour TTL
+  reaped it (R108).
+- **Growth** was right that the documented Docker quickstart produced a container that
+  could not write its own cache — silently defeating both the ratings cache and the
+  watch history that had shipped hours earlier (R109).
+
+All three were verified before being acted on, and all three held.
