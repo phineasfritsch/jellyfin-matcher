@@ -75,8 +75,13 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
       onDragEnd={active ? handleDragEnd : undefined}
       aria-hidden={!active}
     >
-      <article className="flex h-full flex-col overflow-hidden border border-border bg-muted">
-        <div className="relative min-h-0 flex-1 bg-primary">
+      {/*
+        pane-thick, not pane: the cards behind the top one are still in the DOM
+        and a 7%-white panel let their titles read straight through this one.
+        The stack has to look like a stack, not a double exposure.
+      */}
+      <article className="pane-solid flex h-full flex-col overflow-hidden rounded-[var(--radius-sheet)] shadow-2xl shadow-black/60">
+        <div className="relative min-h-0 flex-1 bg-white/[0.04]">
           {card.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -87,7 +92,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
               loading="eager"
             />
           ) : (
-            <div className="flex h-full items-center justify-center p-6 text-center font-display text-2xl uppercase text-muted-fg">
+            <div className="flex h-full items-center justify-center p-6 text-center text-2xl font-semibold text-muted-fg">
               {card.title}
             </div>
           )}
@@ -99,7 +104,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
             and it now lives in the details sheet.
           */}
           {notHeld && (
-            <span className="absolute left-3 top-3 border border-destructive bg-background/85 px-2 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-destructive">
+            <span className="absolute left-3 top-3 rounded-full bg-background/85 px-3 py-1.5 text-[12px] font-semibold text-destructive ring-1 ring-destructive/40">
               Not on your server
             </span>
           )}
@@ -110,7 +115,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
               aria-label={`Ratings, synopsis and trailer for ${card.title}`}
               onPointerDownCapture={(e) => e.stopPropagation()}
               onClick={onOpenDetails}
-              className="absolute bottom-3 right-3 flex size-12 cursor-pointer items-center justify-center border border-border bg-background/85 text-foreground transition active:scale-90"
+              className="absolute bottom-3 right-3 flex size-12 cursor-pointer items-center justify-center rounded-full bg-background/85 text-foreground ring-1 ring-white/25 transition active:scale-90"
             >
               <Info aria-hidden className="size-5" />
             </button>
@@ -123,21 +128,21 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
           */}
           <motion.span
             style={{ opacity: likeOpacity }}
-            className="absolute right-4 top-4 border-4 border-accent px-3 py-1 font-display text-2xl text-accent"
+            className="absolute right-4 top-4 rounded-2xl bg-accent px-4 py-2 text-2xl font-bold text-on-primary ring-2 ring-accent/60"
             aria-hidden
           >
             YES
           </motion.span>
           <motion.span
             style={{ opacity: nopeOpacity }}
-            className="absolute left-4 top-4 border-4 border-destructive px-3 py-1 font-display text-2xl text-destructive"
+            className="absolute left-4 top-4 rounded-2xl bg-destructive px-4 py-2 text-2xl font-bold text-on-primary ring-2 ring-destructive/60"
             aria-hidden
           >
             NO
           </motion.span>
           <motion.span
             style={{ opacity: maybeOpacity }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 border-4 border-maybe px-3 py-1 font-display text-2xl text-maybe"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-2xl bg-maybe px-4 py-2 text-2xl font-bold text-on-primary ring-2 ring-maybe/60"
             aria-hidden
           >
             MAYBE
@@ -151,13 +156,13 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
           cannot vote without knowing what he is voting on. The card carries
           what a vote needs and the sheet carries the rest.
         */}
-        <div className="flex flex-col gap-1 border-t border-border px-3 py-2.5">
-          <h2 className="truncate font-display text-xl uppercase leading-tight">{card.title}</h2>
-          <p className="tabular text-[12.5px] text-muted-fg">
+        <div className="flex flex-col gap-1 border-t border-[var(--color-hairline)] px-4 py-3">
+          <h2 className="truncate text-[19px] font-semibold tracking-[-0.01em]">{card.title}</h2>
+          <p className="tabular text-[13px] text-muted-fg">
             {card.year ?? 'Year unknown'}
             {card.runtime != null && ` · ${card.runtime} min`}
           </p>
-          <p className="tabular text-[12.5px] text-muted-fg">{ratingLine(card)}</p>
+          <p className="tabular text-[13px] text-muted-fg">{ratingLine(card)}</p>
         </div>
       </article>
     </motion.div>

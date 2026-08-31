@@ -18,10 +18,10 @@ import { VOTE_POINTS } from '../../lib/match';
  */
 
 const VOTES = [
-  { key: 'no', glyph: '✕', word: 'NO', points: VOTE_POINTS.DISLIKE, skin: 'border-destructive text-destructive', say: 'Vote no on' },
-  { key: 'maybe', glyph: '?', word: 'MAYBE', points: VOTE_POINTS.MAYBE, skin: 'border-border text-foreground', say: 'Vote maybe on' },
-  { key: 'yes', glyph: '♥', word: 'YES', points: VOTE_POINTS.LIKE, skin: 'border-accent text-accent', say: 'Vote yes on' },
-  { key: 'super', glyph: '★', word: 'STRONG', points: VOTE_POINTS.SUPER, skin: 'border-maybe text-maybe', say: 'Strong yes on' },
+  { key: 'no', glyph: '✕', word: 'No', points: VOTE_POINTS.DISLIKE, skin: 'text-destructive ring-destructive/40 bg-destructive/[0.12]', say: 'Vote no on' },
+  { key: 'maybe', glyph: '?', word: 'Maybe', points: VOTE_POINTS.MAYBE, skin: 'text-foreground ring-white/20 bg-white/[0.07]', say: 'Vote maybe on' },
+  { key: 'yes', glyph: '♥', word: 'Yes', points: VOTE_POINTS.LIKE, skin: 'text-accent ring-accent/40 bg-accent/[0.12]', say: 'Vote yes on' },
+  { key: 'super', glyph: '★', word: 'Strong', points: VOTE_POINTS.SUPER, skin: 'text-maybe ring-maybe/40 bg-maybe/[0.12]', say: 'Strong yes on' },
 ] as const;
 
 function signed(n: number): string {
@@ -42,7 +42,7 @@ export function VoteRow({
         auto-fit rather than four locked columns: at 200% OS text this reflows
         to a 2x2 block instead of clipping the labels off (R51).
       */
-      className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2 p-2.5"
+      className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2.5 px-3 pb-1 pt-2"
       role="group"
       aria-label="Vote"
     >
@@ -52,13 +52,13 @@ export function VoteRow({
           type="button"
           aria-label={`${v.say} ${title}, ${signed(v.points)}`}
           onClick={() => onVote(v.points)}
-          className={`flex min-h-[52px] cursor-pointer flex-col items-center justify-center gap-0.5 border bg-muted px-1 py-2 font-mono transition active:scale-95 ${v.skin}`}
+          className={`flex min-h-[62px] cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[var(--radius-control)] px-1 py-2 ring-1 transition active:scale-95 ${v.skin}`}
         >
-          <span aria-hidden className="font-display text-lg leading-none">
+          <span aria-hidden className="text-[19px] leading-none">
             {v.glyph}
           </span>
-          <span className="text-[13px] font-semibold tracking-[0.06em]">{v.word}</span>
-          <span className="tabular text-[11px] opacity-75">{signed(v.points)}</span>
+          <span className="text-[13.5px] font-semibold">{v.word}</span>
+          <span className="tabular text-[11.5px] opacity-70">{signed(v.points)}</span>
         </button>
       ))}
     </div>
@@ -68,9 +68,12 @@ export function VoteRow({
 /** The vote row's silhouette while a deck is still building. */
 export function VoteRowSkeleton() {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2 p-2.5" aria-hidden>
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2.5 px-3 pb-1 pt-2" aria-hidden>
       {VOTES.map((v) => (
-        <div key={v.key} className="min-h-[52px] animate-pulse border border-border bg-muted" />
+        <div
+          key={v.key}
+          className="min-h-[62px] animate-pulse rounded-[var(--radius-control)] bg-white/[0.06] ring-1 ring-white/10"
+        />
       ))}
     </div>
   );

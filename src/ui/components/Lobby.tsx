@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { isLoggedIn, LoginScreen, useAuthConfig } from '../AuthGate';
 import type { RoomHook } from '../useRoom';
-import { Bar, BigButton, Row, RowButton } from './Listing';
+import { Bar, BigButton, Dock, Group, Row, RowButton } from './Listing';
 
 const RUNTIME_STOPS = [90, 100, 110, 120, 135, 150, 180, null] as const;
 const DECK_SIZES = [25, 50, 75] as const;
@@ -70,12 +70,13 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
         right={`${members.length - guests} acct · ${guests} guest`}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div className="scroll-body flex min-h-0 flex-1 flex-col">
         {/*
           Dee could not find herself on the old lobby: the header counted four
           people and named three others. You are the first row now, and the row
           says plainly that nothing here will ask a guest for an account (R45).
         */}
+        <Group>
         <Row
           label="YOU"
           tone="room"
@@ -86,8 +87,9 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
               : 'No account needed. Nothing here will ask you for one.'
           }
         />
+        </Group>
 
-        <section aria-label="Session settings" className="contents">
+        <Group title="Tonight's rules" ariaLabel="Session settings">
           <RowButton
             label="SRC"
             tone={wide ? 'plain' : 'mine'}
@@ -118,11 +120,11 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
             current and available values are announced, and it is one target
             rather than eight taps.
           */}
-          <div className="grid w-full grid-cols-[54px_1fr] items-stretch border-b border-border">
-            <span className="flex items-center border-r border-border px-2 py-2 font-mono text-xs font-semibold text-muted-fg">
+          <div className="grid w-full grid-cols-[58px_1fr] items-stretch border-b border-border">
+            <span className="flex items-center justify-center py-3.5 text-[11px] font-bold uppercase tracking-[0.05em] text-muted-fg">
               MAX
             </span>
-            <div className="flex flex-col justify-center gap-1 px-3 py-2">
+            <div className="flex flex-col justify-center gap-2 py-3.5 pr-4">
               <label htmlFor="runtime" className="text-[15px] font-semibold leading-tight">
                 Max runtime — {runtimeLabel}
               </label>
@@ -136,7 +138,7 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
                 onChange={(e) =>
                   void updateSettings({ maxRuntime: RUNTIME_STOPS[Number(e.target.value)] })
                 }
-                className="accent-[#00d8ff]"
+                className="accent-[#5ac8fa]"
               />
             </div>
           </div>
@@ -158,19 +160,19 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
                   role="radio"
                   aria-checked={room.settings.deckLimit === n}
                   onClick={() => void updateSettings({ deckLimit: n })}
-                  className={`grid min-h-[54px] w-full cursor-pointer grid-cols-[54px_1fr] items-stretch border-b border-border text-left ${
-                    room.settings.deckLimit === n ? 'bg-primary' : ''
+                  className={`grid min-h-[60px] w-full cursor-pointer grid-cols-[58px_1fr] items-stretch border-b border-border text-left ${
+                    room.settings.deckLimit === n ? 'bg-white/[0.09]' : 'active:bg-white/[0.06]'
                   }`}
                 >
                   <span
-                    className={`flex items-center border-r border-border px-2 py-2 font-mono text-xs font-semibold ${
+                    className={`flex items-center justify-center py-3.5 text-[13px] font-bold ${
                       room.settings.deckLimit === n ? 'text-maybe' : 'text-muted-fg'
                     }`}
                   >
                     {room.settings.deckLimit === n ? '✓' : '—'}
                   </span>
-                  <span className="flex flex-col justify-center px-3 py-2">
-                    <span className="text-[15px] font-semibold">{n} cards</span>
+                  <span className="flex flex-col justify-center py-3.5 pr-4">
+                    <span className="text-[16px] font-semibold">{n} cards</span>
                   </span>
                 </button>
               ))}
@@ -189,9 +191,9 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
             onClick={() => setShowQr((v) => !v)}
           />
           {showQr && shareUrl && (
-            <div className="flex justify-center border-b border-border px-3 py-4">
+            <div className="flex justify-center border-b border-border px-3 py-5">
               {/* Dimmed: a full-white square six inches from a dilated pupil (R43). */}
-              <div className="bg-foreground/80 p-3">
+              <div className="rounded-[var(--radius-control)] bg-foreground/80 p-3">
                 <QRCode
                   value={shareUrl}
                   size={132}
@@ -200,8 +202,9 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
               </div>
             </div>
           )}
-        </section>
+        </Group>
 
+        <Group>
         {/*
           Counts in the waiting slot, names in the list. Ade cannot bear the
           room watching him be the one everyone waits on, so no waiting state
@@ -220,7 +223,8 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
                 : `Waiting on ${members.length - readyCount}.`
           }
         />
-        <section aria-label="Members" className="contents">
+        </Group>
+        <Group title={`Members · ${members.length}`} ariaLabel="Members">
           {members.map((u) => (
             <Row
               key={u.id}
@@ -230,14 +234,14 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
               detail={u.ready ? 'Ready' : 'Still setting up'}
             />
           ))}
-        </section>
+        </Group>
       </div>
 
-      <div className="border-t border-border">
+      <Dock>
         <BigButton onClick={() => void setReady(!me?.ready)} tone={me?.ready ? 'ghost' : 'go'}>
           {me?.ready ? 'Not ready' : "I'm ready"}
         </BigButton>
-      </div>
+      </Dock>
     </div>
   );
 }

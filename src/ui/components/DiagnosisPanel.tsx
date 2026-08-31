@@ -1,7 +1,7 @@
 'use client';
 
 import type { Diagnosis } from '../types';
-import { Bar, Row } from './Listing';
+import { Bar, Group, Row } from './Listing';
 
 /**
  * What the room sees when something upstream went wrong, or when the library
@@ -28,12 +28,19 @@ export function DiagnosisPanel({
         right={diagnosis.recoverable ? 'Can still play' : 'Not your fault'}
         tone="stop"
       />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <Row label="ERR" tone="stop" title={diagnosis.headline} detail={diagnosis.technical} />
-        <Row label="FROM" title={diagnosis.upstream} detail="The system that did not answer." />
-        <Row label="FIX" tone={diagnosis.recoverable ? 'go' : 'room'} title="What now" detail={diagnosis.fix} />
+      <div className="scroll-body flex min-h-0 flex-1 flex-col">
+        <Group>
+          <Row label="ERR" tone="stop" title={diagnosis.headline} detail={diagnosis.technical} />
+          <Row label="FROM" title={diagnosis.upstream} detail="The system that did not answer." />
+          <Row
+            label="FIX"
+            tone={diagnosis.recoverable ? 'go' : 'room'}
+            title="What now"
+            detail={diagnosis.fix}
+          />
+        </Group>
       </div>
-      {children && <div className="border-t border-border">{children}</div>}
+      {children}
     </div>
   );
 }

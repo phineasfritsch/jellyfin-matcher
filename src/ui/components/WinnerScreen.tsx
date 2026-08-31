@@ -7,7 +7,7 @@ import type { MatchDeclaredPayload } from '../types';
 import type { RoomHook } from '../useRoom';
 import { Confetti } from './Confetti';
 import { EmptyState } from './EmptyState';
-import { Bar, BigButton, CostLine, Row } from './Listing';
+import { Bar, BigButton, CostLine, Dock, Group, Row } from './Listing';
 
 export function WinnerScreen({
   roomHook,
@@ -51,29 +51,29 @@ export function WinnerScreen({
         tone={held ? 'go' : 'stop'}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <div className="flex items-start gap-3 border-b border-border p-3">
+      <div className="scroll-body flex min-h-0 flex-1 flex-col">
+        <div className="pane mx-3 mt-3 flex items-start gap-3.5 rounded-[var(--radius-card)] p-3.5">
           {winner.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={winner.posterUrl}
               alt={`${winner.title} poster`}
-              className="w-24 shrink-0 border border-border object-cover"
+              className="w-24 shrink-0 rounded-[var(--radius-control)] object-cover ring-1 ring-[var(--color-hairline)]"
             />
           ) : null}
           <div className="min-w-0">
             <h1
               ref={heading}
               tabIndex={-1}
-              className="font-display text-2xl uppercase leading-tight outline-none"
+              className="text-[22px] font-semibold leading-tight tracking-[-0.015em] outline-none"
             >
               {winner.title}
             </h1>
-            <p className="tabular mt-1 text-[12.5px] text-muted-fg">
+            <p className="tabular mt-1.5 text-[13px] text-muted-fg">
               {winner.year ?? 'Year unknown'}
               {winner.runtime != null && ` · ${winner.runtime} min`}
             </p>
-            <p className="mt-1 text-[12.5px] text-muted-fg">
+            <p className="mt-1 text-[13px] text-muted-fg">
               {match?.viaFallback
                 ? 'Nobody agreed outright, so the points decided.'
                 : 'Everyone said yes.'}
@@ -89,7 +89,7 @@ export function WinnerScreen({
         )}
 
         {match?.viaFallback && match.ranking && (
-          <section aria-label="Final ranking" className="contents">
+          <Group title="Final ranking" ariaLabel="Final ranking">
             {match.ranking.map((r, i) => {
               const card = room.deck.find((c) => c.id === r.cardId);
               return (
@@ -102,22 +102,22 @@ export function WinnerScreen({
                 />
               );
             })}
-          </section>
+          </Group>
         )}
       </div>
 
-      <div className="border-t border-border">
+      <Dock>
         {held && match?.playUrl ? (
           <a
             href={match.playUrl}
-            className="flex min-h-[52px] w-full cursor-pointer items-center justify-center bg-accent px-4 py-3.5 font-mono text-sm font-bold uppercase tracking-[0.08em] text-on-primary"
+            className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-[16px] font-semibold tracking-[-0.01em] text-on-primary"
           >
             Play in Jellyfin
           </a>
         ) : (
           <RequestControl title={winner.title} runtime={winner.runtime} />
         )}
-      </div>
+      </Dock>
     </div>
   );
 }
@@ -147,7 +147,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
     return (
       <p
         role="status"
-        className="flex items-center justify-center gap-2 border-t border-accent bg-accent/10 px-4 py-3.5 text-sm font-medium text-accent"
+        className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-[14px] font-medium text-accent ring-1 ring-accent/35"
       >
         <Check aria-hidden className="size-4" /> Asked. It appears in Jellyfin once the host
         approves it and it finishes downloading.
@@ -158,12 +158,15 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
   if (state === 'confirm' || state === 'busy') {
     return (
       <div className="flex flex-col">
-        <p id="request-cost" className="bg-destructive px-3 py-2 text-[13px] font-medium text-on-primary">
+        <p
+          id="request-cost"
+          className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-[13.5px] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
+        >
           Sends {title}
           {runtime != null && ` (${runtime} min)`} to Jellyseerr. The host approves the
           download; you will not see it tonight.
         </p>
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-2 gap-2">
           <BigButton onClick={send} tone="commit" disabled={state === 'busy'} ariaDescribedBy="request-cost">
             {state === 'busy' ? <Loader2 aria-hidden className="mx-auto size-5 animate-spin" /> : 'Yes, ask'}
           </BigButton>
@@ -181,7 +184,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
         Request via Jellyseerr
       </BigButton>
       {state === 'error' && message && (
-        <p role="alert" className="px-3 py-2 text-center text-sm text-destructive">
+        <p role="alert" className="px-1 py-1 text-center text-[14px] text-destructive">
           {message}
         </p>
       )}

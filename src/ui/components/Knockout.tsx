@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ABSTAIN } from '../../lib/knockout';
 import type { RoomHook } from '../useRoom';
-import { Bar, BigButton, Row, RowButton } from './Listing';
+import { Bar, BigButton, Dock, Group, Row, RowButton } from './Listing';
 
 export function Knockout({ roomHook }: { roomHook: RoomHook }) {
   const { room, userId } = roomHook;
@@ -58,34 +58,38 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
     <div className="flex min-h-0 flex-1 flex-col">
       <Bar left="What are you open to?" right={`${submittedCount} of ${members.length} in`} />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <Row
-          label="HOW"
-          title="Check everything you would watch"
-          detail="Overlap decides the deck. Picking more makes a deck more likely, not worse."
-        />
+      <div className="scroll-body flex min-h-0 flex-1 flex-col">
+        <Group>
+          <Row
+            label="HOW"
+            title="Check everything you would watch"
+            detail="Overlap decides the deck. Picking more makes a deck more likely, not worse."
+          />
+        </Group>
         {room.knockout.needsRevote && (
           <p
             role="alert"
-            className="border-b border-border bg-destructive px-3 py-2.5 text-[15px] font-semibold text-on-primary"
+            className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3 text-[15px] font-semibold text-destructive"
           >
             Too few shared picks — vote again with more options.
           </p>
         )}
 
         {genres === null ? (
-          <div aria-hidden>
-            {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className="h-[54px] animate-pulse border-b border-border bg-muted" />
-            ))}
-          </div>
+          <Group>
+            <div aria-hidden>
+              {Array.from({ length: 8 }, (_, i) => (
+                <div key={i} className="h-[60px] animate-pulse border-b border-border bg-white/[0.04]" />
+              ))}
+            </div>
+          </Group>
         ) : (
           /*
             Genres are rows, not chips. The old 26px chip was the primary
             control of the screen and it was a target a tremor cannot hit and
             a grid that does not contain it (R39).
           */
-          <section aria-label="Genres" className="contents">
+          <Group title="Genres" ariaLabel="Genres">
             {genres.map((g) => (
               <RowButton
                 key={g}
@@ -97,11 +101,11 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
                 onClick={() => toggle(g)}
               />
             ))}
-          </section>
+          </Group>
         )}
       </div>
 
-      <div className="border-t border-border">
+      <Dock>
         <BigButton
           onClick={() => {
             setBusy(true);
@@ -111,7 +115,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
         >
           {busy ? 'Sending…' : `Lock in ${picked.size}`}
         </BigButton>
-      </div>
+      </Dock>
     </div>
   );
 }
@@ -143,13 +147,15 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
     <div className="flex min-h-0 flex-1 flex-col">
       <Bar left="Vote one out" right={`${pool.length} left · 2 survive`} />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <Row
-          label="HOW"
-          title="Vote out the one you least want"
-          detail="Counts stay hidden until everyone has voted, so nobody is watched deciding."
-        />
-        <section aria-label="Surviving genres" className="contents">
+      <div className="scroll-body flex min-h-0 flex-1 flex-col">
+        <Group>
+          <Row
+            label="HOW"
+            title="Vote out the one you least want"
+            detail="Counts stay hidden until everyone has voted, so nobody is watched deciding."
+          />
+        </Group>
+        <Group title="Still in" ariaLabel="Surviving genres">
           {pool.map((g) => (
             <RowButton
               key={g}
@@ -159,7 +165,8 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
               onClick={() => void eliminate(g)}
             />
           ))}
-        </section>
+        </Group>
+        <Group>
         {/*
           R47. Somebody with no opinion should not have to invent one, and
           should not hold up four other people while they fail to. Yellow,
@@ -173,6 +180,7 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
           ariaLabel="Abstain — go with the room"
           onClick={() => void eliminate(ABSTAIN)}
         />
+        </Group>
       </div>
     </div>
   );
@@ -188,11 +196,13 @@ function Waiting({ title, detail, count }: { title: string; detail: string; coun
           was reached, and reduced motion does not freeze the only signal into
           a tilted static icon (R35).
         */}
-        <p role="status" className="font-display text-2xl uppercase tracking-wide">
+        <p role="status" className="text-[22px] font-semibold tracking-[-0.01em]">
           {title}
         </p>
-        <p className="text-sm text-muted-fg">{detail}</p>
-        <p className="font-mono text-xs uppercase tracking-[0.1em] text-maybe">{count}</p>
+        <p className="max-w-xs text-[14px] leading-relaxed text-muted-fg">{detail}</p>
+        <p className="tabular rounded-full bg-maybe/12 px-3 py-1 text-[13px] font-semibold text-maybe">
+          {count}
+        </p>
       </div>
     </div>
   );

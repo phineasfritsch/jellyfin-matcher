@@ -57,9 +57,9 @@ export function HomeActions() {
   }
 
   return (
-    <section className="flex w-full flex-col gap-6">
+    <section className="pane flex w-full flex-col gap-5 rounded-[var(--radius-card)] p-4">
       <div className="flex flex-col gap-2">
-        <label htmlFor="name" className="text-sm font-medium text-muted-fg">
+        <label htmlFor="name" className="text-[13.5px] font-medium text-muted-fg">
           Your name
         </label>
         <input
@@ -68,7 +68,7 @@ export function HomeActions() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Phineas"
           autoComplete="given-name"
-          className="h-12 border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
+          className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
         />
       </div>
 
@@ -76,7 +76,7 @@ export function HomeActions() {
         type="button"
         onClick={createRoom}
         disabled={busy !== null}
-        className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 border-0 bg-accent px-4 py-3.5 font-mono text-sm font-bold uppercase tracking-[0.08em] text-on-primary transition active:scale-[0.99] disabled:opacity-50"
+        className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-[16px] font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
       >
         {busy === 'create' ? (
           <Loader2 aria-hidden className="size-5 animate-spin" />
@@ -86,10 +86,10 @@ export function HomeActions() {
         Create room
       </button>
 
-      <div className="flex items-center gap-3 text-xs text-muted-fg">
-        <div className="h-px flex-1 bg-border" />
+      <div className="flex items-center gap-3 text-[12.5px] text-muted-fg">
+        <div className="h-px flex-1 bg-white/12" />
         or join one
-        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-white/12" />
       </div>
 
       <div className="flex gap-2">
@@ -101,13 +101,13 @@ export function HomeActions() {
           autoCapitalize="characters"
           autoComplete="off"
           aria-label="Room code"
-          className="tabular h-14 min-w-0 flex-1 border border-border bg-muted px-4 text-center font-mono text-xl font-bold tracking-[0.4em] outline-none focus:ring-2 focus:ring-secondary"
+          className="tabular h-14 min-w-0 flex-1 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-center font-mono text-xl font-bold tracking-[0.35em] outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
         />
         <button
           type="button"
           onClick={joinRoom}
           disabled={busy !== null}
-          className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center bg-maybe text-on-primary transition active:scale-95 disabled:opacity-50"
+          className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-maybe text-on-primary transition active:scale-95 disabled:opacity-50"
           aria-label="Join room"
         >
           {busy === 'join' ? (
@@ -119,7 +119,7 @@ export function HomeActions() {
       </div>
 
       {error && (
-        <p role="alert" className="bg-destructive px-3 py-2 text-[15px] font-semibold text-on-primary">
+        <p role="alert" className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-[14.5px] font-semibold text-destructive ring-1 ring-destructive/35">
           {error}
         </p>
       )}

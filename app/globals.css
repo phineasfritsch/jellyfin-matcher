@@ -1,37 +1,125 @@
 @import 'tailwindcss';
 
 /*
-  Late Show. A broadcast listings grid.
+  Glass. iOS-style materials over an ambient ground.
 
-  One meaning per hue, held on every screen. Adding a fifth meaning to a colour
-  that already has one is how this stops signalling anything:
+  The information architecture is unchanged from the direction the focus group
+  picked -- a label column, one row per control, one meaning per colour -- but
+  it is now built the way a grouped inset list is built: translucent cards
+  floating on a coloured ground, hairline edges, generous radii, system type.
 
-    yellow (--color-super)       the room's shared state
-    cyan   (--color-maybe)       mine alone -- my vote, my position
+  Two different border tokens, on purpose:
+
+    --color-border   a real structural divider. Stays above 3:1 against the
+                     ground because it separates one control from another, and
+                     that is information (R41).
+    --color-hairline the glass edge. Decorative: it describes the shape of a
+                     pane, and nothing depends on seeing it. Fill contrast, not
+                     this line, is what separates a card from the ground.
+
+  One meaning per hue, still. Adding a second meaning to a colour that already
+  has one is how it stops signalling anything:
+
+    amber  (--color-super)       the room's shared state
+    blue   (--color-maybe)       mine alone
     green  (--color-accent)      go, safe, already on the server
     red    (--color-destructive) stops, costs money, or is missing
-
-  --color-border is 3.7:1 against the background. It is a structural line on
-  every row, so it has to clear 3:1; the previous #312e81 measured 1.6:1 and
-  was invisible to anyone not looking straight at it (R41).
 */
 @theme {
-  --color-background: #0a0f1e;
-  --color-foreground: #f2f1ec;
-  --color-primary: #161d33;
-  --color-on-primary: #0a0f1e;
-  --color-secondary: #00d8ff;
-  --color-accent: #00e572;
-  --color-muted: #161d33;
-  --color-muted-fg: #9aa4cf;
-  --color-border: #5a6ab0;
-  --color-destructive: #ff3b2f;
-  --color-super: #ffe600;
-  --color-maybe: #00d8ff;
+  --color-background: #0a0c12;
+  --color-foreground: #f2f4f8;
+  --color-primary: rgba(255, 255, 255, 0.1);
+  --color-on-primary: #0a0c12;
+  --color-secondary: #5ac8fa;
+  --color-accent: #32d583;
+  --color-muted: rgba(255, 255, 255, 0.06);
+  --color-muted-fg: #a2a9b8;
+  --color-border: #5c6272;
+  --color-hairline: rgba(255, 255, 255, 0.14);
+  --color-destructive: #ff6b5e;
+  --color-super: #ffc95c;
+  --color-maybe: #5ac8fa;
 
-  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fjalla), Impact, sans-serif;
+  --radius-sheet: 22px;
+  --radius-card: 16px;
+  --radius-control: 13px;
+
+  --font-sans: var(--font-plex), -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    'Segoe UI', system-ui, sans-serif;
+  --font-display: var(--font-plex), -apple-system, BlinkMacSystemFont,
+    'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+/*
+  The ambient ground. Glass needs something behind it or it is just a grey box
+  with a rounded corner: these are what the panes are actually blurring. Fixed,
+  so scrolling a list moves the glass over the light rather than moving both.
+*/
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /*
+    Two radials over a base, not three: they are what the glass is blurring, so
+    they have to be there, but each one is a full-viewport layer that repaints
+    under every pane above it. Two is the budget.
+  */
+  background:
+    radial-gradient(54rem 38rem at 10% -6%, rgba(90, 200, 250, 0.18), transparent 62%),
+    radial-gradient(48rem 36rem at 88% 100%, rgba(50, 213, 131, 0.13), transparent 62%),
+    linear-gradient(168deg, #121826 0%, #0c101a 45%, #080a10 100%);
+}
+
+/*
+  One material, three weights, and they are the ONLY blurred surfaces in the
+  app. backdrop-filter composites the whole layer behind an element on every
+  frame, so it belongs on the handful of large, static chrome surfaces -- the
+  status bar, the dock, a grouped card, the sheet -- and never on small
+  elements or on anything that moves. Putting it on four vote buttons and three
+  drag badges that animate during a swipe wedged the compositor outright.
+*/
+.pane {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px) saturate(165%);
+  -webkit-backdrop-filter: blur(18px) saturate(165%);
+  border: 1px solid var(--color-hairline);
+}
+.pane-thin {
+  background: rgba(18, 22, 32, 0.7);
+  backdrop-filter: blur(20px) saturate(165%);
+  -webkit-backdrop-filter: blur(20px) saturate(165%);
+}
+.pane-solid {
+  background: #131722;
+  border: 1px solid var(--color-hairline);
+}
+.pane-thick {
+  background: rgba(13, 16, 24, 0.78);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  border: 1px solid var(--color-hairline);
+}
+
+/*
+  Backdrop-filter is the whole look, and a browser without it would render
+  near-invisible 7%-white panes on a dark ground. Fall back to an opaque fill
+  so the app stays legible rather than pretty.
+*/
+@supports not (backdrop-filter: blur(1px)) {
+  .pane,
+  .pane-thin {
+    background: #171a22;
+  }
+  .pane-solid {
+  background: #131722;
+  border: 1px solid var(--color-hairline);
+}
+.pane-thick {
+    background: #10131c;
+  }
 }
 
 html {
@@ -43,6 +131,28 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
   min-height: 100dvh;
+}
+
+/*
+  Content scrolls under the sticky dock, the way it does on iOS. Without this
+  the last row of a list sits behind the action button and cannot be tapped.
+*/
+.scroll-body {
+  overflow-y: auto;
+  padding-bottom: 1.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  overscroll-behavior: contain;
+}
+.scroll-body::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+.scroll-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Number columns (scores, timers) must not jitter */

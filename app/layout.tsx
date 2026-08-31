@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Fjalla_One, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 
 // Self-hosted by next/font, so nothing is fetched from a font CDN at runtime
@@ -16,13 +16,7 @@ const plexMono = IBM_Plex_Mono({
   variable: '--font-plex-mono',
   display: 'swap',
 });
-// A condensed grotesque, the way a listings page or a title card is set.
-const fjalla = Fjalla_One({
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-fjalla',
-  display: 'swap',
-});
+
 
 export const metadata: Metadata = {
   title: 'Jellyfin Matcher',
@@ -33,12 +27,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0A0F1E',
+  themeColor: '#0A0C12',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plex.variable} ${plexMono.variable} ${fjalla.variable}`}>
+    <html lang="en" className={`${plex.variable} ${plexMono.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

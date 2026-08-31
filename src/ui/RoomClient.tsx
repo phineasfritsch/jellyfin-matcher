@@ -45,15 +45,20 @@ export function RoomClient({ roomId }: { roomId: string }) {
   const { diagnosis } = roomHook;
   const blocked = diagnosis != null && !diagnosis.recoverable;
 
+  // h-dvh and overflow-hidden, not min-h-dvh: the whole point of the listings
+  // grid is that the status bar stays at the top and the one action stays at
+  // the bottom while the list moves between them. With min-h-dvh the page
+  // itself grew and scrolled, taking both off screen -- which is the layout
+  // this direction exists to replace (R21).
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <main className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {error && !diagnosis && (
-        <p role="alert" className="bg-destructive px-3 py-2 text-[15px] font-semibold text-on-primary">
+        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[15px] font-semibold text-destructive ring-1 ring-destructive/35">
           {error}
         </p>
       )}
       {diagnosis && diagnosis.recoverable && (
-        <p role="alert" className="bg-destructive px-3 py-2 text-[13px] font-medium text-on-primary">
+        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[13.5px] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35">
           {diagnosis.headline} — {diagnosis.fix}
         </p>
       )}

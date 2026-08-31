@@ -6,7 +6,7 @@ import { VOTE_POINTS } from '../../lib/match';
 import type { MovieCandidate } from '../../lib/types';
 import type { RoomHook } from '../useRoom';
 import { EmptyState } from './EmptyState';
-import { Bar, CostLine, RowButton } from './Listing';
+import { Bar, CostLine, Group, RowButton } from './Listing';
 import { MovieDetails } from './MovieDetails';
 import { SwipeCard } from './SwipeCard';
 import { VoteRow, VoteRowSkeleton } from './VoteRow';
@@ -71,7 +71,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         right={`${Math.min(myIndex + 1, room.deck.length)} / ${room.deck.length}`}
       />
       <div
-        className="h-1 bg-muted"
+        className="h-1 bg-white/[0.07]"
         role="progressbar"
         aria-valuenow={myIndex}
         aria-valuemax={room.deck.length}
@@ -88,7 +88,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         slow one; now the room only knows how many have finished.
       */}
       {others.length > 0 && (
-        <p className="tabular border-b border-border px-3 py-1.5 text-[12px] text-muted-fg">
+        <p className="tabular px-4 py-1.5 text-[12.5px] text-muted-fg">
           {others.filter((u) => (room.progress[u.id] ?? 0) >= room.deck.length).length} of{' '}
           {others.length} others finished
         </p>
@@ -124,7 +124,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         </EmptyState>
       ) : (
         <>
-          <div className="relative min-h-0 flex-1">
+          <div className="relative min-h-0 flex-1 px-3 pt-3">
             <AnimatePresence>
               {visible
                 .map((card, i) => (
@@ -153,6 +153,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
             all of them used to be final.
           */}
           {behind && (
+            <Group>
             <RowButton
               label="BACK"
               title={`Undo — ${behind.title}`}
@@ -160,6 +161,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
               ariaLabel={`Undo your vote on ${behind.title}`}
               onClick={() => void undoVote()}
             />
+            </Group>
           )}
         </>
       )}
@@ -194,7 +196,7 @@ function CardShell({
       className="absolute inset-0"
       style={{ zIndex: 10 - depth }}
       initial={false}
-      animate={{ scale: 1 - depth * 0.04, y: depth * 10, opacity: depth === 2 ? 0.4 : 1 }}
+      animate={{ scale: 1 - depth * 0.045, y: depth * 12, opacity: depth === 0 ? 1 : 0.55 }}
       exit={exit}
       transition={{ type: 'spring', stiffness: 400, damping: 35 }}
     >
