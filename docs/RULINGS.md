@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-87 rulings. 53 argued in a design document; the rest are
+89 rulings. 54 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -62,7 +62,7 @@ defined at their first citation.
 | **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:77` |
 | **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:211` +1 |
 | **R47** | _at its citation_ | `src/lib/knockout.ts:18` +1 |
-| **R48** | _at its citation_ | `server/index.ts:523` +2 |
+| **R48** | _at its citation_ | `server/handlers.ts:220` +2 |
 | **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
 | **R50** | _at its citation_ | `src/ui/components/VoteRow.tsx:14` |
 | **R51** | _at its citation_ | `src/ui/components/VoteRow.tsx:43` |
@@ -73,20 +73,21 @@ defined at their first citation.
 | **R58** | `docs/DIRECTION.md:221` | `src/ui/components/SwipeCard.tsx:171` |
 | **R59** | `docs/DIRECTION.md:247` | `src/ui/components/SwipeCard.tsx:164` |
 | **R60** | _at its citation_ | `src/ui/components/VoteRow.tsx:45` +3 |
-| **R61** | _at its citation_ | `server/index.ts:280` +3 |
+| **R61** | _at its citation_ | `server/handlers.ts:66` +4 |
 | **R62** | _at its citation_ | `server/validate.ts:73` +2 |
-| **R63** | _at its citation_ | `server/index.ts:590` +4 |
+| **R63** | _at its citation_ | `server/settlement.ts:65` +3 |
 | **R65** | _at its citation_ | `src/lib/deadline.ts:8` |
 | **R66** | _at its citation_ | `src/ui/useRoom.ts:73` |
-| **R67** | _at its citation_ | `server/index.ts:142` |
-| **R68** | _at its citation_ | `server/index.ts:76` +1 |
+| **R67** | _at its citation_ | `server/index.ts:144` |
+| **R68** | _at its citation_ | `server/index.ts:78` +1 |
+| **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:161` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:113` |
 | **R74** | _at its citation_ | `src/ui/components/VoteRow.tsx:53` |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
-| **R76** | _at its citation_ | `server/index.ts:661` |
-| **R77** | _at its citation_ | `server/index.ts:208` +3 |
+| **R76** | _at its citation_ | `server/index.ts:486` |
+| **R77** | _at its citation_ | `server/handlers.ts:102` +3 |
 | **R78** | _at its citation_ | `src/lib/mdblist.ts:70` |
 | **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:73` +1 |
 | **R80** | `docs/DIRECTION.md:262` | `src/ui/components/MovieDetails.tsx:46` +1 |
@@ -95,12 +96,13 @@ defined at their first citation.
 | **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:53` |
 | **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:160` +1 |
 | **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:78` +1 |
-| **R86** | `docs/DIRECTION.md:416` | `server/index.ts:217` +10 |
-| **R87** | `docs/DIRECTION.md:453` | `server/index.ts:629` +9 |
+| **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:114` +11 |
+| **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:254` +9 |
 | **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:91` +2 |
 | **R89** | `docs/DIRECTION.md:509` | `app/globals.css:37` |
-| **R90** | `docs/DIRECTION.md:536` | `server/index.ts:329` +8 |
+| **R90** | `docs/DIRECTION.md:536` | `server/index.ts:331` +8 |
 | **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:196` +1 |
 | **R92** | `docs/DIRECTION.md:590` | — |
+| **R93** | `docs/DIRECTION.md:609` | `server/handlers.ts:22` +2 |
 
 No ruling is orphaned.

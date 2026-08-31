@@ -45,6 +45,8 @@ import {
 } from './transitions';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { RoomStore, type Room, type RoomSettings } from './store';
+import * as handlers from './handlers';
+import type { Ctx } from './handlers';
 
 const PORT = Number(process.env.PORT ?? 3000);
 
@@ -370,194 +372,68 @@ function socketRoom(socket: Socket): Room | undefined {
   return roomId ? store.getRoom(roomId) : undefined;
 }
 
+/**
+ * Wiring only. Every decision below lives in server/handlers.ts, where a test
+ * can call it without a socket (R93).
+ */
 io.on('connection', (socket) => {
-  socket.on('room:create', (payload: unknown, ack?: Ack) => {
-    try {
-      if (authConfig().createRequires && !authedName(socket)) {
-        throw new Error('Sign in with your Jellyfin account to create a room');
-      }
-      const { name } = (payload ?? {}) as { name?: unknown };
-      // Ceilings, not budgets: a household needs one room (R77).
-      if (store.roomCount() >= MAX_ROOMS) {
-        throw new Error('This server is full. Ask the host to restart it.');
-      }
-      const made = (socket.data as { made?: number }).made ?? 0;
-      if (made >= ROOMS_PER_SOCKET) throw new Error('Too many rooms from this device');
-      const { room, userId, secret } = store.createRoom(
-        asName(name, 'Host'),
-        Boolean(authedName(socket)),
-      );
-      socket.data = { roomId: room.roomId, userId, made: made + 1 };
-      void socket.join(room.roomId);
-      // The secret goes to the member who owns the seat and nowhere else: it
-      // rides the ack, never a broadcast (R86).
-      ack?.({ ok: true, roomId: room.roomId, userId, secret });
-      broadcast(room);
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
-
-  socket.on(
-    'room:join',
-    (payload: unknown, ack?: Ack) => {
-      try {
-        const raw = (payload ?? {}) as {
-          roomId?: unknown;
-          name?: unknown;
-          userId?: unknown;
-          secret?: unknown;
-        };
-        const roomId = asRoomId(raw.roomId);
-        const userId = raw.userId == null ? undefined : asUserId(raw.userId);
-
-        /*
-          R86. Room codes are four characters and user ids are a global
-          counter, so an unlimited join endpoint is an enumeration oracle for
-          both. Attempts are counted per address whether or not they succeed,
-          because the useful signal to an attacker is which guesses were wrong.
-        */
-        const who = socket.handshake.address || 'unknown';
-        if (joinLimiter.isLimited(who)) {
-          const wait = joinLimiter.retryAfterSec(who);
-          throw new Error(`Too many attempts. Try again in ${Math.max(1, wait)} second(s).`);
-        }
-        joinLimiter.record(who);
-
-        // Only a fresh join is gated; reconnecting an existing member is not,
-        // so a guest who already joined keeps their seat.
-        if (!userId && authConfig().joinRequires && !authedName(socket)) {
-          throw new Error('Sign in with your Jellyfin account to join this room');
-        }
-        const result = userId
-          ? {
-              // Returning member. Supplying a user id used to be enough to
-              // become that member; it now needs the secret issued with it.
-              room: store.reconnect(roomId, userId, asSecret(raw.secret)),
-              userId,
-              secret: asSecret(raw.secret),
-            }
-          : store.joinRoom(roomId, asName(raw.name, 'Guest'), Boolean(authedName(socket)));
-        joinLimiter.clear(who);
-        socket.data = { roomId: result.room.roomId, userId: result.userId };
-        void socket.join(result.room.roomId);
-        ack?.({ ok: true, roomId: result.room.roomId, userId: result.userId, secret: result.secret });
-        broadcast(result.room);
-      } catch (err) {
-        fail(ack, err);
-      }
+  const ctx: Ctx = {
+    store,
+    session: {
+      get data() {
+        return socket.data as { roomId?: string; userId?: string; made?: number };
+      },
+      set data(next) {
+        socket.data = next;
+      },
+      authedName: () => authedName(socket),
+      address: () => socket.handshake.address || 'unknown',
+      joinChannel: (roomId) => void socket.join(roomId),
     },
-  );
+    fx: {
+      broadcast,
+      toRoom: (roomId, event, payload) => io.to(roomId).emit(event, payload),
+      settleIfPossible,
+      startSwiping: (room) => void startSwiping(room),
+    },
+    authConfig,
+    joinLimiter,
+  };
 
-  socket.on('room:ready', (payload: unknown, ack?: Ack) => {
+  /**
+   * One error path for every handler.
+   *
+   * Each of these used to carry its own try/catch calling fail(). Eleven copies
+   * of one decision is eleven chances for the next handler to forget it, and a
+   * refusal that never reaches the ack is a phone that hangs (R93).
+   */
+  function wrap(ack: Ack | undefined, run: () => Record<string, unknown> | void) {
     try {
-      const { ready } = (payload ?? {}) as { ready?: unknown };
-      const { roomId, userId } = socket.data as { roomId: string; userId: string };
-      const room = store.setReady(roomId, userId, asBoolean(ready));
-      startKnockout(room, store);
-      ack?.({ ok: true });
-      broadcast(room);
+      ack?.({ ok: true, ...(run() ?? {}) });
     } catch (err) {
       fail(ack, err);
     }
-  });
+  }
 
-  socket.on('room:settings', (payload: unknown, ack?: Ack) => {
-    try {
-      const settings = asSettings(payload);
-      // "Any Movie" scope unlocks Jellyseerr requests, so switching to it needs
-      // an account even when creating and joining did not.
-      if (settings.scope === 'wide' && authConfig().wideRequires && !authedName(socket)) {
-        throw new Error('Sign in with your Jellyfin account to search any movie');
-      }
-      const { roomId } = socket.data as { roomId: string };
-      const room = store.updateSettings(roomId, settings);
-      ack?.({ ok: true });
-      broadcast(room);
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
+  // Spelled out one per line rather than looped over a table: validate.test.ts
+  // reads this file as text and asserts each event by name, and a contract you
+  // cannot grep for is not much of a contract.
+  socket.on('room:create', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.createRoom(ctx, payload)));
+  socket.on('room:join', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.joinRoom(ctx, payload)));
+  socket.on('room:ready', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.setReady(ctx, payload)));
+  socket.on('room:settings', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.updateSettings(ctx, payload)));
+  socket.on('knockout:submit_genres', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.submitGenres(ctx, payload)));
+  socket.on('knockout:eliminate', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.eliminate(ctx, payload)));
+  socket.on('swipe:vote', (payload: unknown, ack?: Ack) => wrap(ack, () => handlers.vote(ctx, payload)));
+  socket.on('swipe:undo', (_payload: unknown, ack?: Ack) => wrap(ack, () => handlers.undo(ctx)));
+  socket.on('winner:reject', (_payload: unknown, ack?: Ack) => wrap(ack, () => handlers.reject(ctx)));
+  socket.on('disconnect', () => handlers.disconnect(ctx));
 
   socket.on('genres:list', async (_payload: unknown, ack?: Ack) => {
     try {
       const room = socketRoom(socket);
       const scope = room?.settings.scope ?? 'local';
       ack?.({ ok: true, genres: await genresForScope(scope) });
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
-
-  socket.on('knockout:submit_genres', (payload: unknown, ack?: Ack) => {
-    try {
-      const genres = asGenres((payload as { genres?: unknown })?.genres);
-      const room = socketRoom(socket);
-      const { userId } = socket.data as { userId: string };
-      if (!room || room.status !== 'KNOCKOUT') throw new Error('Not in knockout');
-      const { done } = recordGenres(room, userId, genres, store);
-      ack?.({ ok: true });
-      if (done) void startSwiping(room);
-      else broadcast(room);
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
-
-  socket.on('knockout:eliminate', (payload: unknown, ack?: Ack) => {
-    try {
-      const genre = asGenre((payload as { genre?: unknown })?.genre);
-      const room = socketRoom(socket);
-      const { userId } = socket.data as { userId: string };
-      if (!room || room.status !== 'KNOCKOUT') throw new Error('Not in knockout');
-      const { done } = recordElimination(room, userId, genre, store);
-      ack?.({ ok: true });
-      if (done) void startSwiping(room);
-      else broadcast(room);
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
-
-  /**
-   * Take back the last card you voted on (R48).
-   *
-   * The deck is the one place in the app where a slip costs something you
-   * cannot get back: a tremor, a neighbour knocking the phone, a thumb put
-   * down to steady it. Only your own last vote, only while the room is still
-   * swiping, and never once a winner has been declared -- undoing a vote that
-   * already locked a match would unlock a room that has moved on.
-   */
-  socket.on('swipe:undo', (_payload: unknown, ack?: Ack) => {
-    try {
-      const room = socketRoom(socket);
-      const { userId } = socket.data as { userId: string };
-      if (!room || room.status !== 'SWIPING') throw new Error('Not swiping');
-      const cardId = undoVote(room, userId, store);
-      if (!cardId) throw new Error('Nothing to undo');
-      ack?.({ ok: true, cardId });
-      broadcast(room);
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
-
-  socket.on('swipe:vote', (payload: unknown, ack?: Ack) => {
-    try {
-      const raw = (payload ?? {}) as { cardId?: unknown; points?: unknown };
-      const cardId = asCardId(raw.cardId);
-      const points = Number(raw.points);
-      const room = socketRoom(socket);
-      const { userId } = socket.data as { userId: string };
-      if (!room || room.status !== 'SWIPING') throw new Error('Not swiping');
-      if (!isValidVote(points)) throw new Error(`Invalid vote value: ${points}`);
-      if (!room.deck.some((c) => c.id === cardId)) throw new Error(`Unknown card: ${cardId}`);
-
-      recordVote(room, userId, cardId, points, store);
-      ack?.({ ok: true });
-
-      if (settleIfPossible(room, cardId)) return;
-      broadcast(room);
     } catch (err) {
       fail(ack, err);
     }
@@ -586,57 +462,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  /**
-   * "Not this one." (R63)
-   *
-   * The vote that ends the night was the only vote with no take-back: once
-   * `declareWinner` fires the room is FINISHED and `swipe:undo` refuses. A
-   * mis-tap on the last card ended the evening on a film nobody chose, and the
-   * only recovery was a new room code and the whole knockout again.
-   *
-   * Rejecting puts the room back where it was with that card struck out. Any
-   * member may do it -- a host role would make the person holding the phone
-   * the only one who can fix the room's mistake.
-   */
-  socket.on('winner:reject', (_payload: unknown, ack?: Ack) => {
-    try {
-      const room = socketRoom(socket);
-      if (!room) throw new Error('No winner to reject');
-      if (!rejectWinner(room, store)) throw new Error('No winner to reject');
-      ack?.({ ok: true });
-
-      // The deck may already be finished for everyone, in which case the
-      // points settle it again immediately on whatever is left standing.
-      if (!settleIfPossible(room, null)) broadcast(room);
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    const { roomId, userId } = socket.data as { roomId?: string; userId?: string };
-    if (!roomId || !userId) return;
-    const room = store.leaveRoom(roomId, userId);
-    if (!room) return;
-    /*
-      The person who just left may have been the only one the room was waiting
-      on. Without this the room waits for them forever, which is the stalemate
-      this whole app exists to prevent.
-
-      This covered SWIPING only. A phone closing during the knockout left the
-      room reading "2 of 3 in" until the leaver returned or the two-hour TTL
-      reaped it -- the same permanent stalemate, in the phase before the one
-      that was guarded (R87).
-    */
-    if (room.status === 'KNOCKOUT') {
-      const { done } = knockoutMemberLeft(room, store);
-      if (done) void startSwiping(room);
-      broadcast(room);
-      return;
-    }
-    if (room.status === 'SWIPING' && settleIfPossible(room, null)) return;
-    broadcast(room);
-  });
 });
 
 setInterval(() => {

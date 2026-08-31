@@ -605,3 +605,45 @@ made. Inventing forty ruling texts after the fact would produce a document that 
 authoritative and reflects nothing. What was missing was a way to find them, so the
 index is generated, says which rulings are argued in a document and which are defined
 at their citation, and is gated so a new citation cannot go unindexed.
+
+### R93 — The socket layer is functions, not closures over a live server.
+
+**Frozen:** eleven handlers inside `io.on('connection')` in `server/index.ts`, each
+closed over the live `io` and `store`, each with its own `try`/`catch`.
+
+**Built:** `server/handlers.ts` — the same decisions as plain functions taking a
+`Ctx`, with `index.ts` reduced to wiring.
+
+**Why.** No test in this repository imported `server/index.ts`. Under `npm run gate`
+the join gating, the reconnect branch, the disconnect path, settlement on departure
+and every vote guard never executed. What did touch that file was a string scan
+asserting the event names are still spelled correctly.
+
+That is the same shape as R82 one layer up: correct-looking code, checked by
+something that cannot see what it does. Three of the worst defects this project has
+shipped lived in exactly that gap and every one of them was green — an identity
+takeover on reconnect (R86), a knockout that could not resolve when a phone dropped
+(R87), and a winner screen that misreported itself after a reload (R90).
+
+**What the seam is.** `Session` is the per-socket state and the three questions only
+a real socket can answer; `Effects` is everything a handler does to the world outside
+its own room. A test passes recorders and calls the handler directly. Production
+passes the socket.io versions and behaves exactly as before.
+
+**One error path.** Each handler used to carry its own `try`/`catch` calling `fail`.
+Eleven copies of one decision is eleven chances for the twelfth to forget it, and a
+refusal that never reaches the ack is a phone that hangs. Handlers now throw and the
+wiring answers.
+
+**The registrations stay spelled out, one per line.** They could be a table and a
+loop. `validate.test.ts` reads this file as text and asserts each event by name, and
+a contract you cannot grep for is not much of a contract.
+
+**Faithfulness was the risk, and the extraction was not faithful at first.** The move
+silently dropped three behaviours — the `KNOCKOUT` status guards, `asBoolean` on the
+ready payload, and `undo` returning the card id the deck animates back. All three
+were restored before anything was wired. Then the new tests were mutation-checked,
+and the first version of the knockout-departure case turned out to be one a bug walks
+straight through: it asserted that *something* happened, which the fallthrough
+broadcast satisfies. A test a bug passes is worse than no test, because it reads
+like cover.
