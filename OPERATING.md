@@ -21,8 +21,8 @@ Numbered, counted, non-zero on failure:
 | Gate | Checks | Current |
 |---|---|---|
 | G1 | `tsc --noEmit` | clean |
-| G2 | `vitest run`, and the **counts** | 257 cases in 17 files |
-| G3 | pinned claims still pinned | 113 |
+| G2 | `vitest run`, and the **counts** | 266 cases in 18 files |
+| G3 | pinned claims still pinned | 115 |
 | G4 | counts stated in prose match `gates.json` | in sync |
 | G5 | `next build` | builds |
 | G6 | deployed app is up, configured, and on this commit | opt in |
@@ -53,7 +53,7 @@ hope, not a fact.
 
 ## What is pinned, and how to change a pin
 
-`src/ui/__tests__/pins.test.ts` holds 113 claims that nothing else asserts:
+`src/ui/__tests__/pins.test.ts` holds 115 claims that nothing else asserts:
 accessibility hooks, copy that discloses a consequence, empty states that
 explain themselves, README promises. They accumulated one decision at a time
 and a redesign done for appearance deletes them without a single other test
@@ -146,7 +146,7 @@ Every run is a fresh clone with no memory. Include:
 
 1. **Get current**: `git fetch origin && git checkout main && git pull --ff-only`
    then `npm ci`. Include the steps that look redundant.
-2. **The gate, numbered, with today's numbers**: 257 cases, 17 files, 113 pins.
+2. **The gate, numbered, with today's numbers**: 266 cases, 18 files, 115 pins.
    Drift is only visible against a number.
 3. **The traps, as prohibitions**: the list above, not a link to it.
 4. **Ownership**: exactly which files this agent may write. Not "the lobby area".

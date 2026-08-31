@@ -150,6 +150,8 @@ const LATESHOW: Pin[] = [
   { id: 'T37', why: 'The screen that first demands an opinion offers a way to decline it, rather than only the screen after', find: 'No preference — go with the room' },
   { id: 'T32', why: 'Each member is sent their own view of the room. Broadcasting the whole Room put everyone’s votes, deck position and ballots on every phone, while three screens promised otherwise (R61)', find: 'export function viewFor' },
   { id: 'T33', why: 'The broadcast is per-socket rather than one payload to the channel, which is what makes the redaction possible at all', find: "sock.emit('room:state', viewFor(room, data.userId))" },
+  { id: 'T47', why: 'The rules of a night are named transitions on a Room, testable without socket.io. They were seventeen field assignments spread across eight socket handlers, so the product was only readable and only testable through its transport (R69)', find: 'export function startKnockout' },
+  { id: 'T48', why: 'Undo arithmetic lives in one place. The old test re-implemented it inside the test body, which asserted the test could do the maths rather than that the server did', find: 'export function undoVote' },
   { id: 'T44', why: 'A deck build cannot spend an unbounded number of requests against somebody personal metered API key (R68)', find: 'requestBudget: number;' },
   { id: 'T45', why: 'The cost of the last build is readable, so a host can see what a night actually spent', find: 'export function lastRatingsCost' },
   { id: 'T46', why: 'getLimits is actually called: the one number saying whether tonight deck comes back rated existed in the client and was read by nothing', find: 'const limits = await getLimits();' },

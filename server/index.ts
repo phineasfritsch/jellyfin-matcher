@@ -5,12 +5,23 @@ import { Server, type Socket } from 'socket.io';
 import { getGenres, playbackUrl, posterOrigin } from '../src/lib/jellyfin';
 import { getMovieGenres as jellyseerrGenres, requestMovie } from '../src/lib/jellyseerr';
 import { getLimits, lastRatingsCost } from '../src/lib/mdblist';
-import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
 import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
 import { diagnoseDeckFailure, diagnoseThinDeck } from './diagnose';
 import { viewFor } from './roomView';
 import { canSettle } from './settlement';
+import {
+  beginDeckBuild,
+  deckBuilt,
+  deckBuildFailed,
+  declare,
+  recordElimination,
+  recordGenres,
+  recordVote,
+  rejectWinner,
+  startKnockout,
+  undoVote,
+} from './transitions';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { RoomStore, type Room, type RoomSettings } from './store';
 
@@ -230,9 +241,7 @@ function settleIfPossible(room: Room, justVoted: string | null): boolean {
   if (verdict.cardId === null) {
     // Nothing to win: an empty deck, or nobody voted for anything. Say so
     // rather than leaving the room on a spinner.
-    room.status = 'FINISHED';
-    room.winner = null;
-    store.touch(room);
+    declare(room, null, store);
     io.to(room.roomId).emit('match:declared', {
       winner: null,
       viaFallback: true,
@@ -247,9 +256,7 @@ function settleIfPossible(room: Room, justVoted: string | null): boolean {
 }
 
 function declareWinner(room: Room, cardId: string, viaFallback: boolean): void {
-  room.status = 'FINISHED';
-  room.winner = cardId;
-  store.touch(room);
+  declare(room, cardId, store);
   const card = room.deck.find((c) => c.id === cardId) ?? null;
   io.to(room.roomId).emit('match:declared', {
     winner: card,
@@ -261,12 +268,10 @@ function declareWinner(room: Room, cardId: string, viaFallback: boolean): void {
 }
 
 async function startSwiping(room: Room): Promise<void> {
-  room.status = 'SWIPING'; // deck empty until build completes — clients show skeletons
+  beginDeckBuild(room, store); // clients show skeletons until the deck lands
   broadcast(room);
   try {
-    room.deck = await buildDeckForRoom(room);
-    room.progress = Object.fromEntries(Object.keys(room.users).map((id) => [id, 0]));
-    store.touch(room);
+    deckBuilt(room, await buildDeckForRoom(room), store);
 
     // Built, but thin. Nobody's key is wrong; it just looks that way from the
     // couch, so the room is told which it is (R54).
@@ -288,8 +293,7 @@ async function startSwiping(room: Room): Promise<void> {
   } catch (err) {
     console.error(`Deck build failed for ${room.roomId}:`, err);
     const diagnosis = diagnoseDeckFailure(err, room.deck.length);
-    room.status = 'KNOCKOUT'; // let the room retry rather than strand it
-    room.knockout = createKnockout();
+    deckBuildFailed(room, store); // let the room retry rather than strand it
     io.to(room.roomId).emit('room:diagnosis', diagnosis);
     io.to(room.roomId).emit('room:error', { message: diagnosis.headline });
   }
@@ -346,10 +350,7 @@ io.on('connection', (socket) => {
     try {
       const { roomId, userId } = socket.data as { roomId: string; userId: string };
       const room = store.setReady(roomId, userId, Boolean(ready));
-      if (room.status === 'LOBBY' && store.allReady(room)) {
-        room.status = 'KNOCKOUT';
-        room.knockout = createKnockout();
-      }
+      startKnockout(room, store);
       ack?.({ ok: true });
       broadcast(room);
     } catch (err) {
@@ -388,15 +389,10 @@ io.on('connection', (socket) => {
       const room = socketRoom(socket);
       const { userId } = socket.data as { userId: string };
       if (!room || room.status !== 'KNOCKOUT') throw new Error('Not in knockout');
-      room.knockout = submitGenres(room.knockout, userId, genres, Object.keys(room.users));
-      store.touch(room);
+      const { done } = recordGenres(room, userId, genres, store);
       ack?.({ ok: true });
-      if (room.knockout.phase === 'DONE') {
-        room.lockedGenres = room.knockout.locked;
-        void startSwiping(room);
-      } else {
-        broadcast(room);
-      }
+      if (done) void startSwiping(room);
+      else broadcast(room);
     } catch (err) {
       fail(ack, err);
     }
@@ -407,15 +403,10 @@ io.on('connection', (socket) => {
       const room = socketRoom(socket);
       const { userId } = socket.data as { userId: string };
       if (!room || room.status !== 'KNOCKOUT') throw new Error('Not in knockout');
-      room.knockout = submitElimination(room.knockout, userId, genre, Object.keys(room.users));
-      store.touch(room);
+      const { done } = recordElimination(room, userId, genre, store);
       ack?.({ ok: true });
-      if (room.knockout.phase === 'DONE') {
-        room.lockedGenres = room.knockout.locked;
-        void startSwiping(room);
-      } else {
-        broadcast(room);
-      }
+      if (done) void startSwiping(room);
+      else broadcast(room);
     } catch (err) {
       fail(ack, err);
     }
@@ -435,19 +426,9 @@ io.on('connection', (socket) => {
       const room = socketRoom(socket);
       const { userId } = socket.data as { userId: string };
       if (!room || room.status !== 'SWIPING') throw new Error('Not swiping');
-      const index = (room.progress[userId] ?? 0) - 1;
-      if (index < 0) throw new Error('Nothing to undo');
-      const card = room.deck[index];
-      if (!card) throw new Error('Nothing to undo');
-
-      const cardVotes = { ...room.votes[card.id] };
-      delete cardVotes[userId];
-      if (Object.keys(cardVotes).length === 0) delete room.votes[card.id];
-      else room.votes[card.id] = cardVotes;
-      room.progress[userId] = index;
-      store.touch(room);
-
-      ack?.({ ok: true, cardId: card.id });
+      const cardId = undoVote(room, userId, store);
+      if (!cardId) throw new Error('Nothing to undo');
+      ack?.({ ok: true, cardId });
       broadcast(room);
     } catch (err) {
       fail(ack, err);
@@ -462,9 +443,7 @@ io.on('connection', (socket) => {
       if (!isValidVote(points)) throw new Error(`Invalid vote value: ${points}`);
       if (!room.deck.some((c) => c.id === cardId)) throw new Error(`Unknown card: ${cardId}`);
 
-      room.votes[cardId] = { ...room.votes[cardId], [userId]: points };
-      room.progress[userId] = (room.progress[userId] ?? 0) + 1;
-      store.touch(room);
+      recordVote(room, userId, cardId, points, store);
       ack?.({ ok: true });
 
       if (settleIfPossible(room, cardId)) return;
@@ -512,11 +491,8 @@ io.on('connection', (socket) => {
   socket.on('winner:reject', (_payload: unknown, ack?: Ack) => {
     try {
       const room = socketRoom(socket);
-      if (!room || room.status !== 'FINISHED') throw new Error('No winner to reject');
-      if (room.winner) room.rejected.push(room.winner);
-      room.winner = null;
-      room.status = 'SWIPING';
-      store.touch(room);
+      if (!room) throw new Error('No winner to reject');
+      if (!rejectWinner(room, store)) throw new Error('No winner to reject');
       ack?.({ ok: true });
 
       // The deck may already be finished for everyone, in which case the
