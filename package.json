@@ -18,7 +18,8 @@
     "counts": "tsx scripts/sync-counts.ts",
     "shots": "tsx scripts/screenshots.ts",
     "rulings": "tsx scripts/rulings.ts",
-    "e2e:two": "tsx scripts/e2e-two-phones.ts"
+    "e2e:two": "tsx scripts/e2e-two-phones.ts",
+    "contrast": "tsx scripts/contrast.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

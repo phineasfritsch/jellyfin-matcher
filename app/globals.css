@@ -50,7 +50,20 @@
   --color-muted-fg: #9ea69f;
   --color-border: #737e77;
   --color-hairline: rgba(255, 255, 255, 0.14);
-  --color-destructive: #e0563f;
+  /*
+    R95: lifted from #e0563f, which was measured and not merely chosen.
+
+    Every place this is used as ink, it sits on a tint of itself over a dark
+    card -- the No button, the cost line, every role="alert". On that ground
+    #e0563f came to 4.19:1, so the word "No" on the control a person taps
+    fifty times a night was below the 4.5:1 its size requires, and so was the
+    "-5" beneath it. #e86b54 measures 5.01:1 on the same ground.
+
+    The two places it is a fill rather than ink (the drag verdict badge, the
+    destructive BigButton) carry #0b0e11 text on top, and a lighter red raises
+    that contrast too, so nothing is traded away for this.
+  */
+  --color-destructive: #e86b54;
   --color-super: #e8c14a;
   --color-maybe: #2fbdbd;
 

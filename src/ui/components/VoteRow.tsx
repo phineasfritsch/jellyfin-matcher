@@ -68,7 +68,20 @@ export function VoteRow({
             {v.glyph}
           </span>
           <span className="text-label font-semibold">{v.word}</span>
-          <span className="tabular text-caption opacity-70">{signed(v.points)}</span>
+          {/*
+            R95: no opacity on the points.
+
+            opacity-70 composites the ink 70/30 with whatever is behind it, and
+            behind it is the button's own coloured tint -- so the number lost
+            about a third of its contrast against the exact surface it had to
+            beat. Measured off docs/screenshots/05-deck.png: -5 at 2.82:1, +2 at
+            3.35:1, +3 at 3.55:1, all under the 4.5:1 a 12px number needs, on
+            the screen a person reads fifty times a night in a dark room. The
+            file's own comment says a scale nobody can see is a scale nobody can
+            use. text-caption already makes this secondary; dimming it as well
+            was paying twice for the same emphasis.
+          */}
+          <span className="tabular text-caption">{signed(v.points)}</span>
         </button>
       ))}
     </div>

@@ -115,9 +115,27 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
               aria-label={`Ratings, synopsis and trailer for ${card.title}`}
               onPointerDownCapture={(e) => e.stopPropagation()}
               onClick={onOpenDetails}
-              className="absolute bottom-3 right-3 flex size-12 cursor-pointer items-center justify-center rounded-full bg-background/85 text-foreground ring-1 ring-white/25 transition active:scale-90"
+              /*
+                R96: a thumb is not type, so this does not scale with the text.
+
+                `size-12` is 3rem, and at the 32px root a reader on 200% text
+                gets a 96px disc. The poster it sits on is about 53px tall at
+                that size, so the button was taller than its own container: its
+                centre sat 19px ABOVE the card's top edge, the article's
+                overflow-hidden clipped roughly 70% of it along with the whole
+                Info glyph, and because overflow clips hit-testing too the
+                tappable region collapsed to about 88x29 -- under the 44px
+                minimum in REDESIGN.md, on the one control that explains the
+                film you are voting on.
+
+                R60 is about type tracking the reader, and it is right. A touch
+                target is not type: a thumb does not get bigger when you raise
+                the font size, so this is 44px at every text size -- the floor
+                the redesign already asked for, now as a literal.
+              */
+              className="absolute bottom-3 right-3 flex size-[44px] cursor-pointer items-center justify-center rounded-full bg-background/85 text-foreground ring-1 ring-white/25 transition active:scale-90"
             >
-              <Info aria-hidden className="size-5" />
+              <Info aria-hidden className="size-[20px] shrink-0" />
             </button>
           )}
 

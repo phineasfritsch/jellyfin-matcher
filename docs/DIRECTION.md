@@ -698,3 +698,51 @@ and the other's phone dies, and asserts the survivor's screen moves on its own.
 Restoring the pre-R87 rule — resolving against every member rather than the connected
 ones — fails it with the sentence the bug deserves: *timed out waiting for Cy to be
 released from the knockout.*
+
+### R95 — Do not dim the thing that is already small.
+
+**Frozen:** the vote points rendered `text-caption opacity-70`, and
+`--color-destructive` was `#e0563f`.
+
+**Built:** no opacity on the points, and the destructive ink lifted to `#e86b54`.
+
+**Why.** `opacity-70` composites the ink 70/30 with whatever is behind it, and
+behind it is the button's own coloured tint — so the number lost about a third of
+its contrast against the exact surface it had to beat. Sampled from
+`docs/screenshots/05-deck.png`: `-5` at **2.82:1**, `+2` at 3.35:1, `+3` at 3.55:1.
+Only `+1`, on the neutral button, passed. This is the screen a person reads fifty
+times a night, often in a dark room, and `VoteRow.tsx` opens by saying a scale
+nobody can see is a scale nobody can use.
+
+`text-caption` already makes the points secondary. Dimming them as well was paying
+twice for the same emphasis, and the second payment came out of legibility.
+
+Removing the opacity was not enough for the red. Everywhere `--color-destructive` is
+used as ink it sits on a tint of itself over a dark card, and on that ground
+`#e0563f` measures 4.19:1 — so the *word* "No" was under 4.5:1 too, at full opacity,
+and had been all along. `#e86b54` measures 5.01:1 there. The two places the token is
+a fill rather than ink carry `#0b0e11` on top, and a lighter red raises that contrast
+as well, so nothing was traded for it.
+
+**Measured before and after, from the rendered PNG.** `-5` 2.82 → 5.03, `+2` 3.35 →
+5.13, `+3` 3.55 → 5.63, the word "No" 4.19 → 5.04. This is the second contrast bug
+settled this way after R89, so the sampler is now a command: `npm run contrast`.
+
+### R96 — A thumb is not type.
+
+**Frozen:** the deck's details button was `size-12` — 3rem.
+
+**Built:** `size-[44px]`, with a `20px` glyph.
+
+**Why.** At the 32px root a reader on 200% text got a 96px disc, on a poster strip
+about 53px tall. The button was taller than its own container: its centre sat above
+the card's top edge, the article's `overflow-hidden` clipped roughly 70% of it along
+with the entire Info glyph, and — because overflow clips hit-testing too — the
+tappable region collapsed to about 88×29, under the 44px minimum
+`docs/REDESIGN.md` already asks for. The control that explains the film you are
+voting on became an unlabelled dark smear.
+
+R60 — every size in rem, so type tracks the reader — is right and is not in question
+here. A touch target is not type. A thumb does not get bigger when you raise the font
+size, so a control sized for one should not either. Rem for text; a floor in pixels
+for the things a finger has to hit.
