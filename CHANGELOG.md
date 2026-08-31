@@ -4,8 +4,8 @@ Notable changes, newest first. Versions follow [semantic versioning](https://sem
 
 ## Unreleased
 
-Twenty-three commits from two rounds of board review, each finding adversarially
-verified before any of it was built. Every item either round raised that code could
+Thirty-nine commits from five rounds of board review, each finding adversarially
+verified before any of it was built. Every item any round raised that code could
 reach is closed. The version is deliberately not bumped here: cutting a release is a
 decision for whoever runs this server, and the notes are ready when they want it.
 
@@ -29,6 +29,21 @@ refused once and the member rejoins by name. Nothing else about a room is affect
 
   **If you run in Docker, keep the `./cache` volume**, or the household forgets every
   time the container is replaced.
+
+### Fixed — signing in destroyed the room you signed in for
+
+- **Tapping "Any Movie" could delete your seat, and the room with it.** That mode
+  needs a Jellyfin account on the default settings, and signing in used to reconnect
+  the socket so the new token would reach the server. A reconnect is a disconnect, and
+  a member who leaves the lobby is removed along with their seat — so the person who
+  tapped the feature lost the room they had just read the code out for, and was told
+  "This room is gone — the server restarted." The token is handed to the live
+  connection now.
+- **A phone that changed network could be thrown out of a room it was sitting in.**
+  A dropped connection is not noticed for up to forty-five seconds, so a phone that
+  switches from wifi to cellular is back long before the old connection is declared
+  dead — and that late notice used to evict them. Seats now belong to a connection, so
+  a stale one cannot give away a seat somebody else is holding.
 
 ### Fixed — the room could be told the wrong thing
 
@@ -113,6 +128,11 @@ refused once and the member rejoins by name. Nothing else about a room is affect
 - **A reload on the winner screen misreported the night.** How the night ended lived
   only in the announcement event, so one refresh reported a film sitting in your
   library as "Not on your server" and offered to download it.
+- **The download disclosure promised an approval step that usually is not there.**
+  It said the host is asked to approve a request before anything is fetched; Matcher
+  requests with an admin key, and Jellyseerr approves those itself unless the host has
+  configured otherwise. It now reports what actually happened — accepted, or waiting
+  for your host — rather than assuming the kinder answer.
 - Three code sites and two design rulings promised the download disclosure would
   state a size. No size datum reaches this app from anywhere, and the real figure is
   not settled until the host's server picks a release. The copy names the uncertainty
@@ -126,17 +146,23 @@ refused once and the member rejoins by name. Nothing else about a room is affect
 - The screenshot harness asserts behaviour while it is in each state, and exits
   non-zero: focus moves into the details sheet, focus returns on close, and a reload
   on the winner screen still tells the truth.
-- `docs/RULINGS.md` indexes all 86 numbered rulings to where each is actually
+- `docs/RULINGS.md` indexes all 95 numbered rulings to where each is actually
   explained. Thirty-nine were cited in code and defined in neither design document,
   while `CLAUDE.md` pointed at a range that document does not contain.
 - `docs/BOARD.md` records the review board — its mandates, how a round runs, and the
   rule that the product is finished only when all five vote finished. It had existed
   only inside chat sessions.
-- The gate is 8 checks: 462 test cases in 29 files, 167 pinned claims.
-- `npm run e2e:two` drives **two real browsers through three rooms** — a whole night,
-  a knockout where one phone dies, and a lobby drop that recovers. Until it existed,
-  every harness here drove a single page, so the product's central claim — that the
-  room lands on one film on *everybody's* phone — was checked by nothing.
+- The gate is 8 checks: 538 test cases in 33 files, 184 pinned claims.
+- `npm run e2e:two` drives **two real browsers through four rooms** — a whole night,
+  a knockout where one phone dies, a lobby drop that recovers, and a network blip that
+  must not evict anybody. Until it existed, every harness here drove a single page, so
+  the product's central claim — that the room lands on one film on *everybody's* phone
+  — was checked by nothing.
+- **The gate can execute the client.** Nothing in the suite rendered a component or
+  ran a hook, so every client defect this project has found was caught by a browser
+  harness, by a reader, or by looking at a screenshot. The winner screen, the failure
+  panel, the vote row, the screen chooser and the socket module all run under the gate
+  now.
 - `npm run contrast` measures a colour pair out of a committed screenshot, because
   two contrast bugs in a row were arithmetic that was correct about the wrong
   surface.

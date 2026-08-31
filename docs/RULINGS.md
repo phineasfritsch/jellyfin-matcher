@@ -20,7 +20,7 @@ defined at their first citation.
 | **R03** | `docs/REDESIGN.md:103` | — |
 | **R04** | `docs/REDESIGN.md:105` | — |
 | **R05** | `docs/REDESIGN.md:109` | — |
-| **R06** | `docs/REDESIGN.md:111` | `src/ui/components/VoteRow.tsx:12` |
+| **R06** | `docs/REDESIGN.md:111` | `src/ui/components/VoteRow.tsx:12` +1 |
 | **R07** | `docs/REDESIGN.md:113` | — |
 | **R08** | `docs/REDESIGN.md:115` | — |
 | **R09** | `docs/REDESIGN.md:120` | — |
@@ -53,7 +53,7 @@ defined at their first citation.
 | **R36** | `docs/DIRECTION.md:140` | — |
 | **R37** | `docs/DIRECTION.md:141` | `src/ui/components/WinnerScreen.tsx:274` |
 | **R38** | `docs/DIRECTION.md:145` | — |
-| **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:97` +2 |
+| **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:97` +3 |
 | **R40** | _at its citation_ | `src/ui/components/Listing.tsx:16` +3 |
 | **R41** | _at its citation_ | `src/ui/components/Listing.tsx:19` +2 |
 | **R42** | _at its citation_ | `src/ui/components/Listing.tsx:206` +1 |

@@ -344,7 +344,7 @@ function RequestControl({
         data-app-focus
         role="group"
         aria-label="Confirm asking for this film"
-        className="flex flex-col outline-none"
+        className="flex flex-col gap-2 outline-none"
       >
         <p
           id="request-cost"

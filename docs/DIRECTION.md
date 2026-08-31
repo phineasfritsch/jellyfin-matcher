@@ -1384,3 +1384,72 @@ awkward to reach against a live server: a thin-deck notice that must stay a stri
 while the room renders underneath it, and a refused rejoin carrying its reason.
 
 The last piece of the client the gate could not execute is executable now.
+
+### R117 — The socket module is executed, not read.
+
+**Frozen:** `src/ui/socket.ts` was reachable only as text — `validate.test.ts` greps
+it for event names, which proves the strings are spelled the same and nothing about
+what they do.
+
+**Built:** eight cases that run it, with `socket.io-client` mocked.
+
+**Why.** Two of this project's most expensive bugs live in this file. R111 — `setAuth`
+ended with `disconnect().connect()`, and the server reads a teardown as the member
+leaving, so signing in to unlock the mode the README leads with destroyed the seat
+that raised the login. R86 — the seat secret is what makes any silent reconnect
+possible, and if it is not stored beside the user id every rejoin after a phone lock
+is refused.
+
+The first assertion is the one that would have caught R111 outright: `disconnect` is
+never called, and `auth:token` is emitted instead. Reintroducing the old line fails
+it in milliseconds.
+
+**Two environment facts worth writing down**, because both cost time and neither is
+guessable.
+
+`jsdom` here exposes **no** `localStorage`, with or without a real origin. The obvious
+diagnosis — opaque origin, therefore no storage — is wrong: setting a URL changes
+`window.location` and brings no storage with it. A file that needs it provides its
+own, which is honest for what is being checked. The app wraps every access in
+`try`/`catch` precisely because a private-mode browser can refuse, so what matters is
+which keys it writes and what it does with what comes back, not the storage engine.
+
+And `vi.mock` is hoisted above imports, so a module under test has to be pulled in
+with a dynamic `import` after the mock is declared, or it binds the real socket
+client before the fake exists.
+
+### R118 — The runtime slider is a 44px target.
+
+**Frozen:** a bare `<input type="range">` whose only styling was `accent-maybe` — a
+colour, not a size.
+
+**Built:** a 44px-tall control with a 28px thumb on a real track.
+
+**Why.** With no size given it took the user agent's default: about 15 CSS px tall,
+measured off the shipped capture. Every other control in the app is 44, 52, 60 or 62,
+and this one was shorter than the 26px chip R39 threw out as *"a target a tremor
+cannot hit"* — on the control a household reaches for when somebody has school in the
+morning. `README.md` promised, unqualified, that nothing you tap is under 44px. It
+was the only control in the app that made that sentence false, and I had written that
+sentence an hour earlier while fixing a different false claim in the same line.
+
+A native range takes a touch anywhere on its box, so the width was never the problem
+and the height was all of it. Still a native input, deliberately: it answers arrow
+keys and announces its value and range to a screen reader, which nothing rebuilt out
+of divs does as well (R06).
+
+### R119 — The release notes are held to the same standard as the prose.
+
+**Frozen:** `CHANGELOG.md` sat outside `sync-counts`, and drifted twelve commits
+behind with three wrong numbers at once.
+
+**Built:** its gate line is generated from `gates.json` like every other count.
+
+**Why.** This is the third time a file has drifted because it was outside that list —
+the README badges were the first, `QUEUE.md` the second — and each time the fix was
+the same one line. The changelog is the file a self-hoster reads to decide whether to
+pull and redeploy, and it was the last place these numbers were written by hand.
+
+G4's whole argument is that a gate stops false claims shipping. A claim it does not
+read is a claim nobody checks, and "nobody checks it" is not a property of the file,
+it is a property of the list.

@@ -259,6 +259,60 @@ body {
   }
 }
 
+/*
+  R118: the runtime slider is a 44px target.
+
+  It shipped as a bare <input type="range"> whose only styling was a colour, so
+  it took the user agent's default: a thumb about 15 CSS px tall over a 6px
+  track. Every other control in the app is 44, 52, 60 or 62 -- and it is shorter
+  than the 26px chip R39 threw out as "a target a tremor cannot hit", on the one
+  control a household reaches for when somebody has school in the morning.
+
+  A native range takes a touch anywhere on its box, so the width was never the
+  problem and the height was the whole of it. The input is 44px tall now and the
+  thumb is drawn at 28 inside that: big enough to see, with the target larger
+  than the paint.
+
+  Still a native input, deliberately. It answers arrow keys, announces its value
+  and its range to a screen reader, and does all of that better than anything
+  rebuilt out of divs (R06).
+*/
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--color-maybe);
+  border: none;
+  /* Centre the 28px thumb on the 6px track inside a 44px box. */
+  margin-top: -11px;
+}
+.slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--color-maybe);
+  border: none;
+}
+
 .scroll-body {
   overflow-y: auto;
   padding-bottom: 1.25rem;

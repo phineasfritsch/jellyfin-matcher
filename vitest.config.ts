@@ -25,6 +25,16 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
+    /*
+      A real origin rather than about:blank, so anything that reasons about the
+      page's URL sees something plausible.
+
+      It does NOT bring localStorage with it: this jsdom exposes none at all,
+      with or without an origin, so a file that needs it provides its own. Said
+      here because the obvious guess -- opaque origin, therefore no storage --
+      is wrong, and the next person will make it.
+    */
+    environmentOptions: { jsdom: { url: 'http://localhost:3000' } },
     environmentMatchGlobs: [['src/ui/__tests__/*.render.test.tsx', 'jsdom']],
   },
 });

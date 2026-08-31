@@ -37,6 +37,11 @@ const EDITS: Array<[string, RegExp, string]> = [
   // QUEUE.md sat outside this list and drifted three waves behind, which is
   // the same class of stale claim G4 exists to stop.
   ['QUEUE.md', /\*\*Today's numbers:\*\* \d+ test cases, \d+ files, \d+ pinned claims/g, `**Today's numbers:** ${g.testCases} test cases, ${g.testFiles} files, ${g.pinnedClaims} pinned claims`],
+  // R119: and the release notes, which drifted twelve commits behind and stated
+  // three wrong numbers at once. It is the one file a host reads to decide
+  // whether to pull, and it was the last place these numbers were written by
+  // hand.
+  ['CHANGELOG.md', /The gate is 8 checks: \d+ test cases in \d+ files, \d+ pinned claims\./g, `The gate is 8 checks: ${g.testCases} test cases in ${g.testFiles} files, ${g.pinnedClaims} pinned claims.`],
 ];
 
 const stale: string[] = [];
