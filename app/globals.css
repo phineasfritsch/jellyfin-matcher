@@ -1,20 +1,37 @@
 @import 'tailwindcss';
 
-@theme {
-  --color-background: #0f0f23;
-  --color-foreground: #f8fafc;
-  --color-primary: #1e1b4b;
-  --color-on-primary: #ffffff;
-  --color-secondary: #4338ca;
-  --color-accent: #22c55e;
-  --color-muted: #27273b;
-  --color-muted-fg: #a5b4fc;
-  --color-border: #312e81;
-  --color-destructive: #ef4444;
-  --color-super: #facc15;
-  --color-maybe: #38bdf8;
+/*
+  Late Show. A broadcast listings grid.
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  One meaning per hue, held on every screen. Adding a fifth meaning to a colour
+  that already has one is how this stops signalling anything:
+
+    yellow (--color-super)       the room's shared state
+    cyan   (--color-maybe)       mine alone -- my vote, my position
+    green  (--color-accent)      go, safe, already on the server
+    red    (--color-destructive) stops, costs money, or is missing
+
+  --color-border is 3.7:1 against the background. It is a structural line on
+  every row, so it has to clear 3:1; the previous #312e81 measured 1.6:1 and
+  was invisible to anyone not looking straight at it (R41).
+*/
+@theme {
+  --color-background: #0a0f1e;
+  --color-foreground: #f2f1ec;
+  --color-primary: #161d33;
+  --color-on-primary: #0a0f1e;
+  --color-secondary: #00d8ff;
+  --color-accent: #00e572;
+  --color-muted: #161d33;
+  --color-muted-fg: #9aa4cf;
+  --color-border: #5a6ab0;
+  --color-destructive: #ff3b2f;
+  --color-super: #ffe600;
+  --color-maybe: #00d8ff;
+
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fjalla), Impact, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 html {
@@ -31,6 +48,15 @@ body {
 /* Number columns (scores, timers) must not jitter */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/*
+  Focus has to be visible on a listings grid where rows are the controls.
+  Cyan because focus is a thing that is true of you alone.
+*/
+:focus-visible {
+  outline: 3px solid var(--color-maybe);
+  outline-offset: -3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

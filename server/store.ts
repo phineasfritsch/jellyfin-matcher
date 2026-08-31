@@ -11,6 +11,13 @@ export interface RoomUser {
   name: string;
   ready: boolean;
   connected: boolean;
+  /**
+   * Whether this member signed in with a Jellyfin account. Shown in the lobby
+   * so the host knows who is in the room before reading the code aloud, and
+   * carried onto a request so an approval can name who asked (R44). Not a
+   * permission -- a guest may do everything a member may do.
+   */
+  authed: boolean;
 }
 
 export interface RoomSettings {
@@ -72,14 +79,14 @@ export class RoomStore {
     return `u_${++this.userSeq}`;
   }
 
-  createRoom(hostName: string): { room: Room; userId: string } {
+  createRoom(hostName: string, authed = false): { room: Room; userId: string } {
     const userId = this.newUserId();
     const room: Room = {
       roomId: this.generateCode(),
       status: 'LOBBY',
       settings: { ...DEFAULT_SETTINGS },
       lockedGenres: [],
-      users: { [userId]: { id: userId, name: hostName, ready: false, connected: true } },
+      users: { [userId]: { id: userId, name: hostName, ready: false, connected: true, authed } },
       knockout: createKnockout(),
       deck: [],
       progress: {},
@@ -97,13 +104,13 @@ export class RoomStore {
   }
 
   /** Members may only join in the lobby — mid-game joins would corrupt votes. */
-  joinRoom(roomId: string, name: string): { room: Room; userId: string } {
+  joinRoom(roomId: string, name: string, authed = false): { room: Room; userId: string } {
     const room = this.requireRoom(roomId);
     if (room.status !== 'LOBBY') {
       throw new Error(`Room ${room.roomId} already started`);
     }
     const userId = this.newUserId();
-    room.users[userId] = { id: userId, name, ready: false, connected: true };
+    room.users[userId] = { id: userId, name, ready: false, connected: true, authed };
     this.touch(room);
     return { room, userId };
   }

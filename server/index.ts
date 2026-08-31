@@ -138,7 +138,10 @@ io.on('connection', (socket) => {
       if (authConfig().createRequires && !authedName(socket)) {
         throw new Error('Sign in with your Jellyfin account to create a room');
       }
-      const { room, userId } = store.createRoom(String(name || 'Host').slice(0, 30));
+      const { room, userId } = store.createRoom(
+        String(name || 'Host').slice(0, 30),
+        Boolean(authedName(socket)),
+      );
       socket.data = { roomId: room.roomId, userId };
       void socket.join(room.roomId);
       ack?.({ ok: true, roomId: room.roomId, userId });
@@ -159,7 +162,7 @@ io.on('connection', (socket) => {
         }
         const result = userId
           ? { room: store.reconnect(roomId, userId), userId } // returning member
-          : store.joinRoom(roomId, String(name || 'Guest').slice(0, 30));
+          : store.joinRoom(roomId, String(name || 'Guest').slice(0, 30), Boolean(authedName(socket)));
         socket.data = { roomId: result.room.roomId, userId: result.userId };
         void socket.join(result.room.roomId);
         ack?.({ ok: true, roomId: result.room.roomId, userId: result.userId });

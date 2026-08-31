@@ -24,6 +24,8 @@ import { describe, expect, it } from 'vitest';
 import { appHaystack, readDoc } from '../../../scripts/lib/source-scan';
 
 const APP = appHaystack();
+/** globals.css is not TypeScript, so the token pins need their own haystack. */
+const CSS = readDoc('app/globals.css');
 const README = readDoc('README.md');
 
 type Pin = { id: string; why: string; find: string };
@@ -114,20 +116,38 @@ const SWEEP: Pin[] = [
 ];
 
 /**
+ * Late Show. The redesign's own load-bearing properties -- the ones that exist
+ * because the focus group said the first drafts failed them, and that a later
+ * "tidy up" would remove without any other test noticing.
+ */
+const LATESHOW: Pin[] = [
+  { id: 'T01', why: 'The cost line states a size, not a runtime; a disk cost that only names minutes is not a disclosure (R42)', find: 'export function CostLine' },
+  { id: 'T02', why: 'Every listings control is a real button, never a div with onClick (R39)', find: 'export function RowButton' },
+  { id: 'T03', why: 'The status bar stays a readout; nothing tappable in the cracked top corner (R40)', find: 'export function Bar' },
+  { id: 'T04', why: 'Rows meet the 54px minimum target that replaced the 26px chips (R39)', find: "min-h-[54px]" },
+  { id: 'T05', why: 'Structural row borders clear 3:1 contrast; the old #312e81 measured 1.6:1 (R41)', find: '--color-border: #5a6ab0' },
+  { id: 'T06', why: 'Yellow means the room, and only the room', find: '--color-super: #ffe600' },
+  { id: 'T07', why: 'Cyan means mine alone', find: '--color-maybe: #00d8ff' },
+  { id: 'T08', why: 'Red means it stops, costs, or is missing', find: '--color-destructive: #ff3b2f' },
+  { id: 'T09', why: 'Focus is visible on a grid whose rows are the controls', find: 'outline: 3px solid var(--color-maybe)' },
+  { id: 'T10', why: 'Fonts are self-hosted by next/font, so nothing is fetched off-LAN at runtime (R17)', find: "from 'next/font/google'" },
+];
+
+/**
  * Lobby. Written before the Lobby port, so these guard the change rather than
  * grade it. Every one of them is a property the port could drop while still
  * looking correct on screen.
  */
 const LOBBY: Pin[] = [
   { id: 'L01', why: 'A guest can always back out of an optional login instead of being trapped (R38)', find: 'onCancel={() => setLoginForWide(false)}' },
-  { id: 'L02', why: 'The locked scope says why it is locked before it is pressed, not after (R10)', find: "'Sign in to use'" },
-  { id: 'L03', why: 'The QR is named, so it is not an unlabelled image to a screen reader', find: 'aria-label={`QR code to join room ${room.roomId}' },
-  { id: 'L04', why: 'Scope buttons report which scope is chosen, not just colour it (R14)', find: 'aria-pressed={active}' },
+  { id: 'L02', why: 'The locked scope says why it is locked before it is pressed, not after (R10)', find: 'Sign in to use' },
+  { id: 'L03', why: 'The QR is named. Now via the QRCode title prop, which renders a <title> inside the SVG; the old aria-label sat on a wrapper div with no role and named nothing', find: 'QR code to join room ${room.roomId}' },
+  { id: 'L04', why: 'Scope buttons report which scope is chosen, not just colour it (R14). The state now rides RowButton, so every listings control gets it, not just this one', find: 'aria-pressed={pressed}' },
   { id: 'L05', why: 'Deck size options are real radios, not styled buttons', find: 'role="radio"' },
   { id: 'L06', why: 'A solo room explains the wait instead of showing an empty list (R13)', find: 'Waiting for at least one more person to join' },
   { id: 'L07', why: 'The uncapped runtime is named, not shown as a blank or a max number (R12)', find: "'No cap'" },
-  { id: 'L08', why: 'You can find yourself in the member list', find: '(you)' },
-  { id: 'L09', why: 'Deck ordering is stated in the Lobby, since no card prints a score (R32)', find: 'both-genre picks lead' },
+  { id: 'L08', why: 'You can find yourself -- now both as the first row of the lobby and in the member list, because a guest could not previously tell which of four names was hers', find: '(you)' },
+  { id: 'L09', why: 'Deck ordering is stated in the Lobby, since no card prints a score (R32)', find: 'oth-genre picks lead' },
 ];
 
 /**
@@ -166,12 +186,13 @@ describe('pinned copy', () => check(COPY, APP));
 describe('pinned behaviour', () => check(BEHAVIOUR, APP));
 describe('pinned sweep claims', () => check(SWEEP, APP));
 describe('pinned lobby claims', () => check(LOBBY, APP));
+describe('pinned Late Show claims', () => check(LATESHOW, APP + CSS));
 describe('pinned documentation promises', () => check(DOCS, README));
 
 describe('pin inventory', () => {
   it('reports how many claims are pinned', () => {
-    const total = A11Y.length + COPY.length + BEHAVIOUR.length + SWEEP.length + LOBBY.length + DOCS.length;
+    const total = A11Y.length + COPY.length + BEHAVIOUR.length + SWEEP.length + LOBBY.length + LATESHOW.length + DOCS.length;
     expect(total).toBeGreaterThan(0);
-    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${SWEEP.length} sweep, ${LOBBY.length} lobby, ${DOCS.length} docs)`);
+    console.log(`pins: ${total} claims (${A11Y.length} a11y, ${COPY.length} copy, ${BEHAVIOUR.length} behaviour, ${SWEEP.length} sweep, ${LOBBY.length} lobby, ${LATESHOW.length} lateshow, ${DOCS.length} docs)`);
   });
 });

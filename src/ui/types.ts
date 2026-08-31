@@ -11,7 +11,7 @@ export interface ClientRoom {
     deckLimit: number;
   };
   lockedGenres: string[];
-  users: Record<string, { id: string; name: string; ready: boolean; connected: boolean }>;
+  users: Record<string, { id: string; name: string; ready: boolean; connected: boolean; authed: boolean }>;
   knockout: KnockoutState;
   deck: MovieCandidate[];
   progress: Record<string, number>;

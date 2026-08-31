@@ -1,10 +1,26 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Fjalla_One, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({
+// Self-hosted by next/font, so nothing is fetched from a font CDN at runtime
+// (R17: this has to work on a LAN with no route to the internet).
+const plex = IBM_Plex_Sans({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-plex',
+  display: 'swap',
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-plex-mono',
+  display: 'swap',
+});
+// A condensed grotesque, the way a listings page or a title card is set.
+const fjalla = Fjalla_One({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-fjalla',
   display: 'swap',
 });
 
@@ -17,12 +33,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0F0F23',
+  themeColor: '#0A0F1E',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${plex.variable} ${plexMono.variable} ${fjalla.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

@@ -2,17 +2,32 @@
 
 import { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { Check, Clock3, Film, Globe, Lock, Users } from 'lucide-react';
 import { isLoggedIn, LoginScreen, useAuthConfig } from '../AuthGate';
 import type { RoomHook } from '../useRoom';
+import { Bar, BigButton, Row, RowButton } from './Listing';
 
 const RUNTIME_STOPS = [90, 100, 110, 120, 135, 150, 180, null] as const;
+const DECK_SIZES = [25, 50, 75] as const;
 
 export function Lobby({ roomHook }: { roomHook: RoomHook }) {
   const { room, userId, setReady, updateSettings } = roomHook;
   const { config } = useAuthConfig();
   const [shareUrl, setShareUrl] = useState('');
   const [loginForWide, setLoginForWide] = useState(false);
+  /**
+   * The QR is the brightest thing in the app and this app is used with the
+   * lights off, so it is not shown until asked for (R43). The code alone is
+   * enough to read across a couch.
+   */
+  const [showQr, setShowQr] = useState(false);
+  /**
+   * Deck size stays a real radio group rather than becoming a cycle button.
+   * A cycle button makes a screen reader user tap through every option to
+   * discover what the options are; a radio group announces all three. It is
+   * collapsed by default only to keep the grid short (R39).
+   */
+  const [deckOpen, setDeckOpen] = useState(false);
+
   useEffect(() => {
     setShareUrl(`${window.location.origin}/room/${room?.roomId ?? ''}`);
   }, [room?.roomId]);
@@ -33,188 +48,196 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
   if (!room || !userId) return null;
   const me = room.users[userId];
   const members = Object.values(room.users);
+  const guests = members.filter((u) => !u.authed).length;
+  const readyCount = members.filter((u) => u.ready).length;
   const soloRoom = members.length < 2;
   const wideLocked = Boolean(config?.wideRequires) && !isLoggedIn();
+  const wide = room.settings.scope === 'wide';
 
-  function chooseWide() {
-    if (wideLocked) setLoginForWide(true);
-    else void updateSettings({ scope: 'wide' });
+  function chooseScope(next: 'local' | 'wide') {
+    if (next === 'wide' && wideLocked) setLoginForWide(true);
+    else void updateSettings({ scope: next });
   }
 
+  const runtimeLabel =
+    room.settings.maxRuntime == null ? 'No cap' : `${room.settings.maxRuntime} min or under`;
+
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col items-center gap-3 pt-2 text-center">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-fg">Room code</p>
-        <h1 className="tabular text-5xl font-bold tracking-[0.3em]">{room.roomId}</h1>
-        {shareUrl && (
-          <div className="rounded-2xl bg-white p-3" aria-label={`QR code to join room ${room.roomId}`}>
-            <QRCode value={shareUrl} size={132} />
-          </div>
-        )}
-        <p className="text-sm text-muted-fg">Scan or share the code to invite</p>
-      </header>
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* R40: a readout, never a control. */}
+      <Bar
+        left={`Room ${room.roomId}`}
+        right={`${members.length - guests} acct · ${guests} guest`}
+      />
 
-      <section className="flex flex-col gap-3" aria-label="Session settings">
-        <h2 className="text-sm font-semibold text-muted-fg">Tonight&apos;s rules</h2>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        {/*
+          Dee could not find herself on the old lobby: the header counted four
+          people and named three others. You are the first row now, and the row
+          says plainly that nothing here will ask a guest for an account (R45).
+        */}
+        <Row
+          label="YOU"
+          tone="room"
+          title={`${me?.name ?? 'You'} (you) — ${me?.authed ? 'signed in' : 'guest'}`}
+          detail={
+            me?.authed
+              ? 'Signed in with your Jellyfin account.'
+              : 'No account needed. Nothing here will ask you for one.'
+          }
+        />
 
-        <div className="grid grid-cols-2 gap-2">
-          <ScopeButton
-            active={room.settings.scope === 'local'}
-            onClick={() => void updateSettings({ scope: 'local' })}
-            icon={<Film aria-hidden className="size-5" />}
-            title="Jellyfin Only"
-            subtitle="On the server now"
+        <section aria-label="Session settings" className="contents">
+          <RowButton
+            label="SRC"
+            tone={wide ? 'plain' : 'mine'}
+            title="Jellyfin only"
+            detail="On the server now. Plays tonight, costs nothing."
+            pill={wide ? undefined : 'SELECTED · ON'}
+            pillTone="mine"
+            pressed={!wide}
+            onClick={() => chooseScope('local')}
           />
-          <ScopeButton
-            active={room.settings.scope === 'wide'}
-            onClick={chooseWide}
-            icon={<Globe aria-hidden className="size-5" />}
-            title="Any Movie"
-            subtitle={wideLocked ? 'Sign in to use' : 'Winner gets requested'}
-            badge={wideLocked ? <Lock aria-hidden className="size-4 text-muted-fg" /> : undefined}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted p-4">
-          <div className="flex items-center justify-between">
-            <label htmlFor="runtime" className="flex items-center gap-2 text-sm font-medium">
-              <Clock3 aria-hidden className="size-4 text-muted-fg" /> Max runtime
-            </label>
-            <span className="tabular text-sm font-semibold">
-              {room.settings.maxRuntime == null ? 'No cap' : `≤ ${room.settings.maxRuntime} min`}
-            </span>
-          </div>
-          <input
-            id="runtime"
-            type="range"
-            min={0}
-            max={RUNTIME_STOPS.length - 1}
-            step={1}
-            value={RUNTIME_STOPS.findIndex((v) => v === room.settings.maxRuntime)}
-            onChange={(e) =>
-              void updateSettings({ maxRuntime: RUNTIME_STOPS[Number(e.target.value)] })
+          <RowButton
+            label="ALT"
+            tone={wide ? 'stop' : 'plain'}
+            title="Any movie"
+            detail={
+              wideLocked
+                ? 'Sign in to use. Adds films you do not own.'
+                : 'Winner gets requested — a film you do not own is downloaded to the server.'
             }
-            className="accent-[#22C55E]"
+            pill={wide ? 'SELECTED · DOWNLOADS' : 'OFF'}
+            pillTone={wide ? 'stop' : 'plain'}
+            pressed={wide}
+            onClick={() => chooseScope('wide')}
           />
-        </div>
 
-        <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Deck size</span>
-            <div className="flex gap-2" role="radiogroup" aria-label="Deck size">
-              {[25, 50, 75].map((n) => (
+          {/*
+            A native range input, not a cycle button: arrow keys work, the
+            current and available values are announced, and it is one target
+            rather than eight taps.
+          */}
+          <div className="grid w-full grid-cols-[54px_1fr] items-stretch border-b border-border">
+            <span className="flex items-center border-r border-border px-2 py-2 font-mono text-xs font-semibold text-muted-fg">
+              MAX
+            </span>
+            <div className="flex flex-col justify-center gap-1 px-3 py-2">
+              <label htmlFor="runtime" className="text-[15px] font-semibold leading-tight">
+                Max runtime — {runtimeLabel}
+              </label>
+              <input
+                id="runtime"
+                type="range"
+                min={0}
+                max={RUNTIME_STOPS.length - 1}
+                step={1}
+                value={RUNTIME_STOPS.findIndex((v) => v === room.settings.maxRuntime)}
+                onChange={(e) =>
+                  void updateSettings({ maxRuntime: RUNTIME_STOPS[Number(e.target.value)] })
+                }
+                className="accent-[#00d8ff]"
+              />
+            </div>
+          </div>
+
+          <RowButton
+            label="DECK"
+            title={`${room.settings.deckLimit} cards`}
+            detail="Both-genre picks lead, then each genre alternates, sorted by rating."
+            pressed={deckOpen}
+            onClick={() => setDeckOpen((v) => !v)}
+            ariaLabel={`Deck size, ${room.settings.deckLimit} cards. Tap to choose another.`}
+          />
+          {deckOpen && (
+            <div role="radiogroup" aria-label="Deck size" className="contents">
+              {DECK_SIZES.map((n) => (
                 <button
                   key={n}
                   type="button"
                   role="radio"
                   aria-checked={room.settings.deckLimit === n}
                   onClick={() => void updateSettings({ deckLimit: n })}
-                  className={`tabular h-10 w-12 cursor-pointer rounded-lg text-sm font-semibold transition active:scale-95 ${
-                    room.settings.deckLimit === n
-                      ? 'bg-secondary text-on-primary'
-                      : 'bg-background text-muted-fg'
+                  className={`grid min-h-[54px] w-full cursor-pointer grid-cols-[54px_1fr] items-stretch border-b border-border text-left ${
+                    room.settings.deckLimit === n ? 'bg-primary' : ''
                   }`}
                 >
-                  {n}
+                  <span
+                    className={`flex items-center border-r border-border px-2 py-2 font-mono text-xs font-semibold ${
+                      room.settings.deckLimit === n ? 'text-maybe' : 'text-muted-fg'
+                    }`}
+                  >
+                    {room.settings.deckLimit === n ? '✓' : '—'}
+                  </span>
+                  <span className="flex flex-col justify-center px-3 py-2">
+                    <span className="text-[15px] font-semibold">{n} cards</span>
+                  </span>
                 </button>
               ))}
             </div>
-          </div>
-          {/*
-            R32: the deck's ordering is stated once, here, because no card
-            prints a score any more. Worded to match `buildDeck` exactly --
-            hybrids first, then each tier composite-desc -- rather than the
-            looser "top of the stack is the good stuff", because R12 forbids
-            a claim about ranking that does not say what it covers. If the
-            sort in src/lib/deck.ts changes, this sentence changes with it.
-          */}
-          <p className="text-xs text-muted-fg">
-            Best-rated first — both-genre picks lead, then each genre alternates, sorted by rating.
-          </p>
-        </div>
-      </section>
+          )}
 
-      <section className="flex flex-col gap-2" aria-label="Members">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-muted-fg">
-          <Users aria-hidden className="size-4" /> Members ({members.length})
-        </h2>
-        <ul className="flex flex-col gap-1">
+          <RowButton
+            label="QR"
+            title={showQr ? 'Hide join code' : 'Show join code'}
+            detail={
+              showQr
+                ? 'Tap to put the screen back to dark.'
+                : 'Hidden — it is the brightest thing here.'
+            }
+            pressed={showQr}
+            onClick={() => setShowQr((v) => !v)}
+          />
+          {showQr && shareUrl && (
+            <div className="flex justify-center border-b border-border px-3 py-4">
+              {/* Dimmed: a full-white square six inches from a dilated pupil (R43). */}
+              <div className="bg-foreground/80 p-3">
+                <QRCode
+                  value={shareUrl}
+                  size={132}
+                  title={`QR code to join room ${room.roomId}`}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/*
+          Counts in the waiting slot, names in the list. Ade cannot bear the
+          room watching him be the one everyone waits on, so no waiting state
+          names anybody (R46) -- but Ravi still has to see who is a guest
+          before he reads the code out, so the list itself is per person.
+        */}
+        <Row
+          label="RDY"
+          tone={readyCount === members.length ? 'go' : 'plain'}
+          title={`${readyCount} of ${members.length} ready`}
+          detail={
+            soloRoom
+              ? 'Waiting for at least one more person to join…'
+              : readyCount === members.length
+                ? 'Everyone is in. Starting.'
+                : `Waiting on ${members.length - readyCount}.`
+          }
+        />
+        <section aria-label="Members" className="contents">
           {members.map((u) => (
-            <li
+            <Row
               key={u.id}
-              className="flex items-center justify-between rounded-lg bg-muted px-4 py-3"
-            >
-              <span className="font-medium">
-                {u.name}
-                {u.id === userId && <span className="text-muted-fg"> (you)</span>}
-              </span>
-              {u.ready ? (
-                <span className="flex items-center gap-1 text-sm font-medium text-accent">
-                  <Check aria-hidden className="size-4" /> Ready
-                </span>
-              ) : (
-                <span className="text-sm text-muted-fg">Waiting…</span>
-              )}
-            </li>
+              label={u.authed ? 'ACC' : 'GST'}
+              tone={u.authed ? 'plain' : 'room'}
+              title={u.id === userId ? `${u.name} (you)` : u.name}
+              detail={u.ready ? 'Ready' : 'Still setting up'}
+            />
           ))}
-        </ul>
-        {soloRoom && (
-          <p className="text-center text-sm text-muted-fg">
-            Waiting for at least one more person to join…
-          </p>
-        )}
-      </section>
+        </section>
+      </div>
 
-      {/*
-        Sticky to the viewport, not to the end of the scroll. On a phone the
-        member list grows with the room, and the one control everybody is
-        waiting for was the first thing to fall below the fold. The negative
-        margin and padding let the button's own background cover content
-        passing underneath it.
-      */}
-      <div className="sticky bottom-0 -mx-4 mt-auto bg-background px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3">
-        <button
-          type="button"
-          onClick={() => void setReady(!me?.ready)}
-          className={`flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-lg font-semibold transition active:scale-95 ${
-            me?.ready ? 'bg-muted text-muted-fg' : 'bg-accent text-background'
-          }`}
-        >
+      <div className="border-t border-border">
+        <BigButton onClick={() => void setReady(!me?.ready)} tone={me?.ready ? 'ghost' : 'go'}>
           {me?.ready ? 'Not ready' : "I'm ready"}
-        </button>
+        </BigButton>
       </div>
     </div>
-  );
-}
-
-function ScopeButton({
-  active,
-  onClick,
-  icon,
-  title,
-  subtitle,
-  badge,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  badge?: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={`relative flex cursor-pointer flex-col items-start gap-1 rounded-xl border p-4 text-left transition active:scale-95 ${
-        active ? 'border-secondary bg-primary' : 'border-border bg-muted'
-      }`}
-    >
-      {badge && <span className="absolute right-3 top-3">{badge}</span>}
-      <span className={active ? 'text-accent' : 'text-muted-fg'}>{icon}</span>
-      <span className="text-sm font-semibold">{title}</span>
-      <span className="text-xs text-muted-fg">{subtitle}</span>
-    </button>
   );
 }
