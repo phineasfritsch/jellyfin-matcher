@@ -77,7 +77,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,format=long
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           # amd64 only; arm64 under QEMU tripled build times. Add
