@@ -55,7 +55,7 @@ function mapItem(item: JellyfinItemDto, cfg: JellyfinConfig): JellyfinMovie {
     genres: item.Genres ?? [],
     tmdbId: Number.isFinite(tmdbId) ? tmdbId : null,
     imdbId: item.ProviderIds?.Imdb ?? item.ProviderIds?.imdb ?? null,
-    posterUrl: item.ImageTags?.Primary ? posterUrl(item.Id, cfg) : null,
+    posterUrl: item.ImageTags?.Primary ? posterUrl(item.Id) : null,
     overview: item.Overview ?? null,
   };
 }
@@ -115,9 +115,25 @@ export async function getGenres(cfg: JellyfinConfig = defaultConfig()): Promise<
   return (data.Items ?? []).map((g) => g.Name);
 }
 
-/** Primary poster image. Auth-free on default Jellyfin config (verify in M4). */
-export function posterUrl(itemId: string, cfg: JellyfinConfig = defaultConfig()): string {
-  return `${cfg.baseUrl}/Items/${itemId}/Images/Primary?maxWidth=600`;
+/**
+ * Poster path, served by Matcher rather than by Jellyfin directly.
+ *
+ * This used to interpolate the server's own JELLYFIN_URL into a browser `src`,
+ * which broke the setup the README itself recommends: behind an HTTPS tunnel,
+ * every `http://192.168.1.100:8096/...` poster is blocked as mixed content, so
+ * the deck renders as fifty grey rectangles. It also handed the private
+ * address of the media server to every guest who joined by QR.
+ *
+ * Relative, so it works on a LAN, behind a tunnel, and from a phone that has
+ * no route to Jellyfin at all.
+ */
+export function posterUrl(itemId: string): string {
+  return `/api/poster/${encodeURIComponent(itemId)}`;
+}
+
+/** Where the app itself fetches that image from, server-side. */
+export function posterOrigin(itemId: string, cfg: JellyfinConfig = defaultConfig()): string {
+  return `${cfg.baseUrl}/Items/${encodeURIComponent(itemId)}/Images/Primary?maxWidth=600`;
 }
 
 /** Deep link into the Jellyfin web UI details page (playback handoff, M4 verifies mobile). */

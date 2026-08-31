@@ -95,21 +95,30 @@ function skip(id: string, name: string, why: string) {
   );
 }
 
-// G4 -- the app actually builds. Slow; --fast skips it.
-if (fast) skip('G4', 'production build', '--fast');
+// G4 -- the numbers stated in prose match the ones the gate enforces. This
+// project's whole argument is that a gate stops false claims from shipping,
+// and the README was stating a test count three waves out of date.
+{
+  const { code, text } = run('npx', ['tsx', 'scripts/sync-counts.ts', '--check']);
+  record('G4', 'documented counts', code === 0, code === 0 ? 'match gates.json' : 'stale prose');
+  if (code !== 0) console.log(text.trim());
+}
+
+// G5 -- the app actually builds. Slow; --fast skips it.
+if (fast) skip('G5', 'production build', '--fast');
 else {
   const { code, text } = run('npx', ['next', 'build']);
-  record('G4', 'production build', code === 0, code === 0 ? 'built' : 'build failed');
+  record('G5', 'production build', code === 0, code === 0 ? 'built' : 'build failed');
   if (code !== 0) console.log(text.split('\n').slice(-25).join('\n'));
 }
 
 // G5 -- the deployed app. Opt in, because a red gate you cannot fix locally
 // teaches people to ignore the gate.
-if (!wantProd) skip('G5', 'production health', 'not requested (--prod)');
-else if (!process.env.MATCHER_URL) skip('G5', 'production health', 'MATCHER_URL unset');
+if (!wantProd) skip('G6', 'production health', 'not requested (--prod)');
+else if (!process.env.MATCHER_URL) skip('G6', 'production health', 'MATCHER_URL unset');
 else {
   const { code, text } = run('npx', ['tsx', 'scripts/health.ts']);
-  record('G5', 'production health', code === 0, text.trim().split('\n').pop() ?? '');
+  record('G6', 'production health', code === 0, text.trim().split('\n').pop() ?? '');
   if (code !== 0) console.log(text);
 }
 

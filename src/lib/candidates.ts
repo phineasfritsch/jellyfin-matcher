@@ -37,7 +37,7 @@ export function candidatesFromJellyfin(
       title: m.title,
       year: m.year,
       runtime: m.runtime,
-      posterUrl: m.posterUrl ?? posterUrl(m.jellyfinItemId, cfg),
+      posterUrl: m.posterUrl ?? posterUrl(m.jellyfinItemId),
       genres: m.genres,
       isHybrid: false,
       jellyfinItemId: m.jellyfinItemId,

@@ -45,7 +45,7 @@ Five variables total, get them from: Jellyfin dashboard -> API keys, Jellyseerr 
 ### Straight on the server (no Docker)
 
 ```bash
-git clone <this repo> && cd jellyfin-matcher
+git clone https://github.com/phineasfritsch/jellyfin-matcher.git && cd jellyfin-matcher
 npm install
 npm run build
 npm start
@@ -72,7 +72,7 @@ Ratings cache lands in `.cache/` next to the app and survives restarts on its ow
 
 ### Docker
 
-A prebuilt image (amd64 and arm64) gets published to GHCR on every push, so no local build needed. Grab `docker-compose.yml`, put your URLs and keys straight into its `environment:` block, then:
+A prebuilt `linux/amd64` image gets published to GHCR on every push, so no local build needed. (arm64 is not published: building it under QEMU tripled CI times. On a Pi, uncomment `build: .` in the compose file and it builds locally.) Grab `docker-compose.yml`, put your URLs and keys straight into its `environment:` block, then:
 
 ```bash
 docker compose up -d
@@ -153,11 +153,11 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 107 cases across 10 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 201 cases across 14 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
-The other 38 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
+Another 96 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
 
 ## License
 

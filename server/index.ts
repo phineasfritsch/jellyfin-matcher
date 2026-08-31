@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import express from 'express';
 import next from 'next';
 import { Server, type Socket } from 'socket.io';
-import { playbackUrl } from '../src/lib/jellyfin';
+import { playbackUrl, posterOrigin } from '../src/lib/jellyfin';
 import { requestMovie } from '../src/lib/jellyseerr';
 import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
 import { isValidVote, rankFallback } from '../src/lib/match';
@@ -48,6 +48,36 @@ app.get('/healthz', (_req, res) =>
     auth: authConfig(),
   }),
 );
+
+/**
+ * Poster proxy.
+ *
+ * The browser asks Matcher for the image and Matcher fetches it from Jellyfin.
+ * That keeps the media server's address off the client -- a guest who joined by
+ * QR never learns it -- and it means posters load over whatever scheme the app
+ * itself is served on. Without this, the tunnel setup the README recommends
+ * renders the whole deck as blocked mixed content.
+ *
+ * Item ids only, cached hard: they are immutable, and a deck of fifty asks for
+ * fifty of these at once.
+ */
+app.get('/api/poster/:itemId', async (req, res) => {
+  const { itemId } = req.params;
+  if (!/^[A-Za-z0-9-]{1,64}$/.test(itemId)) return res.status(400).end();
+  try {
+    const upstream = await fetch(posterOrigin(itemId), {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!upstream.ok || !upstream.body) return res.status(upstream.status).end();
+    res.setHeader('Content-Type', upstream.headers.get('content-type') ?? 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    res.end(buf);
+  } catch {
+    // A missing poster is a blank card, never a broken room.
+    res.status(502).end();
+  }
+});
 
 // Tells the browser which actions need a Jellyfin login.
 app.get('/api/auth-config', (_req, res) => res.json(authConfig()));
