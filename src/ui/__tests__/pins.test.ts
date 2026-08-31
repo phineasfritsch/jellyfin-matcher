@@ -141,6 +141,10 @@ const LATESHOW: Pin[] = [
   { id: 'T18', why: 'A vote needs real travel, not just speed; velocity alone let a tremor or a nudge answer for you (R49)', find: 'VELOCITY_FLOOR' },
   { id: 'T19', why: 'Members carry ACC or GST so the host knows who is in the room before reading the code aloud (R44)', find: "u.authed ? 'ACC' : 'GST'" },
   { id: 'T21', why: 'Row dividers are never faded below their contrast floor; the decorative pane edge is a different token', find: '[&:not(:last-child)]:border-border' },
+  { id: 'T23', why: 'Only connected members decide WHEN a room ends; a member who left mid-deck could otherwise block both a match and the deck exhausting, which is the exact stalemate the product exists to prevent (R56)', find: 'export function activeUserIds' },
+  { id: 'T24', why: 'Everyone who can end a room goes through one settlement check, so the last event before a hang cannot be one nothing re-examines', find: 'function settleIfPossible' },
+  { id: 'T25', why: 'Leaving re-checks settlement, because the leaver may have been the only member the room was waiting on', find: "room.status === 'SWIPING' && settleIfPossible(room, null)" },
+  { id: 'T26', why: 'A deck that built empty settles instead of parking every phone on a skeleton that will never advance', find: 'if (room.deck.length === 0) {' },
   { id: 'T22', why: 'Glass degrades to an opaque fill where backdrop-filter is unsupported, rather than to near-invisible 7%-white panes', find: '@supports not (backdrop-filter' },
   { id: 'T20', why: 'Abstaining counts as voted but weighs nothing, so nobody has to invent an opinion or hold up the room (R47)', find: 'export const ABSTAIN' },
 ];

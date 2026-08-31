@@ -5,9 +5,10 @@ import { Server, type Socket } from 'socket.io';
 import { playbackUrl } from '../src/lib/jellyfin';
 import { requestMovie } from '../src/lib/jellyseerr';
 import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
-import { fallbackWinner, isInstantMatch, isValidVote, rankFallback } from '../src/lib/match';
+import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
 import { diagnoseDeckFailure, diagnoseThinDeck } from './diagnose';
+import { canSettle } from './settlement';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { RoomStore, type Room, type RoomSettings } from './store';
 
@@ -90,10 +91,34 @@ function fail(ack: Ack | undefined, err: unknown): void {
   ack?.({ ok: false, error: err instanceof Error ? err.message : String(err) });
 }
 
-/** All members finished the deck with no instant match → fallback settlement. */
-function deckExhausted(room: Room): boolean {
-  const userIds = Object.keys(room.users);
-  return room.deck.length > 0 && userIds.every((id) => (room.progress[id] ?? 0) >= room.deck.length);
+/**
+ * Settle the room if it can be settled, and report whether it was.
+ *
+ * Every event that could end a room goes through here -- a vote, someone
+ * leaving, a deck finishing its build. Settlement used to be checked only
+ * inside `swipe:vote`, which meant the last person to act could be the one who
+ * disconnected, and then nothing ever looked again.
+ */
+function settleIfPossible(room: Room, justVoted: string | null): boolean {
+  const verdict = canSettle(room, justVoted);
+  if (!verdict) return false;
+  if (verdict.cardId === null) {
+    // Nothing to win: an empty deck, or nobody voted for anything. Say so
+    // rather than leaving the room on a spinner.
+    room.status = 'FINISHED';
+    room.winner = null;
+    store.touch(room);
+    io.to(room.roomId).emit('match:declared', {
+      winner: null,
+      viaFallback: true,
+      playUrl: null,
+      ranking: null,
+    });
+    broadcast(room);
+    return true;
+  }
+  declareWinner(room, verdict.cardId, verdict.viaFallback);
+  return true;
 }
 
 function declareWinner(room: Room, cardId: string, viaFallback: boolean): void {
@@ -128,6 +153,13 @@ async function startSwiping(room: Room): Promise<void> {
       room.settings.scope,
     );
     if (thin) io.to(room.roomId).emit('room:diagnosis', thin);
+    // Zero cards is not a deck. Settle now rather than leaving five phones on
+    // a skeleton that will never advance.
+    if (room.deck.length === 0) {
+      broadcast(room);
+      settleIfPossible(room, null);
+      return;
+    }
   } catch (err) {
     console.error(`Deck build failed for ${room.roomId}:`, err);
     const diagnosis = diagnoseDeckFailure(err, room.deck.length);
@@ -310,15 +342,7 @@ io.on('connection', (socket) => {
       store.touch(room);
       ack?.({ ok: true });
 
-      if (isInstantMatch(room.votes, cardId, Object.keys(room.users))) {
-        declareWinner(room, cardId, false);
-        return;
-      }
-      if (deckExhausted(room)) {
-        const winner = fallbackWinner(room.deck, room.votes);
-        if (winner) declareWinner(room, winner, true);
-        return;
-      }
+      if (settleIfPossible(room, cardId)) return;
       broadcast(room);
     } catch (err) {
       fail(ack, err);
@@ -352,7 +376,12 @@ io.on('connection', (socket) => {
     const { roomId, userId } = socket.data as { roomId?: string; userId?: string };
     if (!roomId || !userId) return;
     const room = store.leaveRoom(roomId, userId);
-    if (room) broadcast(room);
+    if (!room) return;
+    // The person who just left may have been the only one the room was waiting
+    // on. Without this the room waits for them forever, which is the stalemate
+    // this whole app exists to prevent.
+    if (room.status === 'SWIPING' && settleIfPossible(room, null)) return;
+    broadcast(room);
   });
 });
 

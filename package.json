@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "gate": "tsx scripts/gate.ts",
     "inventory": "tsx scripts/inventory.ts",
-    "prod:read": "tsx --env-file-if-exists=.env scripts/health.ts"
+    "prod:read": "tsx --env-file-if-exists=.env scripts/health.ts",
+    "e2e:walkout": "node scripts/e2e-walkout.cjs"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

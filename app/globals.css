@@ -63,14 +63,16 @@ body::before {
   z-index: -1;
   pointer-events: none;
   /*
-    Two radials over a base, not three: they are what the glass is blurring, so
-    they have to be there, but each one is a full-viewport layer that repaints
-    under every pane above it. Two is the budget.
+    Two radials over a base. They are what the glass is blurring, so they have
+    to be strong enough to see through a pane -- an ambient nobody can perceive
+    turns every card into a grey box and the material stops meaning anything.
+    Two layers is the budget: each is full-viewport and repaints under every
+    pane above it.
   */
   background:
-    radial-gradient(54rem 38rem at 10% -6%, rgba(90, 200, 250, 0.18), transparent 62%),
-    radial-gradient(48rem 36rem at 88% 100%, rgba(50, 213, 131, 0.13), transparent 62%),
-    linear-gradient(168deg, #121826 0%, #0c101a 45%, #080a10 100%);
+    radial-gradient(60rem 42rem at 8% -10%, rgba(74, 168, 255, 0.3), transparent 58%),
+    radial-gradient(52rem 40rem at 92% 104%, rgba(46, 214, 140, 0.22), transparent 60%),
+    linear-gradient(168deg, #16203a 0%, #0d1524 40%, #070a12 100%);
 }
 
 /*
@@ -86,6 +88,15 @@ body::before {
   backdrop-filter: blur(18px) saturate(165%);
   -webkit-backdrop-filter: blur(18px) saturate(165%);
   border: 1px solid var(--color-hairline);
+  /*
+    A lit top edge and a dark bottom one. Real glass catches light on the edge
+    facing it; without this a pane is a flat rectangle with a uniform border,
+    which is the tell that separates a material from a div with opacity on it.
+  */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.24),
+    0 12px 32px -12px rgba(0, 0, 0, 0.6);
 }
 .pane-thin {
   background: rgba(18, 22, 32, 0.7);
@@ -95,12 +106,14 @@ body::before {
 .pane-solid {
   background: #131722;
   border: 1px solid var(--color-hairline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 .pane-thick {
   background: rgba(13, 16, 24, 0.78);
   backdrop-filter: blur(22px) saturate(165%);
   -webkit-backdrop-filter: blur(22px) saturate(165%);
   border: 1px solid var(--color-hairline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /*
@@ -116,6 +129,7 @@ body::before {
   .pane-solid {
   background: #131722;
   border: 1px solid var(--color-hairline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 .pane-thick {
     background: #10131c;
