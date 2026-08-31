@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { MdblistMedia } from './types';
+import { withDeadline } from './deadline';
 
 const BASE_URL = 'https://api.mdblist.com';
 /** Free tier caps batch lookups at 10 IDs per request (supporter: 100). */
@@ -22,7 +23,7 @@ export function defaultConfig(overrides: Partial<MdblistConfig> = {}): MdblistCo
   return {
     apiKey: process.env.MDBLIST_API_KEY ?? '',
     cacheFile: path.join('.cache', 'mdblist.json'),
-    fetchFn: fetch,
+    fetchFn: withDeadline(fetch),
     now: () => Date.now(),
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
     ...overrides,

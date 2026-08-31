@@ -67,9 +67,25 @@ export function useRoom(roomId: string): RoomHook {
     // we silently stop receiving broadcasts.
     const onConnect = () => {
       const session = loadSession(roomId);
-      if (session) {
-        emitAck('room:join', { roomId, userId: session.userId }).catch(() => {});
-      }
+      if (!session) return;
+      emitAck('room:join', { roomId, userId: session.userId }).catch((err) => {
+        /*
+          R66: a rejoin that fails is the end of the session, and it used to be
+          swallowed. Pushing main restarts the server and rooms live in memory,
+          so a deploy mid-night makes every phone in the house fail this call --
+          and each one then sat on a deck the server had forgotten, still
+          rendering cards, still accepting votes, never receiving another
+          broadcast. Silence looked exactly like a room where nobody had voted
+          yet.
+        */
+        clearSession(roomId);
+        setError(
+          err instanceof Error && /not found/i.test(err.message)
+            ? 'This room is gone — the server restarted. Start a new one.'
+            : 'Lost this room and could not rejoin it. Start a new one.',
+        );
+        setConnecting(false);
+      });
     };
     socket.on('connect', onConnect);
 

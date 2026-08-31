@@ -1,3 +1,4 @@
+import { withDeadline } from './deadline';
 export interface JellyseerrConfig {
   baseUrl: string;
   apiKey: string;
@@ -8,7 +9,7 @@ export function defaultConfig(overrides: Partial<JellyseerrConfig> = {}): Jellys
   return {
     baseUrl: (process.env.JELLYSEERR_URL ?? '').replace(/\/$/, ''),
     apiKey: process.env.JELLYSEERR_API_KEY ?? '',
-    fetchFn: fetch,
+    fetchFn: withDeadline(fetch),
     ...overrides,
   };
 }

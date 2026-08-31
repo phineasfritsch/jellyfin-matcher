@@ -30,6 +30,7 @@ type Health = {
   uptimeSec?: number;
   rooms?: number;
   upstreams?: Record<string, boolean>;
+  reachable?: Record<string, { ok: boolean | null; checkedAt: string | null; detail: string | null }>;
   auth?: Record<string, boolean | string>;
 };
 
@@ -70,6 +71,16 @@ async function main() {
   if (up.mdblist === false) notes.push('MDBList unset: every card will be unrated');
   if (up.jellyseerr === false) notes.push('Jellyseerr unset: Any Movie mode and requests are dead');
 
+  // Configured is two strings being non-empty. Reachable is the service
+  // actually answering, and only the second one tells you anything at 11pm.
+  const reach = health.reachable ?? {};
+  if (reach.jellyfin?.ok === false) {
+    problems.push(`Jellyfin is configured but not answering: ${reach.jellyfin.detail ?? 'unknown'}`);
+  }
+  if (reach.jellyseerr?.ok === false) {
+    notes.push(`Jellyseerr not answering: ${reach.jellyseerr.detail ?? 'unknown'}`);
+  }
+
   const deployed = health.version ?? 'unknown';
   if (!skipParity) {
     const head = localHead();
@@ -86,6 +97,13 @@ async function main() {
   console.log(`uptime    ${health.uptimeSec ?? '?'}s`);
   console.log(`rooms     ${health.rooms ?? '?'} live`);
   console.log(`upstreams ${Object.entries(up).map(([k, v]) => `${k}=${v ? 'yes' : 'NO'}`).join(' ') || '?'}`);
+  console.log(
+    `answering ${
+      Object.entries(reach)
+        .map(([k, v]) => `${k}=${v.ok === null ? 'n/a' : v.ok ? 'yes' : 'NO'}`)
+        .join(' ') || '?'
+    }`,
+  );
   console.log(`latency   ${ms}ms`);
   for (const note of notes) console.log(`note      ${note}`);
 

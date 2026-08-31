@@ -2,8 +2,8 @@ import { createServer } from 'node:http';
 import express from 'express';
 import next from 'next';
 import { Server, type Socket } from 'socket.io';
-import { playbackUrl, posterOrigin } from '../src/lib/jellyfin';
-import { requestMovie } from '../src/lib/jellyseerr';
+import { getGenres, playbackUrl, posterOrigin } from '../src/lib/jellyfin';
+import { getMovieGenres as jellyseerrGenres, requestMovie } from '../src/lib/jellyseerr';
 import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
 import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
@@ -29,10 +29,61 @@ app.use(express.json());
 const STARTED_AT = Date.now();
 
 /**
+ * Last known answer from each upstream, refreshed in the background.
+ * `null` means not configured, so "off" and "broken" stay distinguishable.
+ */
+type Reach = { ok: boolean | null; checkedAt: string | null; detail: string | null };
+const reach: Record<'jellyfin' | 'jellyseerr', Reach> = {
+  jellyfin: { ok: null, checkedAt: null, detail: null },
+  jellyseerr: { ok: null, checkedAt: null, detail: null },
+};
+
+function reachability() {
+  return reach;
+}
+
+async function probe(name: 'jellyfin' | 'jellyseerr', run: () => Promise<unknown>) {
+  const configured =
+    name === 'jellyfin'
+      ? Boolean(process.env.JELLYFIN_URL && process.env.JELLYFIN_API_KEY)
+      : Boolean(process.env.JELLYSEERR_URL && process.env.JELLYSEERR_API_KEY);
+  if (!configured) {
+    reach[name] = { ok: null, checkedAt: new Date().toISOString(), detail: 'not configured' };
+    return;
+  }
+  try {
+    await run();
+    reach[name] = { ok: true, checkedAt: new Date().toISOString(), detail: null };
+  } catch (err) {
+    reach[name] = {
+      ok: false,
+      checkedAt: new Date().toISOString(),
+      // Safe to show: the clients never put a key in a message.
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+/** Cheapest call each service has that still proves the key works. */
+async function probeAll(): Promise<void> {
+  await Promise.all([
+    probe('jellyfin', () => getGenres()),
+    probe('jellyseerr', () => jellyseerrGenres()),
+  ]);
+}
+
+/**
  * Read-only state report. `version` is the commit the running image was built
  * from, so parity between the repository and production is a fact you can
  * check rather than a hope (`npm run prod:read`). Reports whether each upstream
  * is configured, never what the credentials are.
+ *
+ * `configured` is two strings being non-empty. `reachable` is the service
+ * actually answering, which is a different question and the only one worth
+ * asking at 11pm: a wrong key, a sleeping NAS and a half-open tunnel all look
+ * identically healthy to a config check (R67). Reachability is probed in the
+ * background on an interval rather than per request, so the container's
+ * HEALTHCHECK cannot itself hammer Jellyfin every thirty seconds.
  */
 app.get('/healthz', (_req, res) =>
   res.json({
@@ -46,6 +97,7 @@ app.get('/healthz', (_req, res) =>
       jellyseerr: Boolean(process.env.JELLYSEERR_URL && process.env.JELLYSEERR_API_KEY),
       mdblist: Boolean(process.env.MDBLIST_API_KEY),
     },
+    reachable: reachability(),
     auth: authConfig(),
   }),
 );
@@ -464,6 +516,12 @@ setInterval(() => {
     io.in(id).disconnectSockets();
   }
 }, 10 * 60 * 1000).unref();
+
+// Probe on boot and every two minutes. Background, so /healthz stays cheap
+// enough for a container HEALTHCHECK to hit every thirty seconds without any
+// of that traffic reaching Jellyfin.
+void probeAll();
+setInterval(() => void probeAll(), 2 * 60 * 1000).unref();
 
 void nextApp.prepare().then(() => {
   httpServer.listen(PORT, () => {

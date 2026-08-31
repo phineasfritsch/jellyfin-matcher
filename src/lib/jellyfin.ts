@@ -1,3 +1,4 @@
+import { withDeadline } from './deadline';
 /** Jellyfin stores runtime in 100ns ticks: 600,000,000 ticks = 1 minute. */
 const TICKS_PER_MINUTE = 600_000_000;
 
@@ -11,7 +12,7 @@ export function defaultConfig(overrides: Partial<JellyfinConfig> = {}): Jellyfin
   return {
     baseUrl: (process.env.JELLYFIN_URL ?? '').replace(/\/$/, ''),
     apiKey: process.env.JELLYFIN_API_KEY ?? '',
-    fetchFn: fetch,
+    fetchFn: withDeadline(fetch),
     ...overrides,
   };
 }
