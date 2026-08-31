@@ -25,9 +25,22 @@ permissions:
   contents: read
   packages: write
 
+# R141: one slot PER REF, and a deploy is never the thing cancelled.
+#
+# This was `group: docker-publish` with `cancel-in-progress: true` -- a single
+# literal, so every branch and every pull request shared one slot and the newest
+# run killed whatever was in it. The morning the dependency bot opened five pull
+# requests at once, they cancelled each other AND two pushes to main. A push to
+# main is the deploy in this project; those two deploys simply did not happen,
+# and the only trace was a grey "cancelled" that reads like somebody meant it.
+#
+# Interpolating the ref gives each branch its own slot. Cancelling only on a
+# pull request keeps the useful half -- a new commit supersedes its own older
+# run -- while main queues instead, because a deploy interrupted mid-publish is
+# worse than a deploy that waits.
 concurrency:
-  group: docker-publish
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Nothing ships past a red gate.

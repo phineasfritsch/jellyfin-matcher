@@ -2141,3 +2141,45 @@ mystery six months later when a security patch forced the same bump.
 Both fixes are on `main` ahead of the bot, so the pull request should now
 rebase onto a tree that already accommodates it. Should, not does — that is a
 prediction until the rebased run is green, and it is written here as one.
+
+### R141 — Two deploys did not happen and nothing said so
+
+Chasing why a dependency pull request was red turned up something better. The
+gate job had not failed at all: the log ends `##[error]The operation was
+canceled.` The workflow declared
+
+```yaml
+concurrency:
+  group: docker-publish
+  cancel-in-progress: true
+```
+
+— a single literal group, shared by every branch and every pull request, with
+the newest run killing whatever was in the slot. The morning the dependency bot
+opened five pull requests at once, they cancelled each other **and two pushes to
+`main`**.
+
+A push to `main` *is* the deploy in this project. There is no separate step, by
+design (R?, and stated in CLAUDE.md). So two deploys did not happen, and the
+only trace was a grey "cancelled" in a list — which reads like somebody meant
+it, and is why it sat there unexamined until a completely different
+investigation walked past it.
+
+Interpolating the ref gives each branch its own slot. Cancelling only on
+`pull_request` keeps the useful half — a new commit supersedes its own older run
+— while `main` queues instead, because **a deploy interrupted mid-publish is
+worse than a deploy that waits.**
+
+Two things worth taking from this beyond the fix.
+
+**A cancelled run is not a passing run and is not a failing one.** Every summary
+this project reads — `gh run list`, the badge, my own glance at CI — treats it as
+a third thing that means nothing happened, and that is exactly what makes it
+invisible. The two deploys that were skipped looked identical to two deploys
+nobody had asked for.
+
+**The bug was found by pulling a thread that led somewhere else.** The
+investigation was "why is the dependabot PR red", the answer to that was two
+genuine incompatibilities (R140), and this was sitting underneath as the reason
+a *different* PR was red. Fixing only the thing you set out to fix would have
+left it.

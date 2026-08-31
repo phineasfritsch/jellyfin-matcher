@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-135 rulings. 100 argued in a design document; the rest are
+136 rulings. 101 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -150,5 +150,6 @@ defined at their first citation.
 | **R138** | `docs/DIRECTION.md:2034` | — |
 | **R139** | `docs/DIRECTION.md:2070` | — |
 | **R140** | `docs/DIRECTION.md:2105` | — |
+| **R141** | `docs/DIRECTION.md:2145` | — |
 
 No ruling is orphaned.

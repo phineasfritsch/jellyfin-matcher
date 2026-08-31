@@ -210,3 +210,35 @@ describe('the maintenance story is true', () => {
     expect(readDoc('docs/MAINTAINING.md')).toMatch(/bus factor is one/i);
   });
 });
+
+/**
+ * R141: a deploy is never the run that gets cancelled.
+ *
+ * The concurrency group was the literal `docker-publish` with
+ * `cancel-in-progress: true`, so every branch and every pull request shared one
+ * slot and the newest run killed whatever was in it. When the dependency bot
+ * opened five pull requests at once they cancelled each other and two pushes to
+ * main -- and a push to main IS the deploy here, so two deploys did not happen
+ * and left a grey "cancelled" that reads like somebody meant it.
+ */
+describe('concurrent runs do not cancel a deploy', () => {
+  const workflow = readDoc('.github/workflows/docker.yml');
+  const block = /concurrency:\s*\n\s*group:\s*(.+)\n\s*cancel-in-progress:\s*(.+)/.exec(workflow);
+
+  it('declares a concurrency group at all', () => {
+    expect(block, 'no concurrency block: runs pile up instead').not.toBeNull();
+  });
+
+  it('gives each ref its own slot rather than sharing one literal', () => {
+    // A constant group name is the whole defect: it makes every unrelated
+    // branch a competitor for the slot a deploy is standing in.
+    const group = block?.[1] ?? '';
+    expect(group, `the group is a constant: ${group}`).toContain('github.ref');
+  });
+
+  it('cancels only pull requests, so a push to main always finishes', () => {
+    const cancel = block?.[2] ?? '';
+    expect(cancel).toContain('pull_request');
+    expect(cancel.trim(), 'unconditional cancelling can kill a deploy').not.toBe('true');
+  });
+});
