@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
+import { withDeadline } from '../src/lib/deadline';
 
 export type AuthMode = 'off' | 'requests' | 'create' | 'all';
 
@@ -86,7 +87,21 @@ export class AuthStore {
 export async function authenticateWithJellyfin(
   username: string,
   password: string,
-  fetchFn: typeof fetch = fetch,
+  /*
+    R88: the deadline is on the default, not left to the caller.
+
+    This was the one server-side upstream still calling bare `fetch` --
+    jellyfin.ts, jellyseerr.ts and mdblist.ts all wrap theirs, and deadline.ts
+    states the invariant outright. A Jellyfin that accepts the connection and
+    never answers held this request open forever, and the request is never
+    counted by the rate limiter either, since a failed attempt is only recorded
+    in the catch.
+
+    The symptom is worse than a slow page: AuthGate reaches setBusy(false) only
+    on error, so a hung sign-in leaves the button disabled with nothing said,
+    and the only way out is a reload.
+  */
+  fetchFn: typeof fetch = withDeadline(fetch),
 ): Promise<AuthedUser> {
   const baseUrl = (process.env.JELLYFIN_URL ?? '').replace(/\/$/, '');
   if (!baseUrl) throw new Error('Jellyfin is not configured');

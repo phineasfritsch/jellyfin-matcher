@@ -23,9 +23,18 @@
   so it cannot be mistaken for the system blue it replaced.
 
   Two border tokens, because they are two different things. --color-border is a
-  divider between controls and clears 3:1 against the ground, since that is
-  information. --color-hairline is the edge of a translucent sheet; nothing
-  depends on seeing it (R41).
+  divider between controls and clears 3:1 against the ground it is drawn on,
+  since that is information. --color-hairline is the edge of a translucent
+  sheet; nothing depends on seeing it (R41).
+
+  "The ground it is drawn on" is load-bearing and used to be unsaid. The token
+  was chosen against --color-background, #0b0e11, where it measures 3.44:1 --
+  and #0b0e11 is never on screen: body::before covers the canvas edge to edge,
+  and every divider is drawn inside a .gel on top of that. Measured off the
+  committed captures, the genre rows in 04-knockout render this line against
+  roughly rgb(24,34,37), where the old #5f6a63 came to 2.67-2.85:1. It failed
+  the rule its own comment stated, and the arithmetic proving it passed was
+  correct about a surface nobody has ever seen (R89).
 
   THE TYPE SCALE. One scale, in rem so it tracks the reader's OS setting (R60).
   Sizes outside this list are a mistake, not a decision.
@@ -39,7 +48,7 @@
   --color-accent: #4db06b;
   --color-muted: rgba(255, 255, 255, 0.06);
   --color-muted-fg: #9ea69f;
-  --color-border: #5f6a63;
+  --color-border: #737e77;
   --color-hairline: rgba(255, 255, 255, 0.14);
   --color-destructive: #e0563f;
   --color-super: #e8c14a;

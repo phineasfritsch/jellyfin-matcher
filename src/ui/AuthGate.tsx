@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { Clapperboard, Loader2, Lock } from 'lucide-react';
 import { getAuthToken, setAuth } from './socket';
 
+/** Longer than the server's own 15s upstream deadline, so its message wins when it has one (R88). */
+const LOGIN_TIMEOUT_MS = 20_000;
+
 export interface AuthConfig {
   createRequires: boolean;
   joinRequires: boolean;
@@ -69,17 +72,35 @@ export function LoginScreen({
     setBusy(true);
     setError(null);
     try {
+      /*
+        R88: the sign-in has a deadline on this side too.
+
+        setBusy(false) runs only in the catch, which is correct as long as the
+        request always settles -- and `fetch` has no default timeout, so a
+        Jellyfin that accepts the connection and never answers left this button
+        disabled with nothing said and no way out but a reload. The server-side
+        deadline is 15s; this one is longer so that when the server can produce
+        a real message, its message wins.
+      */
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), password }),
+        signal: AbortSignal.timeout(LOGIN_TIMEOUT_MS),
       });
       const data = (await res.json()) as { token?: string; name?: string; error?: string };
       if (!res.ok || !data.token) throw new Error(data.error ?? 'Login failed');
       setAuth(data.token, data.name ?? username.trim());
       onLoggedIn();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const timedOut = err instanceof DOMException && err.name === 'TimeoutError';
+      setError(
+        timedOut
+          ? 'Your Jellyfin server did not answer. Check it is awake and try again.'
+          : err instanceof Error
+            ? err.message
+            : 'Login failed',
+      );
       setBusy(false);
     }
   }

@@ -485,3 +485,50 @@ a member responding — and a member leaving is precisely the case where nobody 
 deciders, returns the state untouched when the round still has somebody to wait for,
 and refuses to resolve at all when nobody is left to decide (an empty decider list
 makes `every` vacuously true, which would lock genres for an empty room).
+
+### R88 — The sign-in has a deadline at both ends.
+
+**Frozen:** `authenticateWithJellyfin` defaulted to bare `fetch`; the browser's login
+POST passed no signal.
+
+**Built:** the server default is `withDeadline(fetch)`; the browser aborts at 20s.
+
+**Why.** This was the last server-side upstream without one — `jellyfin.ts`,
+`jellyseerr.ts` and `mdblist.ts` all wrap theirs, and `deadline.ts` states the
+invariant in its first paragraph. A Jellyfin that accepts the connection and never
+answers held the request open forever. It is also never counted by the rate limiter,
+because a failed attempt is only recorded in the `catch`.
+
+The visible symptom is worse than a slow page. `setBusy(false)` runs only in the
+`catch`, which is correct exactly as long as the request always settles — so a hung
+sign-in left the button disabled, with nothing said, and no way out but a reload.
+The browser's deadline is longer than the server's so that when the server can
+produce a real message, its message wins; when it cannot, the page says the server
+did not answer instead of saying nothing.
+
+### R89 — Contrast is measured against the ground that is actually on screen.
+
+**Frozen:** `--color-border: #5f6a63`, pinned as 3.44:1 against `--color-background`.
+
+**Built:** `#737e77`, measured off the committed captures at 3.57–3.80:1.
+
+**Why.** The arithmetic in the pin was correct and described a surface nobody has
+ever seen. `#0b0e11` is the canvas colour, and `body::before` covers the canvas edge
+to edge with two radial gradients over a linear; every divider is then drawn inside a
+`.gel` on top of that. Sampling `04-knockout.png` directly, the genre rows render the
+divider against roughly `rgb(24,34,37)`, where `#5f6a63` came to **2.67–2.85:1**. The
+token failed the rule stated in the comment directly above it, and the proof that it
+passed was the thing hiding it.
+
+R41 said "clears 3:1 against the ground" without ever saying which ground, and lived
+only in code comments — cited by `Listing.tsx` and by pin T05, defined in neither
+design document. It says which ground now, and it is written down here.
+
+**Measured, not computed.** The new value was checked by reading pixels out of the
+rendered PNG and finding the divider rows empirically, then re-reading them after the
+change. The failure mode being corrected is precisely a number that was right about
+the wrong thing, so a second calculation would not have caught it.
+
+One correction to the finding that prompted this: the reported 2.12:1 against a
+pressed row was a different element — the teal callout card. Dividers in the resting
+list measure symmetrically against both neighbours, which is why one token clears it.
