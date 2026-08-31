@@ -1355,3 +1355,32 @@ is gone, which is the cause rather than the symptom.
 a socket, so testing it means mocking the hook. That is a different piece of work and
 worth doing on its own rather than smuggled in behind two prop-driven components.
 
+
+### R116 — The screen chooser is testable too.
+
+**Frozen:** `RoomClient` was uncovered, because it calls `useRoom` and that opens a
+socket.
+
+**Built:** the hook is mocked and the chooser is rendered.
+
+**Why.** `RoomClient` decides which of six screens a phone is looking at, and two of
+this project's worst client failures were decisions *it* made rather than anything a
+component drew.
+
+R98 — a deck-build failure is unrecoverable by construction, and nothing cleared a
+diagnosis, so the panel stayed up for the session, hiding the KNOCKOUT the server had
+already restored. R101 — a refused rejoin cleared the session and set an error but
+left `userId` set, so the join gate never rendered and the phone kept showing a room
+it received no broadcasts for.
+
+Neither is visible in any single component. Both are visible here, and both are now
+caught independently: reintroducing R101 fails the join-gate case, reintroducing R98
+fails the way-out case, and neither failure touches the other.
+
+**Mocking the hook is the whole trick, and it is not a compromise.** What was wanted
+was never the socket — it was the branch. Replacing `useRoom` wholesale gives every
+combination of room state, diagnosis and seat directly, including ones that are
+awkward to reach against a live server: a thin-deck notice that must stay a strip
+while the room renders underneath it, and a refused rejoin carrying its reason.
+
+The last piece of the client the gate could not execute is executable now.
