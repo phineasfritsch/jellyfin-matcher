@@ -1501,3 +1501,28 @@ an honest home and cannot be smuggled into a claim about the product.
 **The failure message is what made this visible.** R110 made a lost pin name the
 corpus it searched; without that, the fifth occurrence would have looked like a
 sixth deleted string rather than a pattern with a shape.
+
+### R122 — The knockout, rendered.
+
+**Frozen:** four states, two ever photographed, and one of those two by mistake.
+
+**Built:** eight cases covering the skeleton, the checkbox round, the wait and the
+elimination round.
+
+**Why.** This screen has the most states in the app and the least evidence. Every
+`04-knockout.png` committed for months was the **skeleton** — shipped above the fold
+in the README with alt text promising a list of genres (R85). The loading state is
+also the one a screen reader used to meet in silence, which is why it carries a
+`role="status"` label; removing that label now fails a test in milliseconds, where
+before it took a board member reading the source.
+
+The elimination cases hold R46 and R61 in place from the rendering side: the screen
+shows a bare count and must not be able to name anybody, because the promise that
+nobody sees who is slow is a server promise and not a rendering convention.
+
+**One test was wrong and the app was right.** The first version asserted a vote count
+on the elimination ballot; the screen shows "3 left · 2 survive" there, and the count
+appears only once *you* have answered — before that the screen is a ballot, not a
+progress report. The correct move was to fix the test's setup rather than to make the
+app match a guess, and it is worth writing down because the opposite is always
+available and always looks like progress.
