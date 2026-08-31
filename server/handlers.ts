@@ -79,6 +79,12 @@ export interface Ctx {
   fx: Effects;
   authConfig(): AuthConfig;
   joinLimiter: RateLimiter;
+  /**
+   * Ask Jellyseerr for a film. Injected because this is the one call in the app
+   * that spends the host's disk, and a test of the rules around it must not be
+   * able to fire it (R99).
+   */
+  requestMovie(tmdbId: number): Promise<{ id: number | string; status: unknown }>;
 }
 
 function room(ctx: Ctx): Room {
@@ -244,6 +250,53 @@ export function reject(ctx: Ctx) {
   // settle it again immediately on whatever is left standing.
   if (!ctx.fx.settleIfPossible(current, null)) ctx.fx.broadcast(current);
   return {};
+}
+
+/**
+ * Ask the host's Jellyseerr for the winner.
+ *
+ * R99. The one control that spends somebody's disk, and until now the only
+ * guard on pressing it twice was a disabled button on the phone that pressed
+ * it. Three things made that worse than it sounds:
+ *
+ *   - The client abandons its ack at 10s and the server's upstream deadline is
+ *     15s, so a Jellyseerr that takes twelve seconds tells the phone "Request
+ *     failed" for a request that then succeeds.
+ *   - The winner screen puts the button straight back on that error.
+ *   - Nothing on the server refused the second press, so the retry the error
+ *     invited landed in Radarr as a second download.
+ *
+ * The record goes on the room, so the refusal is the server's, it survives a
+ * reload, and every phone can see the film was asked for rather than only the
+ * one that asked.
+ */
+export async function requestWinner(ctx: Ctx) {
+  // Firing a real download always needs an account, even if joining did not.
+  if (ctx.authConfig().requestRequires && !ctx.session.authedName()) {
+    throw new Error('Sign in with your Jellyfin account to request a download');
+  }
+  const current = room(ctx);
+  if (current.status !== 'FINISHED' || !current.winner) throw new Error('No winner to request yet');
+
+  const card = current.deck.find((c) => c.id === current.winner);
+  if (!card) throw new Error('Winner card missing from deck');
+  if (card.jellyfinItemId) throw new Error('Already in the library');
+  if (card.tmdbId == null) throw new Error('No TMDb id on winner');
+
+  // Idempotent by the room, not by the button.
+  if (current.winnerRequest) {
+    throw new Error(`${current.winnerRequest.by} already asked for this. The host has it.`);
+  }
+
+  const result = await ctx.requestMovie(card.tmdbId);
+
+  // Recorded before it is announced, so a phone that reloads mid-announcement
+  // still learns the room asked (R90 again, one screen along).
+  current.winnerRequest = { by: ctx.session.authedName() ?? 'Someone', title: card.title };
+  ctx.store.touch(current);
+  ctx.fx.toRoom(current.roomId, 'winner:requested', { title: card.title });
+  ctx.fx.broadcast(current);
+  return { requestId: result.id, status: result.status };
 }
 
 /**

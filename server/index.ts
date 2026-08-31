@@ -398,6 +398,7 @@ io.on('connection', (socket) => {
     },
     authConfig,
     joinLimiter,
+    requestMovie,
   };
 
   /**
@@ -407,6 +408,14 @@ io.on('connection', (socket) => {
    * of one decision is eleven chances for the next handler to forget it, and a
    * refusal that never reaches the ack is a phone that hangs (R93).
    */
+  async function wrapAsync(ack: Ack | undefined, run: () => Promise<Record<string, unknown> | void>) {
+    try {
+      ack?.({ ok: true, ...((await run()) ?? {}) });
+    } catch (err) {
+      fail(ack, err);
+    }
+  }
+
   function wrap(ack: Ack | undefined, run: () => Record<string, unknown> | void) {
     try {
       ack?.({ ok: true, ...(run() ?? {}) });
@@ -439,28 +448,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('winner:request', async (_payload: unknown, ack?: Ack) => {
-    try {
-      // Firing a real download always needs an account, even if joining didn't.
-      if (authConfig().requestRequires && !authedName(socket)) {
-        throw new Error('Sign in with your Jellyfin account to request a download');
-      }
-      const room = socketRoom(socket);
-      if (!room || room.status !== 'FINISHED' || !room.winner) {
-        throw new Error('No winner to request yet');
-      }
-      const card = room.deck.find((c) => c.id === room.winner);
-      if (!card) throw new Error('Winner card missing from deck');
-      if (card.jellyfinItemId) throw new Error('Already in the library');
-      if (card.tmdbId == null) throw new Error('No TMDb id on winner');
-      const result = await requestMovie(card.tmdbId);
-      store.touch(room);
-      ack?.({ ok: true, requestId: result.id, status: result.status });
-      io.to(room.roomId).emit('winner:requested', { title: card.title });
-    } catch (err) {
-      fail(ack, err);
-    }
-  });
+  socket.on('winner:request', (_payload: unknown, ack?: Ack) =>
+    wrapAsync(ack, () => handlers.requestWinner(ctx)),
+  );
 
 });
 

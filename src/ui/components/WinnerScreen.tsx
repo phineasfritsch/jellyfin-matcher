@@ -205,7 +205,11 @@ export function WinnerScreen({
             Play in Jellyfin
           </a>
         ) : (
-          <RequestControl title={winner.title} runtime={winner.runtime} />
+          <RequestControl
+            title={winner.title}
+            runtime={winner.runtime}
+            alreadyAsked={room.winnerRequest}
+          />
         )}
       </Dock>
     </div>
@@ -218,7 +222,23 @@ export function WinnerScreen({
  * and for a thumb, and this is the control where they must all behave the same.
  * The confirm states the cost before it is committed, not after.
  */
-function RequestControl({ title, runtime }: { title: string; runtime: number | null }) {
+function RequestControl({
+  title,
+  runtime,
+  alreadyAsked,
+}: {
+  title: string;
+  runtime: number | null;
+  /**
+   * R99: whether the ROOM has asked, which is not the same as whether this
+   * phone has. It lived in the component state below, so it was private to
+   * whoever pressed the button and gone the moment they reloaded -- on the one
+   * control that spends the host's disk, where a second press is a second
+   * download. The server refuses the repeat now; this is so nobody is invited
+   * to try.
+   */
+  alreadyAsked: { by: string; title: string } | null;
+}) {
   const [state, setState] = useState<'idle' | 'confirm' | 'busy' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
 
@@ -233,14 +253,16 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
     }
   }
 
-  if (state === 'done') {
+  if (state === 'done' || alreadyAsked) {
     return (
       <p
         role="status"
         className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-body font-medium text-accent ring-1 ring-accent/35"
       >
-        <Check aria-hidden className="size-4" /> Asked. It appears in Jellyfin once the host
-        approves it and it finishes downloading.
+        <Check aria-hidden className="size-4" />{' '}
+        {alreadyAsked && state !== 'done'
+          ? `${alreadyAsked.by} asked for this. It appears in Jellyfin once the host approves it and it finishes downloading.`
+          : 'Asked. It appears in Jellyfin once the host approves it and it finishes downloading.'}
       </p>
     );
   }

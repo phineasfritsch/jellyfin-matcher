@@ -143,6 +143,8 @@ export function declare(
   room.winnerViaFallback = outcome.viaFallback;
   room.winnerRanking = outcome.ranking;
   room.winnerPlayUrl = outcome.playUrl;
+  // A new winner has not been asked for, whatever the last one's state was.
+  room.winnerRequest = null;
   store.touch(room);
 }
 
@@ -159,6 +161,7 @@ export function rejectWinner(room: Room, store: RoomStore): boolean {
   room.winnerViaFallback = false;
   room.winnerRanking = null;
   room.winnerPlayUrl = null;
+  room.winnerRequest = null;
   room.status = 'SWIPING';
   store.touch(room);
   return true;

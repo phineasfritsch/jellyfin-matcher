@@ -22,6 +22,7 @@ import type { Room } from '../store';
 /** A socket that is a plain object, and effects that only remember. */
 function harness() {
   const store = new RoomStore();
+  const requests: number[] = [];
   const broadcasts: Room[] = [];
   const emits: Array<{ roomId: string; event: string; payload: unknown }> = [];
   const swipeStarts: Room[] = [];
@@ -58,6 +59,12 @@ function harness() {
       requestRequires: true,
     }),
     joinLimiter: new RateLimiter(30, 60_000),
+    // Never the real thing. A test of the rules around the one control that
+    // spends the host's disk must not be able to spend it (R99).
+    requestMovie: async (tmdbId: number) => {
+      requests.push(tmdbId);
+      return { id: 4242, status: 'PENDING' };
+    },
   };
 
   return {
@@ -65,6 +72,7 @@ function harness() {
     store,
     session,
     broadcasts,
+    requests,
     emits,
     swipeStarts,
     settled,
@@ -221,6 +229,78 @@ describe('voting', () => {
   it('refuses an undo with nothing behind it', () => {
     const { h } = swiping();
     expect(() => handlers.undo(h.ctx)).toThrow(/Nothing to undo/);
+  });
+});
+
+describe('asking Jellyseerr for the winner', () => {
+  function finished(held: boolean) {
+    const h = harness();
+    const host = handlers.createRoom(h.ctx, { name: 'Ada' });
+    h.ctx.session.authedName = () => 'ada';
+    const room = h.store.getRoom(host.roomId)!;
+    room.status = 'FINISHED';
+    room.winner = 'c1';
+    room.deck = [
+      { id: 'c1', title: 'Parasite', tmdbId: 496243, jellyfinItemId: held ? 'j1' : null },
+    ] as unknown as Room['deck'];
+    return { h, room };
+  }
+
+  it('asks once and records who asked', async () => {
+    const { h, room } = finished(false);
+    const res = await handlers.requestWinner(h.ctx);
+
+    expect(res.requestId).toBe(4242);
+    expect(h.requests).toEqual([496243]);
+    expect(room.winnerRequest).toEqual({ by: 'ada', title: 'Parasite' });
+  });
+
+  it('refuses the second press without calling Jellyseerr again', async () => {
+    // The whole point. A second request is a second download, and the only
+    // thing stopping it used to be a disabled button on one phone.
+    const { h } = finished(false);
+    await handlers.requestWinner(h.ctx);
+    await expect(handlers.requestWinner(h.ctx)).rejects.toThrow(/already asked/i);
+    expect(h.requests).toHaveLength(1);
+  });
+
+  it('tells the room, so it is not private to whoever pressed it', async () => {
+    const { h } = finished(false);
+    await handlers.requestWinner(h.ctx);
+    expect(h.emits.some((e) => e.event === 'winner:requested')).toBe(true);
+    // And broadcasts, so a phone that never receives the event still learns it
+    // from the room state on its next reload.
+    expect(h.broadcasts.length).toBeGreaterThan(1);
+  });
+
+  it('refuses a film the server already has', async () => {
+    const { h } = finished(true);
+    await expect(handlers.requestWinner(h.ctx)).rejects.toThrow(/Already in the library/);
+    expect(h.requests).toHaveLength(0);
+  });
+
+  it('refuses a guest, because this one spends the host disk', async () => {
+    const { h } = finished(false);
+    h.ctx.session.authedName = () => null;
+    await expect(handlers.requestWinner(h.ctx)).rejects.toThrow(/Sign in/);
+    expect(h.requests).toHaveLength(0);
+  });
+
+  it('refuses before the room has a winner', async () => {
+    const { h, room } = finished(false);
+    room.status = 'SWIPING';
+    await expect(handlers.requestWinner(h.ctx)).rejects.toThrow(/No winner to request/);
+    expect(h.requests).toHaveLength(0);
+  });
+
+  it('lets the room ask again after it rejects the winner', async () => {
+    // A new winner has not been asked for, whatever the last one's state was.
+    const { h, room } = finished(false);
+    await handlers.requestWinner(h.ctx);
+    expect(room.winnerRequest).not.toBeNull();
+
+    handlers.reject(h.ctx);
+    expect(room.winnerRequest).toBeNull();
   });
 });
 

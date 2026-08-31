@@ -812,3 +812,36 @@ done its half, and there was no control on screen to meet it.
 Blocking is still correct — a build failure genuinely leaves nothing else to draw,
 and the panel carries the upstream and the technical line a self-hosting reader
 needs to fix their server. What was missing was only the way out.
+
+### R99 — A client deadline shorter than the server's turns slow into wrong.
+
+**Frozen:** `emitAck` gave up after 10s; `UPSTREAM_TIMEOUT_MS` is 15s; nothing on the
+server refused a second `winner:request`.
+
+**Built:** the client waits 20s, the room records the request, and the server refuses
+the repeat.
+
+**Why.** Three reasonable-looking pieces composed into a second download.
+
+A Jellyseerr that takes twelve seconds is inside the server's deadline and outside
+the client's, so the phone was told **"Request failed"** for a request that then
+succeeded. The winner screen puts the button straight back on an error. And nothing
+on the server refused the second press — no flag on the room, no limiter — so the
+retry the false error invited reached Radarr as a genuine second download of the same
+film. This is the one control in the app that spends somebody else's disk, and its
+only guard was a disabled button on the phone that had already pressed it.
+
+**Idempotence belongs to the room.** `winnerRequest` is recorded server-side before
+the announcement, so the refusal survives a reload, a rejoin, and a different phone.
+It is cleared when a winner is declared or rejected, so a new winner never inherits
+the last one's state.
+
+**And it was private.** "Asked." lived in component state, so it was known only to
+whoever pressed the button and gone the moment they refreshed — while
+`winner:requested` was emitted to the whole room and **nothing subscribed to it**.
+Five other people had no way to know the film had been asked for. The screen now
+names who asked, from room state.
+
+Tested against an injected `requestMovie`: the rules around the control that spends
+the host's disk are checkable without a test being able to spend it. Removing the
+guard turns the second-press case red.

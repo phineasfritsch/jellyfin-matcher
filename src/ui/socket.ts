@@ -62,7 +62,18 @@ export function emitAck<T extends Record<string, unknown> = Record<string, unkno
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     getSocket()
-      .timeout(10_000)
+      /*
+        R99: longer than the server's own upstream deadline, not shorter.
+
+        This was 10s while UPSTREAM_TIMEOUT_MS is 15s, so any action that waits
+        on Jellyfin or Jellyseerr could be reported to the phone as failed while
+        the server was still working and about to succeed. On winner:request
+        that mattered: the screen said "Request failed", put the button back,
+        and the retry it invited landed in Radarr as a second download.
+
+        A client deadline shorter than the server's turns slow into wrong.
+      */
+      .timeout(20_000)
       .emit(event, payload, (err: Error | null, res: ({ ok: true } & T) | { ok: false; error: string }) => {
         if (err) return reject(err);
         if (res.ok) resolve(res as T);

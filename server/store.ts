@@ -60,6 +60,18 @@ export interface Room {
   winnerRanking: FallbackResult[] | null;
   /** Needs the server's Jellyfin base URL, so it cannot be derived on a phone. */
   winnerPlayUrl: string | null;
+  /**
+   * R99: the Jellyseerr request, once it has been made.
+   *
+   * On the room rather than in a component, for two reasons. It is the one
+   * control in this app that spends the host's disk, so a second press must be
+   * refused by the server and not merely by a disabled button -- nothing did,
+   * and the client gives up on its ack before the server gives up on
+   * Jellyseerr, so "Request failed" was routinely shown for a request that
+   * then succeeded, with the button put straight back. And every phone in the
+   * room should be able to see it was asked for, including one that reloads.
+   */
+  winnerRequest: { by: string; title: string } | null;
   createdAt: number;
   lastActivity: number;
 }
@@ -170,6 +182,7 @@ export class RoomStore {
       winnerViaFallback: false,
       winnerRanking: null,
       winnerPlayUrl: null,
+      winnerRequest: null,
       createdAt: this.now(),
       lastActivity: this.now(),
     };
