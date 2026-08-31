@@ -17,6 +17,7 @@
  * server now sends each member their own votes and nobody else's, and counts
  * where the UI needs a count.
  */
+import { deckExhausted } from './settlement';
 import type { Room } from './store';
 
 /** A room as one member may see it. Same shape, minus everyone else's answers. */
@@ -35,6 +36,16 @@ export interface RoomView extends Omit<Room, 'votes' | 'progress' | 'knockout'> 
   submittedCount: number;
   /** How many members have cast an elimination vote this round, including you. */
   votedCount: number;
+  /**
+   * R100: whether every connected member has reached the end of the deck.
+   *
+   * A fact about the room that a phone cannot work out for itself. It knows its
+   * own position and a count of how many others finished, but not whether the
+   * ones who finished are the ones still connected -- and that is exactly the
+   * difference that decides whether rejecting the winner returns the room to
+   * the deck or settles it again on the spot.
+   */
+  deckExhausted: boolean;
 }
 
 function only<T>(record: Record<string, T>, userId: string): Record<string, T> {
@@ -67,5 +78,6 @@ export function viewFor(room: Room, userId: string): RoomView {
     othersFinished,
     submittedCount: memberIds.filter((id) => room.knockout.submissions[id] !== undefined).length,
     votedCount: memberIds.filter((id) => room.knockout.elimVotes[id] !== undefined).length,
+    deckExhausted: deckExhausted(room),
   };
 }

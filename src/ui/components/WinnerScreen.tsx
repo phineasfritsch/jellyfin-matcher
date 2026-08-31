@@ -52,6 +52,14 @@ export function WinnerScreen({
   const ranking = match?.ranking ?? room.winnerRanking;
   const playUrl = match?.playUrl ?? room.winnerPlayUrl;
   const held = Boolean(playUrl);
+  /*
+    Whether rejecting returns the room to the deck or settles it again on the
+    spot. The server sends this because a phone cannot work it out: it knows its
+    own position and a count of others finished, but not whether those others
+    are the ones still connected -- and a member rejoining is exactly what flips
+    the answer (R100).
+  */
+  const roomExhausted = room.deckExhausted;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -169,8 +177,28 @@ export function WinnerScreen({
               id="reject-cost"
               className="rounded-[var(--radius-control)] bg-super/12 px-3.5 py-2.5 text-body font-medium leading-relaxed text-super ring-1 ring-super/35"
             >
-              This throws away what the room just agreed on and puts everyone back in the deck.
-              {winner.title} will not be offered again.
+              {/*
+                R100: say what actually happens, which is not one thing.
+
+                This always read "puts everyone back in the deck" and the button
+                always said "keep swiping". On a points winner nobody swipes
+                anything: rejecting leaves progress untouched, so the deck is
+                still exhausted, and settlement runs again inside the same call
+                and declares the next-ranked film on the spot. The copy promised
+                a return to the deck on the exact path where the deck is over.
+              */}
+              {roomExhausted ? (
+                <>
+                  This throws away what the room just agreed on. Everyone has finished the
+                  deck, so the points pick the next film straight away — there is nothing
+                  left to swipe. {winner.title} will not be offered again.
+                </>
+              ) : (
+                <>
+                  This throws away what the room just agreed on and puts everyone back in the
+                  deck. {winner.title} will not be offered again.
+                </>
+              )}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <BigButton
@@ -181,7 +209,7 @@ export function WinnerScreen({
                 tone="ghost"
                 ariaDescribedBy="reject-cost"
               >
-                Yes, keep swiping
+                {roomExhausted ? 'Yes, pick the next one' : 'Yes, keep swiping'}
               </BigButton>
               <BigButton onClick={() => setConfirmingReject(false)} tone="ghost">
                 Keep this one
@@ -194,7 +222,7 @@ export function WinnerScreen({
             onClick={() => setConfirmingReject(true)}
             className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-row font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985]"
           >
-            Not this one — keep swiping
+            {roomExhausted ? 'Not this one — pick the next' : 'Not this one — keep swiping'}
           </button>
         )}
         {held && playUrl ? (

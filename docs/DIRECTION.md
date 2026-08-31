@@ -845,3 +845,30 @@ names who asked, from room state.
 Tested against an injected `requestMovie`: the rules around the control that spends
 the host's disk are checkable without a test being able to spend it. Removing the
 guard turns the second-press case red.
+
+### R100 — Say what will happen, not what usually happens.
+
+**Frozen:** the reject confirm read *"puts everyone back in the deck"* and its button
+said *"Yes, keep swiping"*, on every path.
+
+**Built:** both branch on whether the deck is actually finished, and the room tells
+the phone which it is.
+
+**Why.** On a points winner nobody swipes anything. `rejectWinner` puts the room back
+to `SWIPING` but leaves `progress` untouched, so `deckExhausted` is still true and
+`settleIfPossible` — called in the same handler, on the next line — declares the
+next-ranked film immediately. The comment above that line says so in as many words.
+The copy promised a return to the deck on the exact path where the deck is over, and
+the button named an action nobody was about to take.
+
+**The fact is sent, not derived.** A phone knows its own position in the deck and a
+count of how many others finished, but not whether the members who finished are the
+members still connected — and that is precisely what decides the answer. A member
+rejoining flips it. So `deckExhausted` is computed by the same function settlement
+uses and travels in the room view, rather than being approximated on the client from
+two numbers that nearly work.
+
+`viaFallback` looks like the right signal and is wrong in both directions: a
+disconnected member who rejoins before the reject makes the deck un-exhausted, and an
+instant match can happen on a deck that is exhausted anyway. Guessing from the
+outcome is not the same as asking about the state.

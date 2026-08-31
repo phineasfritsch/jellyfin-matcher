@@ -37,6 +37,13 @@ export interface ClientRoom {
   submittedCount: number;
   /** How many members have cast an elimination vote, including you. */
   votedCount: number;
+  /**
+   * Whether every connected member has finished the deck (R100). Decides
+   * whether rejecting the winner returns the room to swiping or settles it
+   * again immediately -- which is the difference between the reject confirm
+   * telling the truth and not.
+   */
+  deckExhausted: boolean;
 }
 
 /** A named, actionable account of why the deck is short or missing (R54). */

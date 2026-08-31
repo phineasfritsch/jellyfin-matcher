@@ -79,3 +79,50 @@ describe('the winner outcome on the room', () => {
     expect(room.winnerRanking).toBeNull();
   });
 });
+
+/**
+ * R100: whether rejecting returns the room to the deck, or settles it again.
+ *
+ * The reject confirm said "puts everyone back in the deck" and its button said
+ * "keep swiping", on every path. On a points winner nobody swipes anything:
+ * rejecting leaves progress untouched, so the deck is still exhausted, and
+ * settlement runs again inside the same call and declares the next-ranked film
+ * on the spot. The copy promised a return to the deck on the exact path where
+ * the deck is over -- so the fact has to reach the phone.
+ */
+describe('the room knows whether the deck is finished', () => {
+  function room(progress: number, deckSize: number) {
+    const store = new RoomStore();
+    const { room: r, userId } = store.createRoom('Ada');
+    r.status = 'SWIPING';
+    r.deck = Array.from({ length: deckSize }, (_, i) => ({ id: `c${i}` })) as Room['deck'];
+    r.progress[userId] = progress;
+    return { r, userId };
+  }
+
+  it('is false while somebody still has cards left', () => {
+    const { r, userId } = room(2, 5);
+    expect(viewFor(r, userId).deckExhausted).toBe(false);
+  });
+
+  it('is true once every connected member has reached the end', () => {
+    const { r, userId } = room(5, 5);
+    expect(viewFor(r, userId).deckExhausted).toBe(true);
+  });
+
+  it('is a fact about the room, not about the phone asking', () => {
+    // The reason this is sent rather than derived: a second member who has not
+    // finished makes it false for everyone, including the member who has.
+    const { r, userId } = room(5, 5);
+    r.users.u_2 = { id: 'u_2', name: 'Bex', ready: true, connected: true, authed: false };
+    r.progress.u_2 = 1;
+    expect(viewFor(r, userId).deckExhausted).toBe(false);
+  });
+
+  it('ignores a member who has left, the way settlement does', () => {
+    const { r, userId } = room(5, 5);
+    r.users.u_2 = { id: 'u_2', name: 'Bex', ready: true, connected: false, authed: false };
+    r.progress.u_2 = 1;
+    expect(viewFor(r, userId).deckExhausted).toBe(true);
+  });
+});

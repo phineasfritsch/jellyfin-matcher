@@ -51,7 +51,7 @@ defined at their first citation.
 | **R34** | `docs/DIRECTION.md:135` | — |
 | **R35** | `docs/DIRECTION.md:136` | `src/ui/components/Knockout.tsx:221` |
 | **R36** | `docs/DIRECTION.md:140` | — |
-| **R37** | `docs/DIRECTION.md:141` | `src/ui/components/WinnerScreen.tsx:220` |
+| **R37** | `docs/DIRECTION.md:141` | `src/ui/components/WinnerScreen.tsx:248` |
 | **R38** | `docs/DIRECTION.md:145` | — |
 | **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:97` +2 |
 | **R40** | _at its citation_ | `src/ui/components/Listing.tsx:16` +3 |
@@ -67,7 +67,7 @@ defined at their first citation.
 | **R50** | _at its citation_ | `src/ui/components/VoteRow.tsx:14` |
 | **R51** | _at its citation_ | `src/ui/components/VoteRow.tsx:43` |
 | **R52** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:24` +1 |
-| **R53** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:62` |
+| **R53** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:70` |
 | **R54** | _at its citation_ | `server/diagnose.ts:8` +3 |
 | **R55** | _at its citation_ | `src/ui/AuthGate.tsx:162` |
 | **R58** | `docs/DIRECTION.md:221` | `src/ui/components/SwipeCard.tsx:189` |
@@ -82,14 +82,14 @@ defined at their first citation.
 | **R68** | _at its citation_ | `server/index.ts:78` +1 |
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
-| **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:161` |
+| **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:169` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:135` |
 | **R74** | _at its citation_ | `src/ui/components/VoteRow.tsx:53` |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:476` |
 | **R77** | _at its citation_ | `server/handlers.ts:108` +3 |
 | **R78** | _at its citation_ | `src/lib/mdblist.ts:70` |
-| **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:73` +1 |
+| **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:81` +1 |
 | **R80** | `docs/DIRECTION.md:262` | `src/ui/components/MovieDetails.tsx:46` +1 |
 | **R81** | `docs/DIRECTION.md:281` | `src/ui/components/MovieDetails.tsx:37` +1 |
 | **R82** | `docs/DIRECTION.md:297` | `scripts/gate.ts:132` +1 |
