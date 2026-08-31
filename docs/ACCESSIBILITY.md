@@ -242,6 +242,16 @@ Each says what would settle it.
 
 ### R1 — 1.4.10 Reflow (AA). Nothing has ever been rendered at 320px.
 
+> **Measured, and it was a FAIL, now fixed (R137).** `npm run measure:reflow`
+> renders the deck at 320×256 in real Chrome against the compiled stylesheet.
+> The vote row's bottom edge was at **372px** on a surface that could not
+> scroll — the controls the deck exists for were 116px out of reach — and the
+> buttons wrap to two rows at 320px wide, which the reading below did not
+> predict. Below 520px of height the shell and the screen inside it now release,
+> so the page scrolls; 320×568 and 402×874 are unchanged, which is how R21 is
+> known to be intact. The suspicion recorded below was correct in every part
+> except that it was gentler than the truth.
+
 `scripts/screenshots.ts` shoots at **402×874**. `scripts/measure-rows.ts`
 measures at **402** wide. Every capture in `docs/screenshots/` is that phone.
 The criterion's width is **320 CSS px**, which is 1280px at 400% zoom, and no

@@ -192,3 +192,65 @@ describe('a control whose only boundary is a ring can be seen', () => {
     }
   });
 });
+
+/**
+ * R137 / WCAG 2.2 AA 1.4.10 Reflow: a control you cannot reach.
+ *
+ * R21 is why this app does not scroll -- the bar stays at the top and the one
+ * action stays at the bottom while the list moves between them, and a deck that
+ * scrolls is a deck where the vote row slides under your thumb mid-swipe. That
+ * reasoning holds at every height a phone has.
+ *
+ * It stops holding at 256px. The criterion asks for 320 CSS px wide, which is a
+ * 1280x1024 desktop at 400% zoom, and that viewport is 320x256. Measured in a
+ * real Chrome against the compiled stylesheet (`npm run measure:reflow`): the
+ * vote row's bottom edge landed at 372px, 116px below a surface that could not
+ * scroll. The controls the deck exists for were unreachable, and no artefact in
+ * this repository had ever been rendered at that size to notice.
+ *
+ * Scoped honestly: this asserts the CAUSE -- the escape hatch is present and
+ * relaxes the things that were clipping. It cannot lay anything out, so it
+ * cannot prove the vote row is reachable. `npm run measure:reflow` proves that,
+ * in a browser, and is the thing to run if this rule is ever changed.
+ */
+describe('a viewport too short for the screen can still reach the controls', () => {
+  const shortViewport = /@media\s*\(max-height:\s*(\d+)px\)\s*\{([\s\S]*?)\n\}/.exec(css);
+
+  it('has an escape hatch at all', () => {
+    expect(shortViewport, 'no max-height rule: the shell clips at every height').not.toBeNull();
+  });
+
+  it('triggers with room to spare above the smallest phone', () => {
+    // 320x568 measures with the undo row's bottom edge at 560 -- eight pixels
+    // of margin. A threshold with none is one that fails on a font-size change.
+    const px = Number(shortViewport?.[1]);
+    expect(px).toBeGreaterThanOrEqual(480);
+    expect(px, 'so high it would make an ordinary phone scroll, undoing R21').toBeLessThan(700);
+  });
+
+  it('releases the shell and the screen inside it, which both clipped', () => {
+    /*
+      Releasing the shell alone was not enough and the measurement said so:
+      each screen is a `flex min-h-0 flex-1 overflow-hidden` child that clipped
+      its own contents to the shell's height, and the vote row did not move.
+    */
+    const body = shortViewport?.[2] ?? '';
+    expect(body).toMatch(/main\.app-shell\s*\{[^}]*overflow:\s*visible/);
+    expect(body).toMatch(/main\.app-shell\s*>\s*div\s*\{[^}]*overflow:\s*visible/);
+  });
+
+  it('keeps the class the rule hangs on, in the className and not in a comment', () => {
+    /*
+      A media query aimed at a class nothing carries is a rule that does
+      nothing, and it would look exactly like this one.
+
+      The first version of this was `toContain('app-shell')` against the whole
+      file -- and removing the class from the element left it green, because the
+      COMMENT above the element explains what `app-shell` is for. A guard
+      satisfied by the prose describing the thing it guards is the R129 shape
+      exactly, written by me minutes after writing R135 about it.
+    */
+    const shell = /<main className="([^"]*)"/.exec(readDoc('src/ui/RoomClient.tsx'))?.[1] ?? '';
+    expect(shell, 'the shell element does not carry app-shell').toMatch(/\bapp-shell\b/);
+  });
+});

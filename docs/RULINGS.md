@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-131 rulings. 96 argued in a design document; the rest are
+132 rulings. 97 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -35,7 +35,7 @@ defined at their first citation.
 | **R18** | `docs/REDESIGN.md:143` | `src/ui/components/SwipeCard.tsx:145` |
 | **R19** | `docs/DIRECTION.md:111` | — |
 | **R20** | `docs/DIRECTION.md:112` | — |
-| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:74` +1 |
+| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:74` +2 |
 | **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:124` |
 | **R23** | `docs/DIRECTION.md:115` | — |
 | **R24** | `docs/DIRECTION.md:116` | — |
@@ -83,7 +83,7 @@ defined at their first citation.
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:176` |
-| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:146` |
+| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:148` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:150` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:548` |
@@ -146,5 +146,6 @@ defined at their first citation.
 | **R134** | `docs/DIRECTION.md:1866` | — |
 | **R135** | `docs/DIRECTION.md:1909` | — |
 | **R136** | `docs/DIRECTION.md:1952` | — |
+| **R137** | `docs/DIRECTION.md:1986` | — |
 
 No ruling is orphaned.

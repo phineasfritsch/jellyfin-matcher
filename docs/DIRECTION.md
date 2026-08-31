@@ -1982,3 +1982,51 @@ instead of the card announcement it was written for. Both now select the
 `sr-only` region explicitly. Neither was a bad test; both were queries that
 assumed there would only ever be one of something, which is a fair assumption
 right up until it is not.
+
+### R137 — The vote buttons were 116px below a screen that could not scroll
+
+WCAG 2.2 AA 1.4.10 asks that content work at 320 CSS px wide — a 1280×1024
+desktop at 400% zoom, which is a **320×256** viewport. Nothing in this
+repository had ever been rendered at it. `screenshots.ts` shoots 402×874,
+`measure-rows.ts` measures at 402, every capture in `docs/screenshots` is that
+one phone. So the audit could only grade Reflow *unverified*, with a reasoned
+suspicion about height.
+
+`scripts/measure-reflow.ts` settles it, the way `measure-rows.ts` settled the
+row question: compiled stylesheet, real class names, real Chrome, three
+viewports. The suspicion was right and worse than predicted.
+
+At 320×256 the vote row's bottom edge sits at **372px** — 116px below a surface
+that `h-dvh overflow-hidden` made incapable of scrolling. The controls the deck
+exists for were simply unreachable. The buttons also wrap to two rows at 320px
+wide, which the audit's reading had not predicted.
+
+**R21 is not wrong.** The no-scroll rule exists because a deck that scrolls is a
+deck where the vote row slides under your thumb mid-swipe, and that holds at
+every height a phone has — confirmed by the same run: 320×568 and 402×874 are
+unchanged, everything inside the viewport, nothing scrolling. It stops holding
+at 256px, where there is no layout that fits and the choice is between a control
+that moves and a control you cannot reach. **A control you cannot reach is
+worse.** So below 520px of height the shell releases.
+
+Releasing the shell was not enough, and the measurement is what said so: each
+screen is a `flex min-h-0 flex-1 overflow-hidden` child that clipped its own
+contents to the shell's height, so the vote row did not move at all on the first
+attempt. Direct children only — the card's own `overflow-hidden` is what rounds
+the poster.
+
+Three mistakes worth keeping:
+
+- The harness picked the **largest** stylesheet in `.next/static/css`, and
+  `next build` leaves old hashed files behind. It spent a cycle reporting that a
+  rule I had just verified in the built CSS was not taking effect. Newest, not
+  largest — R127's family again: a second copy where the tool looks.
+- `tsx` compiles a named inner arrow into a call to esbuild's `__name` helper,
+  which does not exist inside `page.evaluate`, and the whole thing fails with a
+  ReferenceError that says nothing about the cause.
+- **The guard was hollow and I wrote it minutes after R135.** It asserted
+  `readDoc('RoomClient.tsx')` contained `app-shell`, and removing the class from
+  the element left it green — because the comment above the element explains
+  what `app-shell` is for. A guard satisfied by the prose describing the thing
+  it guards. Found by running the mutation, which is the only reason this
+  paragraph exists rather than a green tick.

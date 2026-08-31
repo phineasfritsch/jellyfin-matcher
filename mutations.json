@@ -415,6 +415,18 @@
         "src/ui/__tests__/a11y.test.tsx"
       ],
       "note": "R46 makes this a bare count on purpose, and the count is exactly what the room IS allowed to know. It moved in silence."
+    },
+    {
+      "id": "R137-no-reflow-escape",
+      "ruling": "R137",
+      "claim": "a viewport too short for the screen can still reach the vote controls",
+      "file": "src/ui/RoomClient.tsx",
+      "find": "className=\"app-shell mx-auto flex h-dvh",
+      "replace": "className=\"mx-auto flex h-dvh",
+      "expect": [
+        "src/ui/__tests__/css.test.ts"
+      ],
+      "note": "WCAG 2.2 AA 1.4.10. Measured at 320x256 (a 1280x1024 desktop at 400% zoom): the vote row ended at 372px on a surface that could not scroll, 116px out of reach. The first version of the guard was toContain(app-shell) over the whole file and this mutation PASSED it, because the comment above the element mentions the class."
     }
   ]
 }

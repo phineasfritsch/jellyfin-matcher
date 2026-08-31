@@ -375,3 +375,47 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+  R137: when the viewport is too short to hold the screen, let it scroll.
+
+  R21 is why this app does not scroll: the status bar stays at the top and the
+  one action stays at the bottom while the list moves between them, and a deck
+  that scrolls is a deck where the vote row slides under your thumb mid-swipe.
+  That reasoning is right and it still holds at any height a phone has.
+
+  It stops holding at 256px. WCAG 1.4.10 asks for 320 CSS px wide, which is a
+  1280x1024 desktop at 400% zoom -- and that viewport is 320x256. Measured
+  there with `npm run measure:reflow`: the card region's min-height plus the
+  vote row plus the undo row put the vote buttons' bottom edge at 372px, 116px
+  below a screen that cannot scroll. The controls the deck exists for were
+  simply unreachable, and nothing in this repository had ever rendered at that
+  size to notice.
+
+  A control you cannot reach is worse than a control that moves. So below a
+  height where the layout can hold together, the shell scrolls: the thumb
+  argument is a comfort argument, and this is a reachability one.
+
+  520px rather than something tighter because 320x568 measures with the undo
+  row's bottom edge at 560 -- eight pixels of room. A threshold with no margin
+  is a threshold that fails on the next font-size change.
+*/
+@media (max-height: 520px) {
+  main.app-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  /*
+    The shell alone is not enough. Each screen is a `flex min-h-0 flex-1
+    overflow-hidden` child, so even with the shell grown it clipped its own
+    contents to the shell's height and the vote row stayed exactly where it
+    was. Direct children only: their descendants keep their own rules, and the
+    card's `overflow-hidden` is what rounds the poster, so it must be left
+    alone.
+  */
+  main.app-shell > div {
+    overflow: visible;
+    flex: 0 0 auto;
+  }
+}

@@ -73,7 +73,9 @@ export function RoomClient({ roomId }: { roomId: string }) {
   // itself grew and scrolled, taking both off screen -- which is the layout
   // this direction exists to replace (R21).
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    // R137: `app-shell` is the hook for the short-viewport escape in
+    // globals.css. Everything else about this element is unchanged.
+    <main className="app-shell mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {error && !diagnosis && (
         <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-body font-semibold text-destructive ring-1 ring-destructive/35">
           {error}
