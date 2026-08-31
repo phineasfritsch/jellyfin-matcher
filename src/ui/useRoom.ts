@@ -52,7 +52,7 @@ export function useRoom(roomId: string): RoomHook {
       attempted.current = true;
       const session = loadSession(roomId);
       if (session) {
-        emitAck('room:join', { roomId, userId: session.userId })
+        emitAck('room:join', { roomId, userId: session.userId, secret: session.secret })
           .then(() => setUserId(session.userId))
           .catch(() => clearSession(roomId))
           .finally(() => setConnecting(false));
@@ -68,7 +68,7 @@ export function useRoom(roomId: string): RoomHook {
     const onConnect = () => {
       const session = loadSession(roomId);
       if (!session) return;
-      emitAck('room:join', { roomId, userId: session.userId }).catch((err) => {
+      emitAck('room:join', { roomId, userId: session.userId, secret: session.secret }).catch((err) => {
         /*
           R66: a rejoin that fails is the end of the session, and it used to be
           swallowed. Pushing main restarts the server and rooms live in memory,
@@ -100,8 +100,10 @@ export function useRoom(roomId: string): RoomHook {
 
   const join = useCallback(
     async (name: string) => {
-      const res = await emitAck<{ userId: string }>('room:join', { roomId, name });
-      saveSession(roomId, { userId: res.userId, name });
+      const res = await emitAck<{ userId: string; secret: string }>('room:join', { roomId, name });
+      // The secret rides the ack and nothing else. Losing it here means every
+      // later reconnect is refused (R86).
+      saveSession(roomId, { userId: res.userId, name, secret: res.secret });
       setUserId(res.userId);
       setError(null);
     },

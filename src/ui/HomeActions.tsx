@@ -25,10 +25,13 @@ export function HomeActions() {
     setBusy('create');
     setError(null);
     try {
-      const res = await emitAck<{ roomId: string; userId: string }>('room:create', {
-        name: name.trim(),
-      });
-      saveSession(res.roomId, { userId: res.userId, name: name.trim() });
+      const res = await emitAck<{ roomId: string; userId: string; secret: string }>(
+        'room:create',
+        { name: name.trim() },
+      );
+      // Without the seat secret the host cannot reclaim their own room after a
+      // refresh (R86).
+      saveSession(res.roomId, { userId: res.userId, name: name.trim(), secret: res.secret });
       router.push(`/room/${res.roomId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not create room');

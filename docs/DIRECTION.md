@@ -412,3 +412,40 @@ of genres appearing; it now carries a `role="status"` label.
 a real Play button — was captured, committed, and referenced in no markdown anywhere,
 while the lobby held a hero slot. The row is now the story: pick what you are open to,
 swipe the deck it builds, land on one film.
+
+### R86 — A seat is proved, not asserted.
+
+**Frozen:** `room:join` with a `userId` reconnected you as that member.
+
+**Built:** a 32-byte seat secret, issued with the id and required to reclaim it,
+plus a per-address rate limit on taking a seat.
+
+**Why.** User ids are a global counter — `u_1`, `u_2` — and room codes are four
+characters. Reconnect checked only that the id existed. So anyone who could reach
+the socket could take a seat in a stranger's room: receive that member's redacted
+private view, and act as them for ready, genre submission, elimination, voting,
+undo and rejecting the winner. Supplying an id also skipped the `joinRequires`
+check, so it defeated the one mitigation the README names for putting Matcher on a
+public hostname.
+
+It is bounded — `scope: wide` and `winner:request` are gated on a signed-in name,
+so no Jellyseerr download can be fired this way — but "an outsider can vote in your
+room and read your ballot" is the product's whole promise inverted.
+
+**The secret is not a field on `RoomUser`.** `viewFor` builds a member's view by
+spreading the room, and R61 is the ruling that a promise the client merely declines
+to render is not a promise. A secret on the room object is a secret on every phone
+in the room, one careless spread away from the console. It lives in a map the room
+graph does not reference, so leaking it would take new code rather than forgetting
+old code — and a test asserts it appears in no view and in no serialization of the
+room.
+
+Both failures return one message. Saying "that id exists but the secret is wrong"
+confirms which ids are real, which is the enumeration the rate limit is there to
+stop.
+
+**The client half is not optional.** The silent reconnect across a phone lock or a
+refresh — promised in the README, and the reason `room:join` accepts an id at all —
+breaks completely if the secret is not persisted beside the id. `StoredSession.secret`
+is optional purely so a session written by an older build does not throw on read;
+without it the reconnect is refused and the member rejoins by name.

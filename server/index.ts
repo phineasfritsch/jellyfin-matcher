@@ -9,6 +9,8 @@ import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
 import { diagnoseDeckFailure, diagnoseThinDeck } from './diagnose';
 import {
+  JOIN_ATTEMPTS,
+  JOIN_WINDOW_MS,
   LOGIN_ATTEMPTS,
   LOGIN_WINDOW_MS,
   MAX_ROOMS,
@@ -24,6 +26,7 @@ import {
   asName,
   asRoomId,
   asSettings,
+  asSecret,
   asUserId,
 } from './validate';
 import { canSettle } from './settlement';
@@ -210,6 +213,10 @@ app.get('/api/auth-config', (_req, res) => res.json(authConfig()));
 const loginLimiter = new RateLimiter(LOGIN_ATTEMPTS, LOGIN_WINDOW_MS);
 setInterval(() => loginLimiter.sweep(), 5 * 60 * 1000).unref();
 
+/** Seat-taking attempts per address (R86). See the room:join handler. */
+const joinLimiter = new RateLimiter(JOIN_ATTEMPTS, JOIN_WINDOW_MS);
+setInterval(() => joinLimiter.sweep(), 5 * 60 * 1000).unref();
+
 app.post('/api/login', async (req, res) => {
   const who = req.ip ?? 'unknown';
   if (loginLimiter.isLimited(who)) {
@@ -376,13 +383,15 @@ io.on('connection', (socket) => {
       }
       const made = (socket.data as { made?: number }).made ?? 0;
       if (made >= ROOMS_PER_SOCKET) throw new Error('Too many rooms from this device');
-      const { room, userId } = store.createRoom(
+      const { room, userId, secret } = store.createRoom(
         asName(name, 'Host'),
         Boolean(authedName(socket)),
       );
       socket.data = { roomId: room.roomId, userId, made: made + 1 };
       void socket.join(room.roomId);
-      ack?.({ ok: true, roomId: room.roomId, userId });
+      // The secret goes to the member who owns the seat and nowhere else: it
+      // rides the ack, never a broadcast (R86).
+      ack?.({ ok: true, roomId: room.roomId, userId, secret });
       broadcast(room);
     } catch (err) {
       fail(ack, err);
@@ -393,20 +402,46 @@ io.on('connection', (socket) => {
     'room:join',
     (payload: unknown, ack?: Ack) => {
       try {
-        const raw = (payload ?? {}) as { roomId?: unknown; name?: unknown; userId?: unknown };
+        const raw = (payload ?? {}) as {
+          roomId?: unknown;
+          name?: unknown;
+          userId?: unknown;
+          secret?: unknown;
+        };
         const roomId = asRoomId(raw.roomId);
         const userId = raw.userId == null ? undefined : asUserId(raw.userId);
+
+        /*
+          R86. Room codes are four characters and user ids are a global
+          counter, so an unlimited join endpoint is an enumeration oracle for
+          both. Attempts are counted per address whether or not they succeed,
+          because the useful signal to an attacker is which guesses were wrong.
+        */
+        const who = socket.handshake.address || 'unknown';
+        if (joinLimiter.isLimited(who)) {
+          const wait = joinLimiter.retryAfterSec(who);
+          throw new Error(`Too many attempts. Try again in ${Math.max(1, wait)} second(s).`);
+        }
+        joinLimiter.record(who);
+
         // Only a fresh join is gated; reconnecting an existing member is not,
         // so a guest who already joined keeps their seat.
         if (!userId && authConfig().joinRequires && !authedName(socket)) {
           throw new Error('Sign in with your Jellyfin account to join this room');
         }
         const result = userId
-          ? { room: store.reconnect(roomId, userId), userId } // returning member
+          ? {
+              // Returning member. Supplying a user id used to be enough to
+              // become that member; it now needs the secret issued with it.
+              room: store.reconnect(roomId, userId, asSecret(raw.secret)),
+              userId,
+              secret: asSecret(raw.secret),
+            }
           : store.joinRoom(roomId, asName(raw.name, 'Guest'), Boolean(authedName(socket)));
+        joinLimiter.clear(who);
         socket.data = { roomId: result.room.roomId, userId: result.userId };
         void socket.join(result.room.roomId);
-        ack?.({ ok: true, roomId: result.room.roomId, userId: result.userId });
+        ack?.({ ok: true, roomId: result.room.roomId, userId: result.userId, secret: result.secret });
         broadcast(result.room);
       } catch (err) {
         fail(ack, err);

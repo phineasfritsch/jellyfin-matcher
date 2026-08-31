@@ -51,6 +51,15 @@ export function asUserId(value: unknown): string {
   return value;
 }
 
+/**
+ * The seat secret issued with a user id (R86). 32 bytes as hex, so the shape is
+ * fixed and anything else is rejected before it reaches a compare.
+ */
+export function asSecret(value: unknown): string {
+  if (typeof value !== 'string' || !/^[0-9a-f]{64}$/.test(value)) fail('seat secret');
+  return value;
+}
+
 /** One genre name. */
 export function asGenre(value: unknown): string {
   if (typeof value !== 'string') fail('genre');

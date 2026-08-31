@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import type { KnockoutState } from '../src/lib/knockout';
 import { createKnockout } from '../src/lib/knockout';
 import type { Votes } from '../src/lib/match';
@@ -60,9 +60,44 @@ const DEFAULT_SETTINGS: RoomSettings = {
   deckLimit: 50,
 };
 
+/** A seat in a room: who you are, and the proof that you are them (R86). */
+export interface Seat {
+  room: Room;
+  userId: string;
+  /** Never put this on the Room. See RoomStore.secrets. */
+  secret: string;
+}
+
+/** Constant-time compare that does not leak length through an early return. */
+function sameSecret(expected: string, given: string): boolean {
+  const a = Buffer.from(expected, 'utf8');
+  const b = Buffer.from(given, 'utf8');
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
 export class RoomStore {
   private rooms = new Map<string, Room>();
   private userSeq = 0;
+
+  /**
+   * R86: the secret that proves you are the member you say you are.
+   *
+   * Reconnecting used to need only a room code and a user id. Ids are a global
+   * counter -- u_1, u_2 -- and codes are four characters, so anyone who could
+   * reach the socket could take a seat in somebody else's room: receive that
+   * member's private view, and act as them for ready, genre picks,
+   * eliminations, votes, undo and rejecting the winner. It defeated the one
+   * mitigation the README offers for putting Matcher on a public hostname.
+   *
+   * Deliberately NOT a field on RoomUser. `viewFor` builds a member's view by
+   * spreading the room, and R61 is the ruling that a promise the client merely
+   * declines to render is not a promise: a secret on the room object is a
+   * secret on every phone in the room. Keeping it in a map the room graph does
+   * not reference makes leaking it require new code rather than forgetting
+   * old code.
+   */
+  private secrets = new Map<string, string>();
 
   constructor(private now: () => number = Date.now) {}
 
@@ -85,7 +120,24 @@ export class RoomStore {
     return `u_${++this.userSeq}`;
   }
 
-  createRoom(hostName: string, authed = false): { room: Room; userId: string } {
+  private seatKey(roomId: string, userId: string): string {
+    return `${roomId}:${userId}`;
+  }
+
+  /** Issues and records a seat secret. 32 bytes: not guessable, not enumerable. */
+  private issueSecret(roomId: string, userId: string): string {
+    const secret = randomBytes(32).toString('hex');
+    this.secrets.set(this.seatKey(roomId, userId), secret);
+    return secret;
+  }
+
+  private forgetSecrets(roomId: string): void {
+    for (const key of this.secrets.keys()) {
+      if (key.startsWith(`${roomId}:`)) this.secrets.delete(key);
+    }
+  }
+
+  createRoom(hostName: string, authed = false): Seat {
     const userId = this.newUserId();
     const room: Room = {
       roomId: this.generateCode(),
@@ -103,7 +155,7 @@ export class RoomStore {
       lastActivity: this.now(),
     };
     this.rooms.set(room.roomId, room);
-    return { room, userId };
+    return { room, userId, secret: this.issueSecret(room.roomId, userId) };
   }
 
   getRoom(roomId: string): Room | undefined {
@@ -111,7 +163,7 @@ export class RoomStore {
   }
 
   /** Members may only join in the lobby — mid-game joins would corrupt votes. */
-  joinRoom(roomId: string, name: string, authed = false): { room: Room; userId: string } {
+  joinRoom(roomId: string, name: string, authed = false): Seat {
     const room = this.requireRoom(roomId);
     if (room.status !== 'LOBBY') {
       throw new Error(`Room ${room.roomId} already started`);
@@ -119,7 +171,7 @@ export class RoomStore {
     const userId = this.newUserId();
     room.users[userId] = { id: userId, name, ready: false, connected: true, authed };
     this.touch(room);
-    return { room, userId };
+    return { room, userId, secret: this.issueSecret(room.roomId, userId) };
   }
 
   leaveRoom(roomId: string, userId: string): Room | undefined {
@@ -127,11 +179,13 @@ export class RoomStore {
     if (!room) return undefined;
     if (room.status === 'LOBBY') {
       delete room.users[userId];
+      this.secrets.delete(this.seatKey(room.roomId, userId));
     } else {
       const user = room.users[userId];
       if (user) user.connected = false; // mid-game: keep votes, allow reconnect
     }
     if (Object.keys(room.users).length === 0) {
+      this.forgetSecrets(room.roomId);
       this.rooms.delete(room.roomId);
       return undefined;
     }
@@ -139,10 +193,21 @@ export class RoomStore {
     return room;
   }
 
-  reconnect(roomId: string, userId: string): Room {
+  /**
+   * Returning to a seat you already hold. Requires the secret issued when the
+   * seat was taken (R86); without it this was the way into anyone's room.
+   *
+   * The failure is deliberately one message for both causes. Telling a caller
+   * that the id exists but the secret is wrong confirms which member ids are
+   * real, which is the enumeration this is meant to close.
+   */
+  reconnect(roomId: string, userId: string, secret: string): Room {
     const room = this.requireRoom(roomId);
     const user = room.users[userId];
-    if (!user) throw new Error(`Unknown user ${userId} in room ${room.roomId}`);
+    const expected = this.secrets.get(this.seatKey(room.roomId, userId));
+    if (!user || !expected || !sameSecret(expected, secret)) {
+      throw new Error('That seat is not yours to take. Join the room again.');
+    }
     user.connected = true;
     this.touch(room);
     return room;
@@ -191,6 +256,7 @@ export class RoomStore {
     const removed: string[] = [];
     for (const [id, room] of this.rooms) {
       if (this.now() - room.lastActivity > ttlMs) {
+        this.forgetSecrets(id);
         this.rooms.delete(id);
         removed.push(id);
       }

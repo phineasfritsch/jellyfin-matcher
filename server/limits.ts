@@ -19,6 +19,16 @@ export const LOGIN_ATTEMPTS = 8;
 /** How long that address waits. */
 export const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 /** Rooms one socket may create, so a script cannot fill the process with them. */
+/**
+ * Attempts to take a seat, per address, per window (R86). Room codes are four
+ * characters and user ids are a global counter, so an unlimited join endpoint
+ * enumerates both. Generous enough that a household reconnecting on flaky wifi
+ * never meets it: a phone rejoining costs one attempt and a success clears the
+ * count.
+ */
+export const JOIN_ATTEMPTS = 30;
+export const JOIN_WINDOW_MS = 60 * 1000;
+
 export const ROOMS_PER_SOCKET = 20;
 /** Total live rooms. A household needs one; this is a ceiling, not a budget. */
 export const MAX_ROOMS = 500;

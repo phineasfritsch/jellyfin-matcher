@@ -74,6 +74,17 @@ export function emitAck<T extends Record<string, unknown> = Record<string, unkno
 export interface StoredSession {
   userId: string;
   name: string;
+  /**
+   * The seat secret (R86). A user id alone used to be enough to reclaim a
+   * seat, which made any room enterable by anyone who could guess a
+   * four-character code and a counter. Stored beside the id because the
+   * silent reconnect this app promises across a phone lock or a refresh is
+   * exactly the thing that needs it.
+   *
+   * Optional only so a session written by an older build does not throw on
+   * read; without it the reconnect is refused and the member rejoins by name.
+   */
+  secret?: string;
 }
 
 const sessionKey = (roomId: string) => `matcher:room:${roomId.toUpperCase()}`;
