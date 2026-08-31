@@ -4,6 +4,7 @@ import * as jellyfin from '../src/lib/jellyfin';
 import * as jellyseerr from '../src/lib/jellyseerr';
 import * as mdblist from '../src/lib/mdblist';
 import type { MovieCandidate } from '../src/lib/types';
+import { recentlyWatched } from './history';
 import type { Room } from './store';
 
 /** Discover pages fetched per locked genre in Any Movie mode (20 results/page). */
@@ -70,6 +71,9 @@ export async function buildDeckForRoom(room: Room): Promise<MovieCandidate[]> {
   return buildDeck(candidates, room.lockedGenres as [string, string], {
     maxRuntime: room.settings.maxRuntime,
     deckLimit: room.settings.deckLimit,
+    // What the household already watched steps aside, so the second night with
+    // the same two genres is not the first night again (R105).
+    exclude: await recentlyWatched(),
   });
 }
 

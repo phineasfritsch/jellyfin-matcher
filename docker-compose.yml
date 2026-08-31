@@ -15,7 +15,10 @@ services:
       - JELLYSEERR_API_KEY=your_jellyseerr_api_key
       - MDBLIST_API_KEY=your_mdblist_api_key
     volumes:
-      # keeps the MDBList ratings cache across restarts
+      # Keeps the MDBList ratings cache AND the watch history across restarts.
+      # Without this mount the app forgets what the household already watched
+      # every time the container is replaced, and the same two genres start
+      # dealing the same deck again.
       - ./cache:/app/.cache
     # The image ships a HEALTHCHECK against /healthz; this makes `docker ps`
     # tell you whether the app can actually answer, not just that it started.

@@ -3,8 +3,8 @@
 [![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
 [![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-447%20in%2028%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
-[![pinned claims](https://img.shields.io/badge/pinned%20claims-164-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
+[![tests](https://img.shields.io/badge/tests-462%20in%2029%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![pinned claims](https://img.shields.io/badge/pinned%20claims-167-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
 
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
 No stalemates — that's the whole point.
@@ -67,6 +67,10 @@ shared.
 4. **Swiping.** Left is no (-5 points), up is maybe (+1), right is like (+2), and there's a super like button (+3). Buttons exist for every action too, you don't have to use gestures. Tap a poster (or the info button) to pull up the synopsis, an embedded trailer, and every rating MDBList knows about, not just the three that feed the score. The instant *every* person in the room has swiped right or super liked the same movie, the room locks and you're done. A "maybe" never triggers a match, that felt wrong.
 
 5. **Fallback.** Deck runs out with no unanimous like? Every card gets `composite score + sum of everyone's points` and the highest total wins. Ties go to the both-genres tier.
+
+6. **Next Tuesday.** Whatever the room lands on is written down, and stays out of the deck for the next 30 days. Without that, the deck builder is deterministic — same two genres, same library, same 50 cards in the same order — so last week's film was card one again. Set `MATCHER_HISTORY_DAYS` to change the window, or `0` to turn it off. The record lives beside the ratings cache in `.cache/`, so if you run in Docker, keep the volume or the household forgets every restart.
+
+   It remembers what the *room agreed on*, not what anyone actually played — nothing tells this app whether you pressed play, and a room that picked a film and then went to bed still doesn't want it dealt first again.
 
 Rooms support more than two people. Match just requires everyone, and the fallback sums all votes.
 
@@ -204,11 +208,11 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 447 cases across 28 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 462 cases across 29 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
-Another 164 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
+Another 167 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
 
 ## License
 

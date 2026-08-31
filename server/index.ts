@@ -44,6 +44,7 @@ import {
   undoVote,
 } from './transitions';
 import { buildDeckForRoom, genresForScope } from './deckService';
+import { recordWatched } from './history';
 import { RoomStore, type Room, type RoomSettings } from './store';
 import * as handlers from './handlers';
 import type { Ctx } from './handlers';
@@ -330,6 +331,16 @@ function declareWinner(room: Room, cardId: string, viaFallback: boolean): void {
   // Recorded on the room first, then announced. The event is how the room
   // hears about it now; the room is where it lives (R90).
   declare(room, cardId, store, { viaFallback, ranking, playUrl });
+  /*
+    R105: remember what the household landed on.
+
+    Recorded here rather than on play, because this is the moment the fact
+    exists and the only moment the server is certain of it -- nothing tells this
+    app whether anybody pressed play, and a room that agreed on a film and then
+    went to bed still does not want it dealt first again next Tuesday. Fire and
+    forget: the write fails open, and the night is already over.
+  */
+  if (card) void recordWatched(card);
   io.to(room.roomId).emit('match:declared', { winner: card, viaFallback, playUrl, ranking });
   broadcast(room);
 }

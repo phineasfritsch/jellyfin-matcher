@@ -78,17 +78,17 @@ defined at their first citation.
 | **R63** | _at its citation_ | `server/settlement.ts:65` +3 |
 | **R65** | _at its citation_ | `src/lib/deadline.ts:8` |
 | **R66** | _at its citation_ | `src/ui/useRoom.ts:78` |
-| **R67** | _at its citation_ | `server/index.ts:144` |
-| **R68** | _at its citation_ | `server/index.ts:78` +1 |
+| **R67** | _at its citation_ | `server/index.ts:145` |
+| **R68** | _at its citation_ | `server/index.ts:79` +1 |
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:169` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:146` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:142` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
-| **R76** | _at its citation_ | `server/index.ts:476` |
+| **R76** | _at its citation_ | `server/index.ts:487` |
 | **R77** | _at its citation_ | `server/handlers.ts:108` +3 |
-| **R78** | _at its citation_ | `src/lib/mdblist.ts:70` |
+| **R78** | _at its citation_ | `server/history.ts:80` +1 |
 | **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:81` +1 |
 | **R80** | `docs/DIRECTION.md:262` | `src/ui/components/MovieDetails.tsx:46` +1 |
 | **R81** | `docs/DIRECTION.md:281` | `src/ui/components/MovieDetails.tsx:37` +1 |

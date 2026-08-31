@@ -5,6 +5,14 @@ export interface DeckOptions {
   maxRuntime?: number | null;
   /** Max cards in the deck (fallback scoring activates at the end). */
   deckLimit?: number;
+  /**
+   * Films the household has already landed on recently, by deck id (R105).
+   *
+   * Applied as a preference rather than a rule: if honouring it would leave no
+   * deck at all, it is dropped. A repeat is a worse night than a fresh film; no
+   * deck is not a night.
+   */
+  exclude?: ReadonlySet<string>;
 }
 
 const DEFAULT_DECK_LIMIT = 50;
@@ -46,7 +54,7 @@ export function buildDeck(
   const limit = opts.deckLimit ?? DEFAULT_DECK_LIMIT;
 
   const seen = new Set<string>();
-  const eligible = candidates.filter((c) => {
+  const matching = candidates.filter((c) => {
     if (seen.has(c.id)) return false;
     seen.add(c.id);
     if (opts.maxRuntime != null && c.runtime != null && c.runtime > opts.maxRuntime) {
@@ -54,6 +62,12 @@ export function buildDeck(
     }
     return hasGenre(c, genreA) || hasGenre(c, genreB);
   });
+
+  // R105: recently watched films step aside, unless stepping aside would empty
+  // the deck. A household with a small library and two narrow genres must still
+  // get a night.
+  const fresh = opts.exclude?.size ? matching.filter((c) => !opts.exclude!.has(c.id)) : matching;
+  const eligible = fresh.length > 0 ? fresh : matching;
 
   const hybrid: MovieCandidate[] = [];
   const onlyA: MovieCandidate[] = [];

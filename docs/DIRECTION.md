@@ -987,3 +987,43 @@ So the reflow that costs the height is also the signal for reclaiming it, and th
 rule needs no breakpoint guess about screens.
 
 Measured on the recaptured 200% deck: the poster goes from about 53px to about 430.
+
+### R105 — The household is remembered between nights.
+
+**Frozen:** rooms lived in memory on a two-hour TTL, the deck builder took no
+exclusion set, and nothing anywhere recorded what a room had chosen.
+
+**Built:** the winner is written to `.cache/history.json`, and films landed on in the
+last 30 days step aside when the next deck is built.
+
+**Why.** The deck builder is deterministic. Same two genres, same library, same fifty
+cards in the same order — so the film the room agreed on last Tuesday was card one
+again this Tuesday. The Product mandate blocked on this in two consecutive board
+rounds, and it is the plainest kind of defect: the app had no memory of the people
+using it.
+
+**This is the half that needs no household.** What the room *landed on* is a fact the
+server already holds at the moment it declares a winner. It needs no account, no
+Jellyfin user context, and no ruling on whose viewing counts in a room mixing members
+and guests. Reading what people have actually played needs all three, and is
+deliberately not attempted here — the board's own note says the exclusion half is
+self-contained, and it is the half that is built.
+
+**Recorded on declaration, not on play.** Nothing tells this app whether anybody
+pressed play, and a room that agreed on a film and then went to bed still does not
+want it dealt first next week. The moment the fact exists is the moment the room
+lands on it.
+
+**A preference, not a rule.** If honouring the history would leave no deck at all, it
+is dropped. A household with a small library and two narrow genres must still get a
+night: a repeat is a worse evening than a fresh film, and no deck is not an evening.
+
+**Fails open, like the cache beside it.** Written through a temp file and a rename
+(R78), and every read treats a truncated or missing file as "this household has no
+history", which is the correct reading of not being able to tell. The night is over
+by the time any of this runs; losing the note must never reach anybody's phone.
+
+**Proved across two real nights.** With the record cleared, a full session against the
+live library landed on Toy Story 3 and wrote it down. The next session — same
+genres, same library — landed on Up. The harness always votes on card one, so card
+one had changed.
