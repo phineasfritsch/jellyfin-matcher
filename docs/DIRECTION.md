@@ -746,3 +746,37 @@ R60 — every size in rem, so type tracks the reader — is right and is not in 
 here. A touch target is not type. A thumb does not get bigger when you raise the font
 size, so a control sized for one should not either. Rem for text; a floor in pixels
 for the things a finger has to hit.
+
+### R97 — The points may not overrule the room's only unanimous opinion.
+
+**Frozen:** the fallback ranked every standing card by `composite + votePoints`.
+
+**Built:** anything every connected member voted No on is dropped before ranking,
+and a deck where that empties the list returns no winner.
+
+**Why.** A rating is 0–100 and a unanimous no is about −5N, so the vote term could
+not outweigh the rating term. On a two-person night a film rated 87 that both people
+rejected scores 77 and beats anything rated below that which nobody objected to. The
+winner screen then announced it as *"Nobody agreed outright, so the points decided."*
+That sentence is true and reads as a compromise, which is what makes it bad: what
+actually happened is that the only thing the room unanimously agreed on was
+overruled by arithmetic.
+
+It is the mirror of `isInstantMatch`, and it exists for the same reason. Unanimity is
+the one signal in this app strong enough to decide something by itself: everyone
+saying yes ends the night immediately, so everyone saying no must at least be able to
+remove a card from contention.
+
+**Unanimity, not majority.** Two of three saying no is a room that disagrees, and
+points deciding a disagreement is precisely what points are for. That case is left
+alone deliberately — it is not an oversight, and a test pins it.
+
+**When the room disliked everything, say so.** Filtering can empty the list, and the
+honest answer is the no-winner path that already exists rather than the least-hated
+film. Turning fifty unanimous noes into a recommendation is the failure this whole
+app is a reaction to.
+
+The pin went in before the code and was red until the code existed. That is the
+opposite of the practice OPERATING.md warns about — a pin written from a diff can
+only find what has already gone — because here the property is new and the pin is
+the specification.

@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-92 rulings. 57 argued in a design document; the rest are
+93 rulings. 58 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -107,5 +107,6 @@ defined at their first citation.
 | **R94** | `docs/DIRECTION.md:651` | — |
 | **R95** | `docs/DIRECTION.md:702` | `src/ui/components/VoteRow.tsx:72` +1 |
 | **R96** | `docs/DIRECTION.md:731` | `src/ui/components/SwipeCard.tsx:119` |
+| **R97** | `docs/DIRECTION.md:750` | `server/settlement.ts:77` +1 |
 
 No ruling is orphaned.

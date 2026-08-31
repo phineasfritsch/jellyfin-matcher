@@ -18,7 +18,7 @@
  * That split is the whole idea. Leaving forfeits your say in *when* the room
  * ends; it does not delete what you already said about the films.
  */
-import { fallbackWinner, isInstantMatch } from '../src/lib/match';
+import { fallbackWinner, isInstantMatch, isUnanimousNo } from '../src/lib/match';
 import type { Room } from './store';
 
 /** Members still holding a phone. The only people who can stall a room. */
@@ -70,8 +70,24 @@ export function canSettle(room: Room, justVoted: string | null): Settlement | nu
 
   if (!deckExhausted(room)) return null;
 
-  // Out of cards: the points decide, among the ones still standing. A deck
-  // with nothing left has no winner, and says so rather than pretending.
-  const standing = room.deck.filter((c) => !rejected.has(c.id));
+  /*
+    Out of cards: the points decide, among the ones still standing. A deck with
+    nothing left has no winner, and says so rather than pretending.
+
+    R97: "still standing" excludes anything every connected member said no to.
+    The ranking is composite + vote sum, a rating is 0-100 and a unanimous no is
+    about -5N, so without this the best-rated film the whole room rejected won
+    on points -- announced as "Nobody agreed outright, so the points decided",
+    which reads as a compromise when the room's one unanimous opinion had just
+    been overruled.
+
+    If that empties the list the room disliked everything, and the honest answer
+    is the no-winner path that already exists rather than the least-hated film.
+    Turning fifty unanimous noes into a recommendation is the failure this whole
+    app is a reaction to.
+  */
+  const standing = room.deck.filter(
+    (c) => !rejected.has(c.id) && !isUnanimousNo(room.votes, c.id, active),
+  );
   return { cardId: fallbackWinner(standing, room.votes), viaFallback: true };
 }

@@ -34,6 +34,31 @@ export function isInstantMatch(votes: Votes, cardId: string, allUserIds: string[
   });
 }
 
+/**
+ * True when every connected member voted No on this card.
+ *
+ * The mirror of isInstantMatch, and it exists for the same reason: unanimity is
+ * the only signal in this app strong enough to decide something on its own.
+ *
+ * R97. Without it the points could crown a film the whole room rejected. The
+ * fallback ranks on `composite + votePoints`, a rating is 0-100 and a unanimous
+ * no is about -5N, so on a two-person night a film rated 87 that both people
+ * said no to scores 77 and beats anything rated below that which nobody
+ * objected to. The winner screen then captioned it "Nobody agreed outright, so
+ * the points decided" -- which is true and reads as a compromise, when what
+ * actually happened is that the room's only unanimous opinion was ignored.
+ *
+ * Unanimity, not majority: two of three saying no is a room that disagrees, and
+ * points deciding a disagreement is exactly what points are for. Everyone
+ * saying no is not a disagreement.
+ */
+export function isUnanimousNo(votes: Votes, cardId: string, allUserIds: string[]): boolean {
+  if (allUserIds.length === 0) return false;
+  const cardVotes = votes[cardId];
+  if (!cardVotes) return false;
+  return allUserIds.every((id) => cardVotes[id] === VOTE_POINTS.DISLIKE);
+}
+
 export interface FallbackResult {
   cardId: string;
   total: number;
