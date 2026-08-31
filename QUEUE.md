@@ -8,7 +8,7 @@ item to Done only when `npm run gate -- --fast` was green *after* it, run by
 something that is not the agent that did the work. Blocked is a legitimate
 outcome and should be written down, not worked around.
 
-**Today's numbers:** 107 test cases, 10 files, 38 pinned claims, all green.
+**Today's numbers:** 171 test cases, 12 files, 87 pinned claims, all green.
 
 ---
 
@@ -52,16 +52,17 @@ outcome and should be written down, not worked around.
 
 ## Later
 
-- [ ] **Screen ports, one screen per wave**, in this order. Each: run
-      `npm run inventory -- <Screen>` first, add missed pins, confirm green,
-      then port. ~~Lobby~~ → Knockout → SwipeDeck → MovieDetails →
-      WinnerScreen → AuthGate. `app/guide/page.tsx` is last (cut list).
-      SwipeDeck is the big one: R19-R28 rewrite the card face entirely.
+- [ ] **Look at the redesign on a real phone.** THE outstanding item. Every
+      screen is rebuilt and a full session was driven end to end against a
+      real Jellyfin library, but no human has seen any of it rendered — the
+      browser extension is not connected here. Specifically worth a look:
+      the teletext palette in a genuinely dark room, whether the 54px rows
+      feel right under a thumb, and whether Fjalla One at 30px on the card
+      reads as a title card or as shouting.
 
-- [ ] **Look at the ported Lobby on a phone.** Not done — the browser
-      extension is not connected, so nobody has seen it rendered. Two things
-      to check: the sticky ready button against a long member list, and
-      whether the new ranking sentence reads as useful or as clutter.
+- [ ] **`app/guide/page.tsx` still wears the old indigo palette.** Last in
+      the cut list on purpose — nothing links to it from the app. It will
+      look wrong beside everything else until it is done.
 
 - [ ] **A tester routine, unattended.** `npm run gate -- --prod` on a schedule.
       Brief says, in these words: *do not fix what you find.* Reports and stops.
