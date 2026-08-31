@@ -3,6 +3,10 @@ name: publish image
 on:
   push:
     branches: [main]
+    # A release tag publishes a pinnable version. Without one the only thing a
+    # compose file can name is `:latest`, which is not a version and cannot be
+    # rolled back to.
+    tags: ['v*.*.*']
   # Contributors need to see a green check without asking. The gate job runs on
   # every pull request; publishing stays limited to main.
   pull_request:
@@ -50,8 +54,10 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=latest
-            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long
 
       - uses: docker/build-push-action@v6
         with:
@@ -69,6 +75,20 @@ jobs:
 
       # Push happens before this job runs, so the repository is never behind
       # what is deployed. Anything reading the repo describes live code.
+      # This repo's package is already public -- verified by an anonymous
+      # manifest pull returning 200 -- so this is a no-op here. It exists
+      # because the package GITHUB_TOKEN creates is private by DEFAULT, which
+      # is what a fork gets, and a private package fails every
+      # `docker compose pull` with `denied`.
+      - name: Ensure the package is public (no-op when it already is)
+        continue-on-error: true
+        run: |
+          gh api -X PATCH "user/packages/container/${PKG}/visibility"             -f visibility=public ||           echo "Could not set visibility automatically. Set it once by hand at:
+            https://github.com/users/${{ github.repository_owner }}/packages/container/${PKG}/settings"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG: jellyfin-matcher
+
       - name: Report deployed version
         run: |
           echo "deployed ${{ github.sha }}"

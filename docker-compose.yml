@@ -1,5 +1,7 @@
 services:
   jellyfin-matcher:
+    # Pin a version rather than tracking :latest, so an upgrade is something
+    # you choose and can roll back. Tags: https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher
     image: ghcr.io/phineasfritsch/jellyfin-matcher:latest
     # build: .   # uncomment to build from source instead of pulling
     container_name: jellyfin-matcher
@@ -15,3 +17,11 @@ services:
     volumes:
       # keeps the MDBList ratings cache across restarts
       - ./cache:/app/.cache
+    # The image ships a HEALTHCHECK against /healthz; this makes `docker ps`
+    # tell you whether the app can actually answer, not just that it started.
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--spider', '--tries=1', 'http://127.0.0.1:3000/healthz']
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
