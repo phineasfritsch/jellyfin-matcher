@@ -21,7 +21,7 @@ Numbered, counted, non-zero on failure:
 | Gate | Checks | Current |
 |---|---|---|
 | G1 | `tsc --noEmit` | clean |
-| G2 | `vitest run`, and the **counts** | 474 cases in 29 files |
+| G2 | `vitest run`, and the **counts** | 476 cases in 29 files |
 | G3 | pinned claims still pinned | 172 |
 | G4 | counts stated in prose match `gates.json` | in sync |
 | G5 | `next build` | builds |
@@ -154,7 +154,7 @@ Every run is a fresh clone with no memory. Include:
 
 1. **Get current**: `git fetch origin && git checkout main && git pull --ff-only`
    then `npm ci`. Include the steps that look redundant.
-2. **The gate, numbered, with today's numbers**: 474 cases, 29 files, 172 pins.
+2. **The gate, numbered, with today's numbers**: 476 cases, 29 files, 172 pins.
    Drift is only visible against a number.
 3. **The traps, as prohibitions**: the list above, not a link to it.
 4. **Ownership**: exactly which files this agent may write. Not "the lobby area".

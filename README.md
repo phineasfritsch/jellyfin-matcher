@@ -3,7 +3,7 @@
 [![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
 [![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-474%20in%2029%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![tests](https://img.shields.io/badge/tests-476%20in%2029%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
 [![pinned claims](https://img.shields.io/badge/pinned%20claims-172-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
 
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
@@ -134,11 +134,17 @@ docker run -d --name jellyfin-matcher \
   -e JELLYSEERR_URL=http://192.168.1.100:5055 \
   -e JELLYSEERR_API_KEY=... \
   -e MDBLIST_API_KEY=... \
-  -v ./cache:/app/.cache \
+  -v matcher-cache:/app/.cache \
   ghcr.io/phineasfritsch/jellyfin-matcher:latest
 ```
 
-The cache mount keeps MDBList ratings across restarts. If you'd rather build from source, uncomment the `build: .` line in the compose file.
+That volume keeps the MDBList ratings **and** the watch history across restarts. Without it the app re-fetches your whole library on every deck build and forgets what you have already watched.
+
+**Use a named volume, not `-v ./cache:/app/.cache`.** The image runs as a non-root user, and a bind mount does not inherit the image directory's ownership the way a named volume does — Docker creates an absent bind-mount source owned by root, so on a Linux host that flag gives you a container which cannot write its own cache. Both writers fail open, so nothing looks broken: the ratings simply never cache, and the household is never remembered. If you want the files on the host anyway, run `mkdir -p cache && sudo chown -R 10001:10001 cache` first.
+
+`npm run prod:read` fails outright when the cache is unwritable, so you do not have to notice this yourself.
+
+If you'd rather build from source, uncomment the `build: .` line in the compose file.
 
 Either way, first deck build for a genre pair is a bit slow (the free tier only allows 10 titles per ratings request, so a big library means a bunch of round trips), after that it's cached for a week.
 
@@ -208,7 +214,7 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 474 cases across 29 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 476 cases across 29 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readDoc } from '../../scripts/lib/source-scan';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from '../../scripts/lib/source-scan';
@@ -79,5 +80,33 @@ describe('the image itself', () => {
 
   it('does not run as root', () => {
     expect(dockerfile).toMatch(/^USER matcher$/m);
+  });
+
+  it('pins the uid, so a bind mount has a number to chown to', () => {
+    /*
+      R109. The image chowns /app/.cache to this user, and a bind mount over
+      that path does not inherit that ownership -- Docker creates an absent
+      bind-mount source root-owned, so the documented quickstart produced a
+      container that could not write its own cache. Both writers fail open, so
+      the only symptoms were a ratings cache that never cached and a watch
+      history that never recorded.
+
+      The compose file now defaults to a named volume, which does inherit it.
+      Anyone who wants the files on the host instead is told to chown to 10001 --
+      and that instruction is only true while the uid is pinned. Without the
+      flag, `adduser -S` takes the next free id, which differs between base
+      image versions.
+    */
+    expect(dockerfile).toMatch(/adduser\s+-u\s+10001\s+-S\s+matcher/);
+    expect(dockerfile).toMatch(/addgroup\s+-g\s+10001\s+-S\s+matcher/);
+    expect(readDoc('README.md')).toContain('chown -R 10001:10001 cache');
+  });
+
+  it('defaults to a named volume, not a bind mount', () => {
+    // The bind mount is what broke it. It stays documented as the opt-in, with
+    // the chown that makes it work (R109).
+    const compose = readDoc('docker-compose.yml');
+    expect(compose).toContain('matcher-cache:/app/.cache');
+    expect(compose).not.toMatch(/^\s+- \.\/cache:\/app\/\.cache$/m);
   });
 });
