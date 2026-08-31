@@ -1733,3 +1733,49 @@ and enforced as a floor.
 The rule: **a count of passing tests is not a measurement of anything until the
 tests have been made to fail.** Coverage says which lines ran. Only mutation
 says whether anybody was watching.
+
+### R130 — What leaves the house, and an exclusion list with a hole in it
+
+Gate U9 asks what an acquirer's due diligence and a Jellyfin maintainer both ask
+first: what am I taking on legally, and what does this send where. Neither had an
+answer in this repository, so `docs/DEPENDENCIES.md` is the answer and
+`server/__tests__/provenance.test.ts` keeps it true.
+
+The legal half was quick and clean. Nine runtime dependencies, all permissive,
+no copyleft — read out of each installed package's own manifest rather than a
+lockfile summary. The one problem was ours: `LICENSE` has been MIT since the
+first commit and `package.json` declared no `license` field at all, so npm, an
+SBOM generator and a dependency scanner all saw an unlicensed package sitting
+beside a permissive licence file.
+
+The interesting half is the destinations. There are five, and the core loop
+needs exactly one of them — Jellyfin, which the user already runs. MDBList is
+optional and a night runs unscored without it; Jellyseerr is only touched in Any
+Movie mode; YouTube is never contacted until somebody presses the trailer button
+(R29). That is a good answer and it had never been written down.
+
+**The one worth arguing about is `image.tmdb.org`.** In Any Movie mode a
+candidate that is not on the server takes its poster straight from TMDB and it
+is rendered as a plain `<img src>` — so the request is made by *every phone in
+the room*, not by the server. `SwipeDeck` also preloads the next cards, so it
+goes out for films nobody has looked at yet. TMDB, and every network between the
+phone and TMDB, can see what a household is browsing on a Friday night.
+
+That is not a credential leak and it is not unusual for a media app. It is
+written down because U9's question is not "is this normal" but "would somebody
+adopting this be surprised", and they would. Three options are recorded in
+`DEPENDENCIES.md`; proxying is the only one a privacy mandate would accept and
+disclosure is the minimum honest thing. The decision is in QUEUE.md, not taken
+here.
+
+**The lesson is in the guard, not the finding.** The provenance test filters out
+placeholder hosts — `.local`, `.example`, localhost, bare IPs — before comparing
+against its allow list. That filter was written unanchored, so `.example`
+matched anywhere in a name. A mutation adding
+`https://telemetry.example-vendor.net/collect` to a real source file was
+silently classified as a placeholder and the test passed.
+
+Caught only because the guard was mutation-tested the moment it was written,
+which after R129 is now the habit rather than the exception. **An allow-list
+guard is only as strong as its exclusion list, and an exclusion list is the part
+nobody reads.** Anchor it, then try to sneak something past it.

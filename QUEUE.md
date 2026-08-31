@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 617 test cases, 37 files, 190 pinned claims, all green.
+**Today's numbers:** 622 test cases, 38 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
@@ -92,6 +92,19 @@ decision.
       what is deployed matches this repository.
       Blocked on: the deployment address, which is not in this repo and which
       the obvious hostnames do not answer on.
+
+- [ ] **Decide what to do about client-side TMDB poster requests (R130).**
+      In Any Movie mode every phone fetches posters straight from
+      `image.tmdb.org`, and the deck preloads ahead, so the request goes out for
+      films nobody has looked at yet. TMDB and anything between the phone and it
+      can see what the household is browsing. Not a credential leak, not unusual
+      for a media app, and disclosed nowhere a user reads. Three options in
+      `docs/DEPENDENCIES.md`: proxy through the server (the only one a privacy
+      mandate accepts), disclose it in the README beside the Docker and auth
+      warnings (the minimum honest thing), or make it a setting defaulting to
+      proxied. This is a judgement about what a household should be signed up to
+      without being asked, so it wants an owner rather than a default.
+      Files: `src/lib/candidates.ts`, `server/`, `README.md`.
 
 ## Blocked — needs a real household, not an agent
 
