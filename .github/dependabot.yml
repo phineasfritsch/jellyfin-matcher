@@ -1,0 +1,23 @@
+# Gate U11 (docs/UPSTREAM.md): a project people install and leave alone breaks
+# from the outside. Weekly, grouped so a single maintainer sees one pull request
+# rather than nine, and every one of them runs the full gate before it can land.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Framework moves together or not at all: a Next major without its React
+      # is a broken tree, and reviewing them apart wastes the review.
+      framework:
+        patterns: ['next', 'react', 'react-dom', '@types/react', '@types/react-dom']
+      realtime:
+        patterns: ['socket.io', 'socket.io-client']
+      dev:
+        dependency-type: development
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

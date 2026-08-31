@@ -106,6 +106,49 @@ decision.
       without being asked, so it wants an owner rather than a default.
       Files: `src/lib/candidates.ts`, `server/`, `README.md`.
 
+- [ ] **Internationalise the interface (U8).** Every string in the app is
+      English and hardcoded; the only locale API anywhere in the source is a
+      single `localeCompare` in a tally sort. Jellyfin ships in dozens of
+      languages, so this is not optional for adoption.
+
+      Measured rather than guessed, and the measurement is rough: about **200
+      user-facing strings across 19 files**, concentrated in `app/guide/page.tsx`
+      (~34), `WinnerScreen.tsx` (~32), `Lobby.tsx` (~25), `Knockout.tsx` and
+      `MovieDetails.tsx` (~20 each). Treat that as an order of magnitude — the
+      scan still counts some Tailwind class strings as prose, so the true figure
+      is somewhat lower.
+
+      Two things make this harder here than the count suggests. Roughly 190
+      **pinned claims assert English sentences** the UI shows, so extraction has
+      to move the pins to the catalogue in the same commit or the gate goes red
+      for the right reason. And a lot of the copy is deliberately load-bearing —
+      the download disclosure (R107), the honesty about what is not known
+      (R91), the peer counts that never name anybody (R46) — so a translator
+      needs the *reasoning*, not just the string. Whatever catalogue format is
+      chosen must carry a note per entry.
+
+- [ ] **Confirm whether the deck ignores parental controls, then fix the trust
+      model (U3).** Analysis in [docs/TRUST.md](docs/TRUST.md). The library is
+      read as `/Items?Recursive=true` with an admin key and **no user scope**
+      (`src/lib/jellyfin.ts:66,104`), while the login path already obtains a
+      Jellyfin user identity and discards the `AccessToken` that would let the
+      app read as that user (`server/auth.ts`).
+
+      **Step one is a measurement, not a change.** On a real Jellyfin: create an
+      account with a maximum parental rating, join a room as that account, build
+      a deck, and see whether a restricted title appears on a card. I could not
+      run this — no server with parental controls configured — so it is written
+      down as a hypothesis with a clear mechanism, not a finding. If it holds, a
+      child joining on their own phone is shown titles their parent already
+      chose to hide, on a screen built to make them look appealing.
+
+      Step two is the design decision, which is a household's rather than an
+      implementer's: whose view is the deck built from when a room mixes
+      signed-in members with guests who typed a four-letter code? Three options
+      and the guest question are in TRUST.md; only the intersection option
+      survives a safeguarding argument.
+      Files: `server/auth.ts`, `src/lib/jellyfin.ts`, the deck builder, `Lobby.tsx`.
+
 ## Blocked — needs a real household, not an agent
 
 Real, and no amount of code closes them alone. They need the app used by people

@@ -11,6 +11,15 @@ on:
   # every pull request; publishing stays limited to main.
   pull_request:
     branches: [main]
+  # Rot arrives from outside. A household installs this and leaves it alone, so
+  # the thing that breaks it is a dependency, a Node release or an Actions
+  # deprecation -- none of which involves anybody pushing. Without a scheduled
+  # run the first person to find out is somebody on a Friday night with guests
+  # in the room. The docker job below is gated on `push`, so this only runs the
+  # gate and publishes nothing. (Gate U11, docs/UPSTREAM.md.)
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read

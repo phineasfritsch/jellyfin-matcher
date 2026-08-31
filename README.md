@@ -240,6 +240,16 @@ Most of those are unit tests over the scoring math, knockout state machine, deck
 
 Another 190 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
 
+## Security, and what leaves your house
+
+Found a hole? **Report it privately** — GitHub → Security → Advisories. Not a public issue; people run this inside their homes. [SECURITY.md](SECURITY.md) says what the app is trusted with and, just as importantly, which two things are known design limits rather than findings: it holds an admin-scoped Jellyfin key, and the default auth mode does not gate a public hostname.
+
+[docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) lists every destination this software can reach. The short version: the core loop needs exactly one service, the one you already run. The part worth knowing is that in Any Movie mode your **phones** fetch posters straight from TMDB — so TMDB can see what your household is browsing, including films you don't own. That is being decided on, not defended.
+
+## Who maintains it
+
+One person. [docs/MAINTAINING.md](docs/MAINTAINING.md) says so plainly, along with how a release is cut and what would have to be true before you should depend on this. The bar the project is now held to — would Jellyfin adopt it, would an acquirer find nothing to fix — is [docs/UPSTREAM.md](docs/UPSTREAM.md). Eleven gates, and it is not close.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Do whatever you want with it. If you build something on top I'd genuinely like to hear about it.

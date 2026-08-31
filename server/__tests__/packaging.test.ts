@@ -156,3 +156,57 @@ describe('the licence says the same thing twice', () => {
     expect(pkg.license).toBe('MIT');
   });
 });
+
+/**
+ * U11 (docs/UPSTREAM.md): the maintenance story is real, not just described.
+ *
+ * docs/MAINTAINING.md makes four claims a stranger picking this up cold would
+ * rely on. Each of them was false at the moment it was written, and each was
+ * made true before that document shipped -- which is the only reason these
+ * tests exist rather than a paragraph promising the same things.
+ *
+ * The repo has shipped a README that described a fix it had not made (a049c4d),
+ * so a claim about process now costs a check.
+ */
+describe('the maintenance story is true', () => {
+  const workflow = readDoc('.github/workflows/docker.yml');
+
+  it('pins the Node version in both places, and they agree', () => {
+    // Two pins that can drift apart are one pin and a lie: CI would keep
+    // passing on 22 while a contributor's 20 failed in ways CI never sees.
+    const pkg = JSON.parse(readDoc('package.json')) as { engines?: { node?: string } };
+    const declared = pkg.engines?.node;
+    expect(declared, 'package.json declares no engines.node').toBeTruthy();
+    const ci = /node-version:\s*(\d+)/.exec(workflow)?.[1];
+    expect(ci, 'the workflow pins no node-version').toBeDefined();
+    expect(declared).toContain(ci!);
+  });
+
+  it('checks for rot on a schedule, not only when somebody pushes', () => {
+    // The thing that breaks an installed-and-forgotten app is a dependency or a
+    // Node release, and neither involves a push.
+    expect(workflow).toMatch(/schedule:/);
+    expect(workflow).toMatch(/cron:/);
+  });
+
+  it('publishes nothing on that scheduled run', () => {
+    // A cron that can publish is a release nobody decided to make.
+    expect(workflow).toContain("if: github.event_name == 'push'");
+  });
+
+  it('has a dependency update story and a private way to report a hole', () => {
+    expect(readDoc('.github/dependabot.yml')).toContain('package-ecosystem: npm');
+    const security = readDoc('SECURITY.md');
+    expect(security).toMatch(/report a vulnerability/i);
+    // The disclosure path must be private: a public issue on an exploitable bug
+    // in software people run at home is the failure this file prevents.
+    expect(security).toMatch(/private/i);
+    expect(security).toMatch(/do not open a normal issue/i);
+  });
+
+  it('says out loud that the bus factor is one', () => {
+    // U11's hardest half cannot be closed by code, so the minimum honest thing
+    // is that an adopter reads it before depending on the project.
+    expect(readDoc('docs/MAINTAINING.md')).toMatch(/bus factor is one/i);
+  });
+});
