@@ -872,3 +872,31 @@ two numbers that nearly work.
 disconnected member who rejoins before the reject makes the deck un-exhausted, and an
 instant match can happen on a deck that is exhausted anyway. Guessing from the
 outcome is not the same as asking about the state.
+
+### R101 — A refused rejoin hands the phone back to the door.
+
+**Frozen:** the rejoin failure cleared the stored session, set an error, and stopped.
+
+**Built:** it also clears `userId` and `room`, so the join gate renders — and the gate
+says why.
+
+**Why.** `userId` staying set meant `RoomClient`'s `!userId` gate never fired, so the
+phone went on rendering the last room state it held: receiving no broadcasts, because
+`joinChannel` only runs on a successful join, and offering controls whose acks the
+server would refuse. The error read *"Start a new one"* while the server's own message
+said to join this one again, and neither was reachable from the screen printing them.
+
+The common way in is a phone dropping out of the **lobby**. A member who leaves before
+the room starts is deleted outright, by design, so their seat is genuinely gone while
+the room is perfectly fine. That is a rejoin, not a bereavement, and the app now says
+so and offers the door.
+
+**Proved by dropping a real phone's network.** `npm run e2e:two` now runs a third room
+where a member goes offline in the lobby and comes back, and asserts she gets the join
+gate, is told why, and can rejoin — with the room seeing her return.
+
+The first version of that test waited four seconds and failed, because socket.io's
+defaults mean a dead connection is not noticed for up to forty-five: the seat was
+never deleted, the rejoin succeeded, and the check timed out waiting for a recovery
+nothing needed. It waits the real duration now. Shortening the server's timeouts to
+suit a test would have changed how long a household's room survives a tunnel.

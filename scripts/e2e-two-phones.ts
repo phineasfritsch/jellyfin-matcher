@@ -345,7 +345,82 @@ async function main() {
       'the knockout resolved on the answers already given (R87)',
     );
 
-    console.log(`\n${checks - failures}/${checks} checks passed. Rooms ${roomId} and ${room2}.`);
+    /*
+      Third room: a phone loses its network in the lobby and comes back.
+
+      A member who drops before the room starts is deleted outright, by design,
+      so their seat is genuinely gone while the room is fine. The rejoin is
+      refused, and until R101 the client cleared the stored session, set an
+      error, and stopped -- leaving userId set, so the join gate never rendered
+      and the phone kept showing a room it could no longer hear. The error even
+      said "Start a new one" while the server's message said to join this one
+      again, and neither was reachable from the screen printing it.
+
+      Offline mode rather than closing the page: the point is a phone that
+      survives while its socket does not.
+    */
+    step('a third room, where a phone loses its network in the lobby');
+    const eveCtx = await browser.createBrowserContext();
+    const finCtx = await browser.createBrowserContext();
+    const eve = await eveCtx.newPage();
+    const fin = await finCtx.newPage();
+    for (const p of [eve, fin]) await p.setViewport(PHONE);
+
+    await eve.goto(URL, { waitUntil: 'domcontentloaded' });
+    await eve.waitForSelector('input', { timeout: 20_000 });
+    await eve.type('input', 'Eve', { delay: 10 });
+    await tap(eve, 'Create', 'Eve');
+    await waitForText(eve, (t) => /Room [A-Z0-9]{4}/.test(t), 'Eve to land in a room');
+    const room3 = (/Room ([A-Z0-9]{4})/.exec(await textOf(eve)) ?? [])[1];
+    if (!room3) throw new Error('could not read the third room code');
+    console.log(`  room ${room3}`);
+
+    await join(fin, room3, 'Fin');
+    await waitForText(eve, (t) => t.includes('Fin'), 'Eve to see Fin arrive');
+
+    step('Fin goes offline, then comes back');
+    await fin.setOfflineMode(true);
+    /*
+      Long enough for the server to actually declare the socket dead.
+
+      socket.io's defaults are a 25s ping interval and a 20s ping timeout, so a
+      dropped connection is not noticed for up to 45 seconds. The first version
+      of this waited four, the seat was never deleted, the rejoin succeeded, and
+      the check timed out waiting for a recovery that was never needed. Slow,
+      but it is the real duration -- a phone locked in a pocket is exactly this
+      case, and shortening the server's timeouts to suit a test would change
+      how long a real household's rooms survive a tunnel.
+    */
+    await new Promise((r) => setTimeout(r, 50_000));
+    await fin.setOfflineMode(false);
+
+    const finBack = await withTimeout(
+      waitForText(
+        fin,
+        (t) => /joining room/i.test(t) || /seat went/i.test(t) || /pick any name/i.test(t),
+        'Fin to be handed back to the join gate',
+        45_000,
+      ),
+      50_000,
+      'the phone to recover from a lobby drop',
+    );
+    ok(
+      /joining room/i.test(finBack) || /pick any name/i.test(finBack),
+      'Fin gets the join gate back, not a room she cannot hear',
+    );
+    ok(/seat went/i.test(finBack), 'Fin is told why she is back at the door');
+
+    step('Fin joins again');
+    await fin.waitForSelector('#join-name', { timeout: 20_000 });
+    await fin.type('#join-name', 'Fin', { delay: 10 });
+    await tap(fin, 'Join Room', 'Fin');
+    await waitForText(fin, (t) => /tonight/i.test(t), 'Fin back in the lobby');
+    await waitForText(eve, (t) => t.includes('Fin'), 'Eve to see Fin return');
+    ok((await textOf(eve)).includes('Fin'), 'the room sees her come back');
+
+    console.log(
+      `\n${checks - failures}/${checks} checks passed. Rooms ${roomId}, ${room2} and ${room3}.`,
+    );
     if (failures > 0) throw new Error(`${failures} check(s) failed`);
   } finally {
     try {

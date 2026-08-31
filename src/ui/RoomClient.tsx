@@ -25,7 +25,9 @@ export function RoomClient({ roomId }: { roomId: string }) {
   }
 
   if (!userId) {
-    return <JoinGate roomId={roomId} join={roomHook.join} />;
+    // R101: why the phone is back here, if it did not arrive by scanning a QR.
+    // Without this the gate reappears mid-evening with no explanation at all.
+    return <JoinGate roomId={roomId} join={roomHook.join} notice={roomHook.error} />;
   }
 
   if (!room) {
@@ -101,7 +103,16 @@ function Centered({ children }: { children: React.ReactNode }) {
   );
 }
 
-function JoinGate({ roomId, join }: { roomId: string; join: (name: string) => Promise<void> }) {
+function JoinGate({
+  roomId,
+  join,
+  notice,
+}: {
+  roomId: string;
+  join: (name: string) => Promise<void>;
+  /** Why the room handed this phone back, when it did not start here (R101). */
+  notice?: string | null;
+}) {
   const { config } = useAuthConfig();
   const [name, setName] = useState(() => getAuthName() ?? '');
   const [busy, setBusy] = useState(false);
@@ -169,12 +180,12 @@ function JoinGate({ roomId, join }: { roomId: string; join: (name: string) => Pr
             {busy && <Loader2 aria-hidden className="size-5 animate-spin" />}
             Join Room
           </button>
-          {error && (
+          {(error ?? notice) && (
             <p
               role="alert"
               className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-body font-semibold text-destructive ring-1 ring-destructive/35"
             >
-              {error}
+              {error ?? notice}
             </p>
           )}
         </form>

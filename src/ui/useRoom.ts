@@ -84,10 +84,31 @@ export function useRoom(roomId: string): RoomHook {
           yet.
         */
         clearSession(roomId);
+
+        /*
+          R101: hand the phone back to the join gate, do not leave it holding a
+          room it can no longer hear.
+
+          This cleared the stored session and set an error, and stopped. userId
+          stayed set, so RoomClient's `!userId` gate never fired and the phone
+          kept rendering the last room state it had -- receiving no broadcasts,
+          since joinChannel only runs on a successful join, and offering
+          controls whose acks would be refused. The copy said "Start a new one"
+          while the server's own message said to join this one again, and
+          neither was reachable from the screen it was printed on.
+
+          Dropping out of the LOBBY is the common way in: a member who leaves
+          before the room starts is deleted outright, by design, so their seat
+          is genuinely gone while the room is fine. That is a rejoin, not a
+          bereavement.
+        */
+        const gone = err instanceof Error && /not found/i.test(err.message);
+        setUserId(null);
+        setRoom(null);
         setError(
-          err instanceof Error && /not found/i.test(err.message)
+          gone
             ? 'This room is gone — the server restarted. Start a new one.'
-            : 'Lost this room and could not rejoin it. Start a new one.',
+            : 'Your seat went while you were away. Join the room again.',
         );
         setConnecting(false);
       });

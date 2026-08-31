@@ -35,7 +35,7 @@ defined at their first citation.
 | **R18** | `docs/REDESIGN.md:143` | `src/ui/components/SwipeCard.tsx:145` |
 | **R19** | `docs/DIRECTION.md:111` | — |
 | **R20** | `docs/DIRECTION.md:112` | — |
-| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:72` +1 |
+| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:74` +1 |
 | **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:114` |
 | **R23** | `docs/DIRECTION.md:115` | — |
 | **R24** | `docs/DIRECTION.md:116` | — |
@@ -83,7 +83,7 @@ defined at their first citation.
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:169` |
-| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:135` |
+| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:146` |
 | **R74** | _at its citation_ | `src/ui/components/VoteRow.tsx:53` |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:476` |
@@ -108,7 +108,7 @@ defined at their first citation.
 | **R95** | `docs/DIRECTION.md:702` | `src/ui/components/VoteRow.tsx:72` +1 |
 | **R96** | `docs/DIRECTION.md:731` | `src/ui/components/SwipeCard.tsx:119` |
 | **R97** | `docs/DIRECTION.md:750` | `server/settlement.ts:77` +1 |
-| **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:48` +3 |
+| **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:50` +3 |
 | **R99** | `docs/DIRECTION.md:816` | `server/handlers.ts:85` +5 |
 
 No ruling is orphaned.
