@@ -1,5 +1,13 @@
 # Deck build at library scale
 
+> **The quadratic finding is fixed (R143).** `saveCache` rewrote the entire
+> cache on any night that learned anything, which is what produced the 65
+> nights and 1.36 GB figure below. It is now a base file plus an append log:
+> a night writes what it learned, and the base is folded in only when the log
+> has grown to the size of the base, so each entry is rewritten about twice
+> over the life of the cache rather than once per night. The measurements
+> below are of the old behaviour and are kept as the record of why it changed.
+
 Gate **U10** in [UPSTREAM.md](UPSTREAM.md) reads:
 
 > **Performance evidence at real library scale.** Deck build measured against a

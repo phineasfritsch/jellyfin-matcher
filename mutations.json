@@ -451,6 +451,18 @@
         "src/ui/__tests__/roomclient.render.test.tsx"
       ],
       "note": "A guest has no account, so getAuthName() is null for exactly the person asked twice."
+    },
+    {
+      "id": "R143-cache-rewrites-everything",
+      "ruling": "R143",
+      "claim": "a night appends what it learned instead of rewriting the whole ratings cache",
+      "file": "src/lib/mdblist.ts",
+      "find": "    const lines = learned.map((pair) => JSON.stringify(pair) + NEWLINE).join('');",
+      "replace": "    await writeBase(file, cache);",
+      "expect": [
+        "src/lib/__tests__/mdblist.test.ts"
+      ],
+      "note": "U10 measured the old behaviour at 65 nights and 1.36 GB written to warm a 50,000-title library, because the request budget admits a few dozen titles a night while the write was the whole cache. Quadratic in the library."
     }
   ]
 }

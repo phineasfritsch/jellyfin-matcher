@@ -2225,3 +2225,40 @@ break rather than a staged one:
 - **The vitest migration in R140 was still correct**, just not sufficient. It
   had to happen for vitest 4 whatever else was in the group; it simply was not
   the thing standing in front.
+
+### R143 — The ratings cache was quadratic in the library
+
+Nothing inside a deck build is superlinear; the benchmark for gate U10 checked
+that carefully and found field reads flat at 6.46 per candidate across a 32×
+range. The quadratic behaviour is *across* builds, and it is in the cache.
+
+`saveCache` serialised the entire cache on any night that learned anything,
+while `MDBLIST_REQUEST_BUDGET` admits a few dozen new titles. So warming a large
+library costs one full rewrite per night, for as many nights as it takes:
+measured at **65 nights and 1.36 GB written** for a 50,000-title library. And
+during all 65 of those nights most titles are unrated, which means the deck is
+not ordered by what the household would like — it is ordered by whichever titles
+happened to get cached first.
+
+That last part is why this is a product defect and not a housekeeping one. The
+ranking looks like a judgement and is partly an artefact of the cache's age.
+
+**A base file plus an append log.** A night appends what it learned and nothing
+else; the base is rewritten only when the log has grown to the size of the base.
+That fraction is the whole design decision and it is written down where it is
+set: a smaller threshold compacts sooner and rewrites each entry more often, a
+larger one leaves a long log every night must read. At 1 each entry is rewritten
+about twice over the life of the cache instead of once per night.
+
+Three things kept deliberately:
+
+- **R78's atomic rename survives**, for the base. A crash mid-compaction leaves
+  the old base and the log, which together are the same cache.
+- **A torn final line is expected, not exceptional.** An append interrupted by a
+  container stop leaves half a line; it is skipped, and the cost is re-fetching
+  one title. Throwing there would cost the night.
+- **The old single-file format still loads**, becomes the base untouched, and is
+  folded in at the first compaction. Changing a format must not make a household
+  buy every rating again against a metered key — there is a test named for that
+  case, because it is the one that would be most expensive to get wrong and the
+  least likely to be noticed in review.

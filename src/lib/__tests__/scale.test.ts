@@ -351,7 +351,15 @@ describe('the ratings cache at library scale', () => {
     );
     const requestsA = lastRatingsCost().requests;
 
+    /*
+      Both halves of the cache. R143 split it into a base file and an append
+      log, so removing only the base leaves the log behind and the second build
+      legitimately finds 200 titles already cached -- which made this read 20
+      where it wanted 40. The property is unchanged and still asserted; the
+      fixture simply has more to clear than it did.
+    */
     await rm(cacheFile, { force: true });
+    await rm(`${cacheFile}.log`, { force: true });
 
     await getMoviesByTmdbIds(
       Array.from({ length: 400 }, (_, i) => i + 1),
