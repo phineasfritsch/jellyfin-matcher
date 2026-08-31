@@ -137,7 +137,13 @@ describe('a film the server does not have', () => {
       somebody else's disk.
     */
     const { container } = render(<SwipeDeck roomHook={hook(wide)} />);
-    expect(container.textContent).not.toMatch(/host is asked to approve/i);
+    /*
+      The negative guard was the single literal /host is asked to approve/i, so
+      the same false promise in any other wording — "your host approves it
+      before anything is fetched" — shipped green (R129). The rule is that this
+      screen must not promise approval at all, so that is what is asserted.
+    */
+    expect(container.textContent).not.toMatch(/approv/i);
     expect(container.textContent).toMatch(/depends on your jellyseerr settings/i);
   });
 
@@ -145,7 +151,14 @@ describe('a film the server does not have', () => {
     // R91: no size datum reaches this app from Jellyfin or Jellyseerr, and the
     // real figure is not settled until the host's server picks a release.
     const { container } = render(<SwipeDeck roomHook={hook(wide)} />);
-    expect(container.textContent).not.toMatch(/\d+\s?GB/i);
+    /*
+      This was /\d+\s?GB/i alone, which does not match "gigabytes", does not
+      match "MB", and does not match R36's superseded "About 100 min of video" —
+      the exact sentence R91 was written to kill, because 108 minutes is 2GB or
+      55GB depending on a release this app never sees (R129).
+    */
+    expect(container.textContent).not.toMatch(/\d+\s?(gb|mb|tb|gigabyte|megabyte|terabyte)/i);
+    expect(container.textContent).not.toMatch(/min(ute)?s? of video/i);
   });
 
   it('keeps quiet when the film is already on the server', () => {
@@ -172,6 +185,21 @@ describe('taking a vote back', () => {
     const voted = room({ progress: { u_1: 1 } });
     const { container } = render(<SwipeDeck roomHook={hook(voted)} />);
     expect(container.textContent).toMatch(/puts the card back and clears your vote/i);
+  });
+
+  it('actually takes the vote back when it is pressed', () => {
+    /*
+      R129. Every test above this one asserts that a row with the right
+      accessible name and the right sentence is on the screen. None of them ever
+      pressed it, so disconnecting the handler — keeping the row, the label and
+      the copy verbatim — left all twelve green. R48 is a behaviour, and the
+      label is not the behaviour.
+    */
+    const undoVote = vi.fn();
+    const voted = room({ progress: { u_1: 1 } });
+    render(<SwipeDeck roomHook={hook(voted, { undoVote })} />);
+    screen.getByRole('button', { name: /undo your vote on Film 1/i }).click();
+    expect(undoVote).toHaveBeenCalled();
   });
 });
 

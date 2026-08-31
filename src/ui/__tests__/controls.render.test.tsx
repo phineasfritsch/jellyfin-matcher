@@ -30,8 +30,16 @@ describe('the failure panel', () => {
     // host as "it's broken", by text, at 11pm.
     const { container } = render(<DiagnosisPanel diagnosis={FAILURE} />);
     expect(container.textContent).toContain('Jellyfin is not answering');
-    expect(container.textContent).toContain('Jellyfin');
     expect(container.textContent).toContain('check JELLYFIN_URL');
+    /*
+      The middle third — WHICH system — used to be `toContain('Jellyfin')`, a
+      substring of the headline asserted on the line above it. Deleting the FROM
+      row outright left all nine cases green (R129). So this names the row, not
+      a word that happens to be inside another sentence.
+    */
+    const from = [...container.querySelectorAll('span')].find((s) => s.textContent === 'FROM');
+    expect(from, 'the FROM row is gone: the panel no longer names the system').toBeTruthy();
+    expect(container.textContent).toContain('The system that did not answer.');
   });
 
   it('shows the technical line rather than hiding it', () => {
@@ -75,10 +83,23 @@ describe('the vote row', () => {
   });
 
   it('prints the word as well as the glyph', () => {
-    // R18/R26: never colour or symbol alone.
+    /*
+      R18/R26: never colour or symbol alone.
+
+      This read `container.textContent`, which includes visually hidden text —
+      so turning every label into `sr-only` left it green, and a glyph-only row
+      is exactly the condition the ruling forbids (R129). The claim is about
+      what the eye sees, so the assertion has to be too.
+    */
     const { container } = render(<VoteRow onVote={() => {}} title="The Odyssey" />);
     for (const word of ['No', 'Maybe', 'Yes', 'Strong']) {
-      expect(container.textContent).toContain(word);
+      const shown = [...container.querySelectorAll('*')].some(
+        (el) =>
+          el.textContent?.trim() === word &&
+          !el.closest('.sr-only') &&
+          !el.className.toString().includes('sr-only'),
+      );
+      expect(shown, `"${word}" is not on the screen, only in the DOM`).toBe(true);
     }
   });
 
@@ -87,13 +108,26 @@ describe('the vote row', () => {
       R95. These rendered at opacity-70, which composites the ink with the
       button's own coloured tint — so "-5" measured 2.82:1 against the surface
       it had to beat, on the screen a person reads fifty times an evening in the
-      dark. A rendering test cannot measure contrast; it can insist the opacity
-      class is gone, which is the cause.
+      dark. A rendering test cannot measure contrast; it can insist nothing is
+      dimming the points, which is the cause.
+
+      It used to insist on that one way — no `.opacity-70` class — and dimming
+      the identical pixels through an inline style sailed past it (R129). Both
+      routes are checked now. A third route exists (a token, a parent's opacity)
+      and is not checked here; `npm run contrast` measures the rendered result
+      and is what actually holds the ratio.
     */
     const { container } = render(<VoteRow onVote={() => {}} title="The Odyssey" />);
     expect(container.textContent).toContain('-5');
     expect(container.textContent).toContain('+3');
-    expect(container.querySelector('.opacity-70')).toBeNull();
+    expect(container.querySelector('[class*="opacity-"]')).toBeNull();
+    for (const el of container.querySelectorAll<HTMLElement>('*')) {
+      const inline = el.style.opacity;
+      expect(
+        inline === '' || Number(inline) >= 1,
+        `something is dimmed to opacity ${inline}`,
+      ).toBe(true);
+    }
   });
 
   it('reports the vote it was pressed for', () => {

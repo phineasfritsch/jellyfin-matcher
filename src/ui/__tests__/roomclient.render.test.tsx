@@ -19,7 +19,20 @@ import type { RoomHook } from '../useRoom';
  * `userId` set, so the join gate never rendered and the phone went on showing a
  * room it received no broadcasts for.
  *
- * Neither is visible in any single component. Both are visible here.
+ * Neither is visible in any single component. Both are visible here — but read
+ * the next paragraph before trusting that sentence about R101.
+ *
+ * This file mocks `useRoom` wholesale, because the real hook opens a socket.
+ * R101's defect lived inside that hook: its rejoin-failure handler did not
+ * clear `userId`. Deleting those exact two lines from `useRoom.ts` leaves every
+ * case here green (R129), because the mock hands itself `userId: null` by hand.
+ * What these cases guard is the half downstream of the bug — that a null seat
+ * reaches the join gate, and that the gate says why it came back.
+ *
+ * The cause is guarded by `scripts/e2e-two-phones.ts:352-411`, which deletes a
+ * real seat, lets a real phone attempt a real rejoin, and asserts it is told
+ * why it is back at the door. There is no `useRoom` unit test; checked, rather
+ * than assumed, because the first draft of this paragraph claimed there was.
  */
 
 // The hook opens a socket, so it is replaced wholesale. Declared before the
@@ -44,6 +57,24 @@ const DIAGNOSIS: Diagnosis = {
   // the size handed to diagnoseDeckFailure is 0 and `deckSize > 0` cannot hold.
   recoverable: false,
 };
+
+/** Enough of a film for the deck and the winner screen to draw one. */
+const MOVIE = {
+  id: 'm1',
+  tmdbId: 1,
+  imdbId: 'tt1',
+  title: 'Film 1',
+  year: 2001,
+  runtime: 100,
+  posterUrl: null,
+  genres: ['Action'],
+  isHybrid: false,
+  jellyfinItemId: 'jf-1',
+  description: null,
+  trailerUrl: null,
+  allRatings: [],
+  scores: { letterboxd: null, imdb: 80, rt: null, composite: 80 },
+} as unknown as ClientRoom['deck'][number];
 
 function room(overrides: Partial<ClientRoom> = {}): ClientRoom {
   return {
@@ -116,6 +147,59 @@ describe('which screen a phone is looking at', () => {
     roomHook.current = hook({ diagnosis: DIAGNOSIS });
     const { container } = render(<RoomClient roomId="AB12" />);
     expect(container.textContent).toContain('Jellyfin is not answering');
+    /*
+      "The screen", not "on the screen". This asserted only that the headline
+      appeared, so removing the `!blocked &&` guard from all four status
+      branches — drawing the failure AND the room at once, which is the state
+      R98 is about — left it green (R129). The word in the test's own name was
+      unbacked.
+    */
+    expect(container.textContent).not.toMatch(/what are you open to/i);
+  });
+
+  it('draws each status on its own screen and only its own', () => {
+    /*
+      R129. Every case in this file built its room with status KNOCKOUT, so
+      LOBBY, SWIPING and FINISHED were never rendered at all: three of the six
+      branches could be rewired to the wrong component and nothing went red. The
+      auditor rotated three of them and all seven cases passed.
+
+      Each status therefore asserts its own screen's words AND the absence of a
+      neighbour's, because a chooser that draws two screens at once passes any
+      test that only looks for one.
+    */
+    const CASES: Array<{
+      status: ClientRoom['status'];
+      shows: RegExp;
+      extra: Partial<ClientRoom>;
+    }> = [
+      { status: 'LOBBY', shows: /max runtime/i, extra: {} },
+      { status: 'KNOCKOUT', shows: /what are you open to/i, extra: {} },
+      {
+        status: 'SWIPING',
+        shows: /card \d+ of \d+/i,
+        extra: { deck: [MOVIE], progress: { u_1: 0 } },
+      },
+      {
+        status: 'FINISHED',
+        shows: /everyone said yes/i,
+        extra: { deck: [MOVIE], winner: 'm1', deckExhausted: true },
+      },
+    ];
+
+    for (const c of CASES) {
+      cleanup();
+      roomHook.current = hook({ room: room({ status: c.status, ...c.extra }) });
+      const { container } = render(<RoomClient roomId="AB12" />);
+      expect(container.textContent, `${c.status} did not draw its own screen`).toMatch(c.shows);
+      for (const other of CASES) {
+        if (other.status === c.status) continue;
+        expect(
+          container.textContent,
+          `${c.status} also drew the ${other.status} screen`,
+        ).not.toMatch(other.shows);
+      }
+    }
   });
 
   it('offers a way out of it', () => {
