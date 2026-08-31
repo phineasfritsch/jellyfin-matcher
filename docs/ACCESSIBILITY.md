@@ -381,15 +381,15 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 1.3.1 Info and Relationships | A | **PARTIAL** | Roles, groups and labels are right throughout (`role="group"` on the vote row, `radiogroup` on deck size, `Group` renders a real `<section>` with its heading). **F8**: three screens have no `h1`. |
 | 1.3.2 Meaningful Sequence | A | PASS (read) | DOM order is reading order. The one reversal — the deck renders its three cards back-to-front for z-order — is invisible to the tree because the two behind are `aria-hidden`, which `a11y` checks holds no focusable element. |
 | 1.3.3 Sensory Characteristics | A | PASS (read) | No copy refers to shape, position, size or sound. Every instruction names its control. |
-| 1.3.4 Orientation | AA | **FAIL** | **F1** — `orientation: 'portrait'` in the manifest. |
+| 1.3.4 Orientation | AA | **PASS (tested)** | **F1 fixed (R133)** — the manifest locks no orientation; `a11y` asserts it. |
 | 1.3.5 Identify Input Purpose | AA | PASS (read) | `autoComplete="given-name"` on both name fields; `username` and `current-password` on the login. The room code is not one of the listed purposes. |
 | 1.4.1 Use of Color | A | **PASS (tested)** | Picked and unpicked genre rows differ by a visible glyph, not only a tone — `a11y`, "SC 1.4.1", asserted on text with `sr-only` and `aria-hidden` stripped. Vote words are covered by `controls.render.test.tsx`. R18/R26. |
 | 1.4.2 Audio Control | A | PASS (read) | The trailer does not autoplay: `playTrailer` gates the iframe and the embed URL carries no autoplay parameter (R29). |
 | 1.4.3 Contrast (Minimum) | AA | PARTIAL / measured | **R6** — real measurement via `npm run contrast`, not standing, and no capture covers an input or the guide. |
 | 1.4.4 Resize Text | AA | PASS (read), one gap | The most-worked criterion here: every size is a rem, no `-webkit-text-size-adjust`, 200% captures exist for the lobby, the deck and the winner (R60, R74, R84, R96, R102, R126). Gap: `truncate` on the card's film title ellipsises a long name at any size and more at 200%. |
 | 1.4.5 Images of Text | AA | N/A | None. |
-| 1.4.10 Reflow | AA | **UNVERIFIED** | **R1** — nothing has ever been rendered at 320 CSS px. |
-| 1.4.11 Non-text Contrast | AA | **FAIL** | **F2** — every ring in the app is between 1.20:1 and 2.02:1 at best. |
+| 1.4.10 Reflow | AA | **PASS (measured)** | **R1 was a FAIL, fixed (R137)** — at 320×256 the vote row sat 116px below a surface that could not scroll. `npm run measure:reflow` in real Chrome. |
+| 1.4.11 Non-text Contrast | AA | **PARTIAL** | **F2 partly fixed (R135)** — every text input is now on a 3.57:1 token, computed in `css.test.ts`. Ghost buttons and ratings tiles stay under 3:1 deliberately; the slider track is still open. |
 | 1.4.12 Text Spacing | AA | **UNVERIFIED** | **R3** — never considered, and the layout clips. |
 | 1.4.13 Content on Hover or Focus | AA | N/A | No tooltips, popovers or hover-revealed content anywhere. `title` in this codebase is a component prop that renders visible text, not the HTML attribute; the one real `<title>` is inside the QR's SVG, which the criterion exempts as user-agent chrome. |
 
@@ -410,10 +410,10 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 2.4.5 Multiple Ways | AA | N/A | Three routes, and a room is a step in a process, which the criterion exempts. |
 | 2.4.6 Headings and Labels | AA | PASS (read) | Every heading and every label describes its subject. See **F8** for the levels. |
 | 2.4.7 Focus Visible | AA | PASS (read) | `:focus-visible { outline: 3px solid var(--color-maybe); outline-offset: -3px }`. `#2fbdbd` computes about 7:1 against the app's surfaces. The `[data-app-focus]` suppression (R80) applies only to `tabIndex={-1}` elements the app focused on the reader's behalf, which are not in the tab order at all; `focus.test.ts` holds the join between the mark and the rule so it cannot drift back to matching by markup shape. |
-| 2.4.11 Focus Not Obscured (Min) | AA | **UNVERIFIED** | **R2** — sticky bar and dock, and no scroll padding in the repository. |
+| 2.4.11 Focus Not Obscured (Min) | AA | **PROBED, not reproduced** | **R2 (R138)** — 0px overlap at 320×256 and 402×874. The bars are siblings of the scrollport, not children. Limits noted in R2. |
 | 2.5.1 Pointer Gestures | A | **PASS (tested)** | All four vote weights are cast from buttons, pressed and checked against `VOTE_POINTS` — `a11y`, "SC 2.5.1 / 2.5.7". |
 | 2.5.2 Pointer Cancellation | A | PASS (read) | Every control fires on click, i.e. the up-event. The drag commits on `onDragEnd` and `dragSnapToOrigin` returns the card when the threshold is not met, so a started gesture can be abandoned (R49). |
-| 2.5.3 Label in Name | A | **FAIL** | **F3** — the abstain row and the undo row. |
+| 2.5.3 Label in Name | A | **PASS (tested)** | **F3 fixed (R134)** — both controls renamed, and `a11y` checks the rule across four screens rather than the two instances. |
 | 2.5.4 Motion Actuation | A | N/A | Nothing reads a device sensor. |
 | 2.5.7 Dragging Movements | AA | **PASS (tested)** | The deck is a swipe interface and every vote it can cast has a button behind it, pressed in `a11y`. The super-like has no gesture at all by design (R49), so the button set is a strict superset of the gesture set. |
 | 2.5.8 Target Size (Minimum) | AA | PASS (read) | The criterion's floor is 24×24 CSS px. This app declares 60px rows, 62px vote buttons, 52px primary buttons, a 44px details disc and a 44px slider box — its own floor (R39, R96, R118) is 44px, well clear. Nothing in jsdom measures a box; `scripts/measure-rows.ts` measures real rows in real Chrome against the compiled stylesheet at 100% and 200% root, which is the closest this repository comes to evidence. |
@@ -433,7 +433,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 3.3.2 Labels or Instructions | A | PASS (read) | Every input has a `<label htmlFor>` or an `aria-label`; the room code field has both an `aria-label` and a placeholder. |
 | 3.3.3 Error Suggestion | AA | PASS (read) | Errors say what to do — "Enter your name first", "Enter a room code", "Your Jellyfin server did not answer. Check it is awake and try again." R88 exists for that last one. |
 | 3.3.4 Error Prevention (Legal, Financial, Data) | AA | PASS (read) | The two irreversible actions — turning down the winner, and asking Jellyseerr for a film — both take a second, deliberate press, and both state the cost before it is committed (R37, R71, R100, R113). Whether this criterion strictly applies is arguable; the app meets it either way. |
-| 3.3.7 Redundant Entry | A | **FAIL** | **F4** — the name is asked for twice. |
+| 3.3.7 Redundant Entry | A | **PASS (tested)** | **F4 fixed (R139)** — the typed name is carried to the join gate; both halves mutation-tested. |
 | 3.3.8 Accessible Authentication (Min) | AA | PASS (read) | Username and password, with `autoComplete="username"` and `current-password`, nothing blocking paste, and no cognitive function test — no puzzle, no transcription, no "type the third letter". A password manager fills it. |
 
 ### Robust
