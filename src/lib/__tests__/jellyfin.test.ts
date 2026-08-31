@@ -178,9 +178,20 @@ describe('getMovies pages through a large library', () => {
   it('stops on a short page even when the server states no count', async () => {
     // Not every Jellyfin version returns TotalRecordCount, and a missing count
     // must not turn into an extra request or an endless one.
-    const { fetchFn } = server(600, { reportCount: false });
+    const { fetchFn, seen } = server(600, { reportCount: false });
     const movies = await getMovies({}, defaultConfig({ ...cfgBase, fetchFn }));
     expect(movies).toHaveLength(600);
+    /*
+      And costs two requests, not three. Asserting only the result made this
+      test blind to the short-page guard: once the dedupe was added for a server
+      that ignores paging, deleting the guard still returns 600 titles — it just
+      asks for one more page first and throws the answer away. G9 caught that as
+      a hollow claim, on the commit that introduced it.
+
+      One wasted round trip per deck build, on the path that has no count to
+      stop it. Small, and exactly the kind of thing nobody finds later.
+    */
+    expect(seen.length, 'a page was fetched that could only return nothing').toBe(2);
   });
 
   it('stops rather than spinning when a server keeps answering', async () => {
