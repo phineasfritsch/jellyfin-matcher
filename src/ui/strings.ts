@@ -58,7 +58,7 @@ export const en = {
   'knockout.voteOut': 'Vote one out',
 
   'deck.notOnServer': {
-    text: 'Not on your server',
+    text: 'Not on your server — voting yes can download it.',
     why: 'The one chip that means money. It marks a card whose yes can spend the host’s disk.',
   },
   'deck.cost': {

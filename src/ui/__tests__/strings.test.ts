@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { appSources } from '../../../scripts/lib/source-scan';
 import { en, t, why, type MessageKey } from '../strings';
 
 /**
@@ -108,4 +109,36 @@ describe('a translator is told why, not just what', () => {
     const cited = LOAD_BEARING.map(why).join(' ');
     expect(cited).toMatch(/R\d{2,3}/);
   });
+});
+
+/**
+ * R146: a sentence lives in the catalogue or in a component, never both.
+ *
+ * Migrating the knockout left the deck's strings defined in the catalogue AND
+ * still hardcoded in `SwipeDeck.tsx` -- so the download disclosure, the one
+ * sentence R107 and R91 are entirely about, existed in two places at once.
+ * Two copies is worse than the one it started as: the tests assert the rendered
+ * screen, so the component's copy is the one that ships and the catalogue's is
+ * the one a translator would edit. They would have drifted silently.
+ *
+ * A partial migration is fine. A duplicated string is not, and the difference
+ * is checkable.
+ */
+describe('no message is hardcoded as well as catalogued', () => {
+  const sources = appSources();
+
+  for (const key of keys) {
+    const text = t(key);
+    // Templates never appear literally in a component; the rest must appear
+    // exactly once across the whole app, in the catalogue itself.
+    it(`${key} appears once, in the catalogue`, () => {
+      const holders = sources
+        .filter((f) => f.code.includes(text))
+        .map((f) => f.path);
+      expect(
+        holders,
+        `"${text.slice(0, 45)}..." is in ${holders.length} files; a component still has its own copy`,
+      ).toEqual(['src/ui/strings.ts']);
+    });
+  }
 });

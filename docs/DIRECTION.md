@@ -2380,3 +2380,33 @@ as well as the catalogue.
 **What remains.** Two components of nineteen files are migrated. The rest is
 mechanical now that the pin question is answered, and locale selection is a
 separate piece of work that this deliberately does not pretend to have done.
+
+### R146 — A partial migration is fine; a duplicated sentence is not
+
+Extracting the knockout's strings left the deck's entries defined in the
+catalogue **and** still hardcoded in `SwipeDeck.tsx`. So the download
+disclosure — the single sentence R107 and R91 are entirely about — existed in
+two places at once, within one commit of being moved.
+
+Two copies is worse than the one it started as, and the reason is worth being
+precise about. The rendering tests assert the *screen*, so the component's copy
+is the one that ships. The catalogue's copy is the one a translator would edit,
+and it is the one carrying the `why` explaining what must not change. A
+translation would have been made carefully, against the reasoning, to a string
+nobody displays.
+
+**A partial migration is fine.** Nineteen files do not move in one commit, and
+pretending otherwise is how a refactor turns into a rewrite. What is not fine is
+a string existing twice, and that difference is checkable: every catalogued text
+must appear in exactly one file across the whole app, and that file must be the
+catalogue.
+
+The same commit also caught the catalogue **paraphrasing** the headline it was
+supposed to copy — `Not on your server` against the shipped `Not on your server
+— voting yes can download it.` That is the second paraphrase in two commits of
+writing this catalogue, which is enough to call it a pattern rather than a slip:
+a catalogue written from memory is a rewrite wearing the clothes of a refactor.
+Copy from source, then check the copy.
+
+The duplication guard makes the rest of the migration safe to do
+incrementally — which is the only way it is going to get done.

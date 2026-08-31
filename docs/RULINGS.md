@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-140 rulings. 105 argued in a design document; the rest are
+141 rulings. 106 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -36,7 +36,7 @@ defined at their first citation.
 | **R19** | `docs/DIRECTION.md:111` | — |
 | **R20** | `docs/DIRECTION.md:112` | — |
 | **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:74` +2 |
-| **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:124` |
+| **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:125` |
 | **R23** | `docs/DIRECTION.md:115` | — |
 | **R24** | `docs/DIRECTION.md:116` | — |
 | **R25** | `docs/DIRECTION.md:117` | `src/ui/components/VoteRow.tsx:8` |
@@ -155,5 +155,6 @@ defined at their first citation.
 | **R143** | `docs/DIRECTION.md:2229` | — |
 | **R144** | `docs/DIRECTION.md:2301` | — |
 | **R145** | `docs/DIRECTION.md:2337` | — |
+| **R146** | `docs/DIRECTION.md:2384` | — |
 
 No ruling is orphaned.

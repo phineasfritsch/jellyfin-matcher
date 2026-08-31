@@ -108,37 +108,40 @@
       "id": "R107-deck-promises-approval",
       "ruling": "R107",
       "claim": "the deck's cost line never promises the host approves the download first",
-      "file": "src/ui/components/SwipeDeck.tsx",
-      "find": "          detail=\"Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.\"",
-      "replace": "          detail=\"Nothing is fetched from this screen. If it wins, your host approves it before anything is fetched.\"",
+      "file": "src/ui/strings.ts",
+      "find": "    text: 'Nothing is fetched from this screen.",
+      "replace": "    text: 'Your host approves it first. Nothing is fetched from this screen.",
       "expect": [
+        "src/ui/__tests__/strings.test.ts",
         "src/ui/__tests__/deck.render.test.tsx"
       ],
-      "note": "R129's 'negative pinned to one wording': the guard was the single literal /host is asked to approve/i, so the same false promise in other words shipped green. Matcher requests with an admin key and Jellyseerr auto-approves those by default, so no approval gate is a promise this app can keep."
+      "note": "R129's 'negative pinned to one wording': the guard was the single literal /host is asked to approve/i, so the same false promise in other words shipped green. Matcher requests with an admin key and Jellyseerr auto-approves those by default, so no approval gate is a promise this app can keep. Re-anchored to the catalogue after R145/R146 moved the sentence there: a translation is now how this defect would be introduced, and it goes red in the catalogue AND in the rendered deck."
     },
     {
       "id": "R91-deck-states-a-size",
       "ruling": "R91",
       "claim": "the deck states no download size, because the app has none to state",
-      "file": "src/ui/components/SwipeDeck.tsx",
-      "find": "          detail=\"Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.\"",
-      "replace": "          detail=\"Nothing is fetched from this screen. About 100 min of video, roughly 2 GB. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.\"",
+      "file": "src/ui/strings.ts",
+      "find": "    text: 'Nothing is fetched from this screen.",
+      "replace": "    text: 'About 100 min of video. Nothing is fetched from this screen.",
       "expect": [
+        "src/ui/__tests__/strings.test.ts",
         "src/ui/__tests__/deck.render.test.tsx"
       ],
-      "note": "The old guard was /\\d+\\s?GB/i alone, which matches neither 'gigabytes' nor 'MB' nor R36's superseded 'About 100 min of video' -- the exact sentence R91 was written to kill, because 108 minutes is 2GB or 55GB depending on a release this app never sees."
+      "note": "The old guard was /\\d+\\s?GB/i alone, which matches neither 'gigabytes' nor 'MB' nor R36's superseded 'About 100 min of video' -- the exact sentence R91 was written to kill, because 108 minutes is 2GB or 55GB depending on a release this app never sees. Re-anchored to the catalogue. The replacement is R36 superseded wording, which is what a translator with no context would plausibly reintroduce."
     },
     {
       "id": "R46-deck-names-peers",
       "ruling": "R46",
       "claim": "peer progress on the deck is a count and never an identity",
-      "file": "src/ui/components/SwipeDeck.tsx",
-      "find": "          {room.othersFinished} of {others.length} others finished",
-      "replace": "          {others.map((u) => u.name).join(', ')} finished",
+      "file": "src/ui/strings.ts",
+      "find": "    text: '{done} of {total} others finished',",
+      "replace": "    text: '{done} of {total} finished, waiting on {who}',",
       "expect": [
+        "src/ui/__tests__/strings.test.ts",
         "src/ui/__tests__/deck.render.test.tsx"
       ],
-      "note": "Ade cannot bear the room watching him be the slow one; R61 makes that a server promise rather than something the client declines to draw."
+      "note": "Ade cannot bear the room watching him be the slow one; R61 makes that a server promise rather than something the client declines to draw. Re-anchored to the catalogue: the peer count is now a template there, and a {who} placeholder is how naming would arrive."
     },
     {
       "id": "R85-knockout-loading-silent",
@@ -512,6 +515,18 @@
         "src/ui/__tests__/strings.test.ts"
       ],
       "note": "R46/R61: peer progress is a count and never a name. A placeholder called who would be the whole defect arriving through the back door of a translation file."
+    },
+    {
+      "id": "R146-string-duplicated",
+      "ruling": "R146",
+      "claim": "a catalogued sentence is not also hardcoded in a component",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "          detail={t('deck.cost')}",
+      "replace": "          detail=\"Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.\"",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "Two copies of a load-bearing sentence is worse than the one it started as: the rendering tests assert the SCREEN, so the component copy is what ships and the catalogue copy is what a translator edits. They drift silently. This was the actual state after the knockout migration."
     }
   ]
 }

@@ -7,6 +7,7 @@ import type { MovieCandidate } from '../../lib/types';
 import type { RoomHook } from '../useRoom';
 import { EmptyState } from './EmptyState';
 import { Bar, CostLine, Group, RowButton } from './Listing';
+import { t } from '../strings';
 import { MovieDetails } from './MovieDetails';
 import { SwipeCard } from './SwipeCard';
 import { VoteRow, VoteRowSkeleton } from './VoteRow';
@@ -99,7 +100,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
           aria-live="polite"
           className="tabular px-4 py-1.5 text-label text-muted-fg"
         >
-          {room.othersFinished} of {others.length} others finished
+          {t('deck.othersFinished', { done: room.othersFinished, total: others.length })}
         </p>
       )}
       {/*
@@ -115,8 +116,8 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
       */}
       {notHeld && (
         <CostLine
-          headline="Not on your server — voting yes can download it."
-          detail="Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings."
+          headline={t('deck.notOnServer')}
+          detail={t('deck.cost')}
         />
       )}
       {/*
@@ -171,7 +172,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
             <RowButton
               label="BACK"
               title={`Undo — ${behind.title}`}
-              detail="Puts the card back and clears your vote."
+              detail={t('deck.undo')}
               /*
                 R134 / 2.5.3. The row reads "Undo — <film>" and was named "Undo
                 your vote on <film>", so the visible words were not in the
