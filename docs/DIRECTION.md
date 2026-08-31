@@ -647,3 +647,43 @@ and the first version of the knockout-departure case turned out to be one a bug 
 straight through: it asserted that *something* happened, which the fallthrough
 broadcast satisfies. A test a bug passes is worse than no test, because it reads
 like cover.
+
+### R94 — The room is not proved by one phone.
+
+**Frozen:** every harness in the repo drove exactly one browser page.
+
+**Built:** `npm run e2e:two` — two Chrome pages, two browser contexts, one room.
+
+**Why.** `scripts/screenshots.ts` says it drives "two real sockets" and it does, but
+the second member is a headless socket with no UI. So the sentence this product is
+built on —
+
+> Everyone swipes the same deck. The first film you all like wins.
+
+had never been observed happening. That one phone renders a winner proves nothing
+about the other five in the room, and the interesting failures live exactly there: a
+broadcast that reaches one socket and not another, a screen that transitions locally
+without waiting for the room, a view that is correct for whoever acted and stale for
+everybody else. Every automated check in this repo would have passed a build where
+only the acting phone ever updated.
+
+Fourteen assertions across a whole night, including the ones about what a phone must
+*not* see: that Ada's genre picks are not sitting in Bex's page state, and that Bex
+is never told how Ada voted. R61 is a server promise, and a promise the client merely
+declines to render is not one — so it is checked on the other device, which is the
+only place the difference is visible.
+
+**Two browser contexts, not two pages.** Two pages in one context share an origin's
+`localStorage`, so the second page picked up the first member's stored session and
+silently reconnected as her. The app was right and the harness was wrong, in the most
+embarrassing possible way: a room of one phone pretending to be two, which is the
+exact illusion this script exists to stop relying on.
+
+**No `ok(true)`.** Two of the first fourteen checks were unconditional passes sitting
+after a wait that would have thrown. That is the same defect as a test a bug walks
+through, and it had just been caught once already in this session (R93); writing it
+again an hour later is the argument for the rule rather than against it. Both assert
+the state the wait left behind now.
+
+Verified by breaking it: making `broadcast` send to a single socket fails the harness
+immediately and by name.

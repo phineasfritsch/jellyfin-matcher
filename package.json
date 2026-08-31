@@ -17,7 +17,8 @@
     "e2e:walkout": "node scripts/e2e-walkout.cjs",
     "counts": "tsx scripts/sync-counts.ts",
     "shots": "tsx scripts/screenshots.ts",
-    "rulings": "tsx scripts/rulings.ts"
+    "rulings": "tsx scripts/rulings.ts",
+    "e2e:two": "tsx scripts/e2e-two-phones.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

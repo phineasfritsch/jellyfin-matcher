@@ -101,6 +101,7 @@ The dividing line is shared mutable state, not task size.
 | One agent per component file, ownership declared | nothing | parallel |
 | `npm run gate`, `npm test` | nothing in-process, but CPU and the Next build cache | serial |
 | `npm run e2e` | port 3000, a live Jellyfin, real Jellyseerr requests | **serial, one at a time** |
+| `npm run e2e:two` | a running server, a live Jellyfin, a real room | **serial, one at a time** |
 | Two agents editing one file | the file | never; last write wins silently |
 | Anything committing | the git index | one at a time, explicit paths |
 | Anything pushing to `main` | production, since push *is* deploy | one, last |
@@ -109,6 +110,11 @@ The dividing line is shared mutable state, not task size.
 drives a real session, and in Any Movie mode can fire a genuine Jellyseerr
 request that lands in Radarr. Two of them at once is not a flaky test, it is two
 downloads.
+
+`npm run e2e:two` drives two Chrome pages through one room and asserts what each
+phone can see — including what it must not see. Every other harness here drives a
+single page, so until it existed the product's central claim, that the room lands on
+one film on *everybody's* phone, was checked by nothing.
 
 **Never let a worker grade its own work.** Port and feature agents do not run
 the gate. One verifier runs it afterwards, serially, with the workers' reports
