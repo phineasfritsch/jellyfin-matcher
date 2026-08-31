@@ -129,7 +129,7 @@ export function LoginScreen({
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"
             autoCapitalize="off"
-            className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
+            className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -142,7 +142,7 @@ export function LoginScreen({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
-            className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
+            className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
           />
         </div>
         <button

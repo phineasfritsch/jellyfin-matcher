@@ -61,6 +61,14 @@ been there since the manifest was written.
 
 ### F2 — 1.4.11 Non-text Contrast (AA). Every ring in the app is invisible.
 
+> **Partly fixed (R135).** Every text input now uses `--color-border` (#737e77),
+> measured at 3.57–3.80:1 on the real ground, and `css.test.ts` computes that
+> ratio rather than trusting the token's name. The ghost buttons and the ratings
+> tiles are deliberately still under 3:1: their visible label identifies them, so
+> the criterion is arguable there. For a text input, whose ring was the only
+> thing marking it, it was not arguable at all. The slider track is still
+> `rgba(255,255,255,0.16)` and remains open.
+
 This one is arithmetic, not opinion, and it does not need a screenshot.
 
 A white overlay at alpha *a* composited over the darkest possible ground —

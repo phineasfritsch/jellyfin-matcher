@@ -110,3 +110,85 @@ describe('the runtime slider is a real target', () => {
     }
   });
 });
+
+/**
+ * R135 / WCAG 2.2 AA 1.4.11 Non-text Contrast: the boundary of a control that
+ * has no other boundary must reach 3:1.
+ *
+ * Every text input in the app was `ring-1 ring-white/15` over `bg-white/[0.07]`
+ * -- a fill that differs from its container by seven hundredths of white, with
+ * a ring whose BEST POSSIBLE contrast, composited over pure black, is 1.39:1.
+ * The real ground is not black, so it is worse. Nothing else marked the field:
+ * that ring was the entire visual claim that a box was there to type in.
+ *
+ * This is arithmetic rather than opinion, which is why it can be checked here
+ * and did not need a screenshot to find. `--color-border` already existed for
+ * exactly this job -- R89 measured it at 3.57-3.80:1 off the committed captures
+ * -- so the fix was to use the token the project already had.
+ */
+describe('a control whose only boundary is a ring can be seen', () => {
+  const css = readDoc('app/globals.css');
+
+  /** Relative luminance, per WCAG. */
+  function luminance(hex: string): number {
+    const n = hex.replace('#', '');
+    const parts = [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16) / 255);
+    const lin = parts.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * lin[0]! + 0.7152 * lin[1]! + 0.0722 * lin[2]!;
+  }
+
+  function ratio(a: string, b: string): number {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi! + 0.05) / (lo! + 0.05);
+  }
+
+  /*
+    Literal patterns, not built ones -- for the third time in this file. A
+    template literal turns `\s` into a bare `s`, so a constructed pattern
+    silently matches the letter and reports a token that is plainly there as
+    missing.
+  */
+  const TOKENS: Record<string, RegExp> = {
+    'color-border': /--color-border:\s*(#[0-9a-fA-F]{6})/,
+    'color-background': /--color-background:\s*(#[0-9a-fA-F]{6})/,
+  };
+
+  function token(name: string): string {
+    const m = TOKENS[name]!.exec(css);
+    expect(m, `--${name} is not a plain hex, so this cannot check it`).not.toBeNull();
+    return m![1]!;
+  }
+
+  it('has a border token that clears 3:1 against the ground', () => {
+    const measured = ratio(token('color-border'), token('color-background'));
+    expect(
+      measured,
+      `--color-border is ${measured.toFixed(2)}:1 on the ground; 1.4.11 wants 3:1`,
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it('marks every text input with it, not with a translucent white', () => {
+    /*
+      A white overlay cannot reach 3:1 on this ground at any alpha the design
+      uses: 10% is 1.20:1 at best, 15% is 1.39:1, 25% is 2.02:1 -- and those are
+      the BEST case, composited over pure black. Checked per file rather than as
+      one blob so the failure names the screen.
+    */
+    for (const file of ['src/ui/AuthGate.tsx', 'src/ui/HomeActions.tsx', 'src/ui/RoomClient.tsx']) {
+      const src = readDoc(file);
+      /*
+        Up to the self-closing `/>`, not to the first `>`. These inputs carry
+        `onChange={(e) => ...}`, and an arrow function contains a `>`, so
+        `[^>]*` stopped mid-element and reported a correctly-ringed input as
+        having no ring at all.
+      */
+      for (const [tag] of src.matchAll(/<input\b[\s\S]*?\/>/g)) {
+        if (/type="range"/.test(tag)) continue; // the slider draws its own track
+        expect(tag, `an input in ${file} is outlined by a translucent white`).not.toMatch(
+          /ring-white\//,
+        );
+        expect(tag, `an input in ${file} has no visible boundary token`).toMatch(/ring-border/);
+      }
+    }
+  });
+});

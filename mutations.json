@@ -367,6 +367,30 @@
         "src/ui/__tests__/a11y.test.tsx"
       ],
       "note": "WCAG 2.2 A 2.5.3. The row reads \"Undo — <film>\"; the name did not contain that phrase. The rule this is checked by walks every labelled control on four screens, so a third one is covered by existing rather than by somebody remembering."
+    },
+    {
+      "id": "R135-input-ring-translucent",
+      "ruling": "R135",
+      "claim": "a text input is outlined by a token that clears 3:1, not a translucent white",
+      "file": "src/ui/RoomClient.tsx",
+      "find": "ring-1 ring-border focus:ring-2 focus:ring-secondary",
+      "replace": "ring-1 ring-white/15 focus:ring-2 focus:ring-secondary",
+      "expect": [
+        "src/ui/__tests__/css.test.ts"
+      ],
+      "note": "WCAG 2.2 AA 1.4.11. A white overlay at 15% reaches 1.39:1 at BEST, composited over pure black; the real ground is lighter, so it is worse. That ring was the only thing marking a box you were meant to type in."
+    },
+    {
+      "id": "R135-border-token-too-dark",
+      "ruling": "R135",
+      "claim": "the border token itself clears 3:1 against the ground",
+      "file": "app/globals.css",
+      "find": "--color-border: #737e77;",
+      "replace": "--color-border: #2b312e;",
+      "expect": [
+        "src/ui/__tests__/css.test.ts"
+      ],
+      "note": "Moving the inputs onto the token is only worth anything while the token is bright enough. The test computes the ratio rather than trusting the name -- this mutation reports 1.46:1."
     }
   ]
 }

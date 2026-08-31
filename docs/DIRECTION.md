@@ -1905,3 +1905,46 @@ The first mutation attempt did not catch the abstain case, because the test
 rendered the checkbox phase and that control lives on the elimination ballot:
 the test was named for a screen it never drew. Found by running the mutation
 rather than by reading the test, which is the whole of R129 restated.
+
+### R135 — Every ring in the app was invisible
+
+WCAG 2.2 AA 1.4.11 asks that the boundary of a control reach 3:1 against what is
+behind it, where that boundary is what identifies the control. Every text input
+in this app was `ring-1 ring-white/15` over `bg-white/[0.07]` — a fill differing
+from its container by seven hundredths of white, ringed by a line whose **best
+possible** contrast, composited over pure black, is 1.39:1. The real ground is
+lighter, so it is worse than that. Nothing else marked the field. That ring was
+the entire visual claim that there was a box there to type in.
+
+This is arithmetic, not taste, and it needed no screenshot to find — which is
+why it is a little embarrassing that it survived a redesign, a contrast ruling
+(R89), a measuring command (`npm run contrast`) and six board rounds. The
+measuring was pointed at text, and a ring is not text.
+
+The fix was already in the repository: `--color-border`, which R89 raised to
+`#737e77` and measured at 3.57–3.80:1 off the committed captures precisely
+because it marks a boundary that has to be seen. The inputs now use it.
+
+**The guard computes the ratio rather than trusting the token's name.** It
+parses `--color-border` and `--color-background` out of the stylesheet, does the
+WCAG luminance arithmetic, and fails with the number: darkening the token to
+`#2b312e` reports "1.46:1 on the ground; 1.4.11 wants 3:1". A test that asserted
+`ring-border` was present would have passed that mutation happily, which is the
+R129 shape — guarding a name instead of a value, exactly as T118 guarded the
+existence of a `.slider` rule while its height went back to 15px.
+
+Two things I got wrong writing it, both worth keeping because both look right:
+
+- The token pattern was built in a template literal, so `\s` became a bare `s`
+  and the check reported a token that is plainly there as missing. **Third time
+  in this one file.** Constructed regexes are now banned in it by comment.
+- The element pattern was `<input\b[^>]*>`, and these inputs carry
+  `onChange={(e) => ...}` — an arrow function contains a `>`, so the match
+  stopped mid-element and reported a correctly-ringed input as unringed. A
+  false failure, which is the more expensive kind: it teaches the reader to
+  distrust the check.
+
+The ghost buttons and the ratings tiles are still under 3:1 and are deliberately
+left. Their label identifies them, so the criterion is arguable there; for a
+text input it is not arguable at all. That distinction is in
+`docs/ACCESSIBILITY.md` rather than silently in a diff.

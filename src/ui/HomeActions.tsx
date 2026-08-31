@@ -71,7 +71,7 @@ export function HomeActions() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Phineas"
           autoComplete="given-name"
-          className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
+          className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
         />
       </div>
 
@@ -104,7 +104,7 @@ export function HomeActions() {
           autoCapitalize="characters"
           autoComplete="off"
           aria-label="Room code"
-          className="tabular h-14 min-w-0 flex-1 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-center font-mono text-xl font-bold tracking-[0.35em] outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
+          className="tabular h-14 min-w-0 flex-1 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-center font-mono text-xl font-bold tracking-[0.35em] outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
         />
         <button
           type="button"

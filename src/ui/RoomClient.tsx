@@ -170,7 +170,7 @@ function JoinGate({
             onChange={(e) => setName(e.target.value)}
             placeholder="Ferb"
             autoComplete="given-name"
-            className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-row outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
+            className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-row outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
           />
           <button
             type="submit"
