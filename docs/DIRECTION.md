@@ -1676,3 +1676,60 @@ than the fix.
 materialises a second copy of the tree inside the tree is indistinguishable from
 the tree, to every tool that globs.** Worktrees, backup directories, a `cp -r`
 left behind by a script. If the counts are load-bearing, the glob has to be.
+
+### R129 — Half the suite's claims did not survive their own bug
+
+R125 found one test file whose comment claimed more than it could see. This is
+what happened when that question was asked of everything: eight agents, each in
+an isolated worktree, reintroduced the historical defect behind every claim the
+render tests make — taking the real code out of git history wherever it existed
+rather than inventing a plausible mutation — and recorded whether the test that
+names that claim went red.
+
+**97 claims. 44 sound, 4 weak, 49 hollow.**
+
+Not all 49 are defects, and the audit said so itself. R97 is guarded by
+`unanimousNo.test.ts`, R99's mechanism by `handlers.test.ts`, R86 by the
+typecheck, R85's capture half by the screenshot script. A rendering test that
+does not reach the server is not lying unless its comment says it does — and
+where a comment did say it, the comment was the thing that was wrong.
+
+The rest were real, and they fall into a small number of shapes worth naming,
+because each is a way of writing a test that feels thorough and is not:
+
+- **An assertion satisfied by its own neighbour.** R54's "which system failed"
+  was `toContain('Jellyfin')`, a substring of the headline asserted one line
+  above it. Deleting the row that names the system changed nothing.
+- **Reading the DOM where the claim is about the screen.** R18/R26 used
+  `textContent`, which includes `sr-only`, so a glyph-only vote row passed.
+- **A negative pinned to one wording.** R107's guard forbade one exact phrase,
+  so the same false promise in other words shipped green. R91's `/\d+\s?GB/i`
+  matches neither "gigabytes" nor "MB" nor the sentence it was written to kill.
+- **One route checked where two exist.** R95 forbade a dimming *class*; an
+  inline style dimmed the identical pixels invisibly.
+- **The control asserted and never pressed.** Twelve cases named R48's undo row
+  and its copy; disconnecting the handler left all twelve green.
+- **A fixture that renders one branch.** Every case in the screen chooser used
+  one room status, so three of six branches could be rewired silently. Every
+  case in the knockout skipped the checkbox wait. No case in the winner screen
+  ever set a ranking.
+- **A mock that discards the thing under test.** The socket's `io()` returned a
+  fresh literal per call and ignored its options, so five claims — the single
+  socket, `socket.auth`, the handshake token, the R99 deadline — could not be
+  observed at all. A mock that throws away what it is standing in for is not a
+  double, it is a hole.
+
+Twenty-three are fixed, each re-run against the exact mutation that had passed
+it. The rest are recorded in QUEUE.md with their mutations, so they are
+verifiable rather than a matter of opinion.
+
+**What this does and does not mean.** The product defects these rulings describe
+were real and remain fixed; the audit undercuts the evidence, not the fixes. But
+the evidence was the argument. A repository whose whole claim is that a gate
+stops false claims from shipping had 597 green cases proving materially less
+than their number implied — and the number is printed in four tracked documents
+and enforced as a floor.
+
+The rule: **a count of passing tests is not a measurement of anything until the
+tests have been made to fail.** Coverage says which lines ran. Only mutation
+says whether anybody was watching.

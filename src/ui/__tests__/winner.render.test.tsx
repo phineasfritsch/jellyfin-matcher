@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WinnerScreen } from '../components/WinnerScreen';
 import type { ClientRoom } from '../types';
@@ -166,6 +166,17 @@ describe('the winner screen, rendered', () => {
     const { container } = render(<WinnerScreen roomHook={hookWith(room)} match={null} />);
     expect(container.textContent).toMatch(/ada asked/i);
     expect(screen.queryByRole('button', { name: /request via jellyseerr/i })).toBeNull();
+    /*
+      R107/R111, on the branch where the sentence actually lived. Matcher
+      requests with an admin key and Jellyseerr auto-approves those by default,
+      so a host approval gate is not a promise this app can keep. The old copy
+      said "It appears in Jellyfin once the host approves it" right here — and
+      restoring it left nine of nine green, because /ada asked/i still matched
+      (R129). The server has already accepted it on this branch; there is
+      nothing left to approve.
+    */
+    expect(container.textContent).not.toMatch(/approv/i);
+    expect(container.textContent).toMatch(/your server accepted it/i);
   });
 
   it('says when Jellyseerr is holding it rather than claiming it started', () => {
@@ -185,5 +196,46 @@ describe('the winner screen, rendered', () => {
 
     render(<WinnerScreen roomHook={hookWith(roomWith({ deckExhausted: false }))} match={null} />);
     expect(screen.getByRole('button', { name: /keep swiping/i })).toBeTruthy();
+  });
+
+  it('keeps that promise inside the confirmation, where it was actually made', () => {
+    /*
+      R129. The case above asserts the two labels on the trigger and never
+      presses it — so the confirm panel, where R100's false promise lived, was
+      never mounted, and reverting the copy inside it left nine of nine green.
+      The trigger is the invitation; the panel is the promise.
+    */
+    const exhausted = render(<WinnerScreen roomHook={hookWith(roomWith())} match={null} />);
+    fireEvent.click(screen.getByRole('button', { name: /pick the next/i }));
+    expect(screen.getByRole('button', { name: /yes, pick the next one/i })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /yes, keep swiping/i })).toBeNull();
+    exhausted.unmount();
+
+    render(<WinnerScreen roomHook={hookWith(roomWith({ deckExhausted: false }))} match={null} />);
+    fireEvent.click(screen.getByRole('button', { name: /keep swiping/i }));
+    expect(screen.getByRole('button', { name: /yes, keep swiping/i })).toBeTruthy();
+  });
+
+  it('still shows the ranking that explains a points winner', () => {
+    /*
+      R129. R90 named five symptoms of a reload; this file reached four of them.
+      No fixture ever set `winnerRanking`, so the group that explains WHY a film
+      won on points — the one thing a fallback winner needs and a unanimous one
+      does not — was never rendered, and dropping the reload fallback for it was
+      invisible.
+    */
+    const room = roomWith({
+      winnerViaFallback: true,
+      winnerRanking: [
+        { cardId: 'tmdb-1', total: 6.4, composite: 4.4, votePoints: 2, isHybrid: false },
+        { cardId: 'tmdb-2', total: 2.1, composite: 3.1, votePoints: -1, isHybrid: false },
+      ],
+    });
+    const { container } = render(<WinnerScreen roomHook={hookWith(room)} match={null} />);
+    expect(screen.getByRole('region', { name: 'Final ranking' })).toBeTruthy();
+    expect(container.textContent).toMatch(/nobody agreed outright/i);
+    // The numbers that make the ranking an explanation rather than a list.
+    expect(container.textContent).toMatch(/6\.4 points/);
+    expect(container.textContent).toMatch(/from the room/);
   });
 });

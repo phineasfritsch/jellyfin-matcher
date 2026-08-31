@@ -43,18 +43,62 @@ Object.defineProperty(globalThis, 'localStorage', {
 const emit = vi.fn();
 const disconnect = vi.fn(() => ({ connect: vi.fn() }));
 
+/*
+  R129. This mock used to be `io: () => ({ ... })` — a fresh literal per call,
+  with its options ignored. Five of this file's claims were therefore
+  unobservable: nothing could see that `getSocket` keeps ONE socket, that
+  `setAuth` updates `socket.auth`, that the handshake carries the stored token,
+  or what deadline `emitAck` sets. Removing the singleton guard, deleting
+  `socket.auth = { token }`, and putting R99's 10s timeout back all left eight
+  of eight green.
+
+  So the stub is now a single object that records what the module does to it.
+  A mock that discards the thing under test is not a test double, it is a hole.
+*/
+const ackEmit = vi.fn();
+// The parameter is declared so `timeout.mock.calls[0][0]` is typed as the
+// number it is; without it vitest infers an empty argument tuple.
+const timeout = vi.fn((_ms: number) => ({ emit: ackEmit }));
+const socketStub = {
+  emit,
+  disconnect,
+  on: vi.fn(),
+  off: vi.fn(),
+  auth: {} as Record<string, unknown>,
+  connected: true,
+  timeout,
+};
+/** What `io()` was handed, and how many times it was called at all. */
+const handshake = { calls: 0, opts: null as null | { auth?: (cb: (d: unknown) => void) => void } };
+
 vi.mock('socket.io-client', () => ({
-  io: () => ({ emit, disconnect, on: vi.fn(), off: vi.fn(), auth: {}, connected: true }),
+  io: (opts?: { auth?: (cb: (d: unknown) => void) => void }) => {
+    handshake.calls += 1;
+    handshake.opts = opts ?? null;
+    return socketStub;
+  },
 }));
 
 const socketModule = await import('../socket');
-const { clearAuth, clearSession, getAuthName, getSocket, loadSession, saveSession, setAuth } =
-  socketModule;
+const {
+  clearAuth,
+  clearSession,
+  emitAck,
+  getAuthName,
+  getAuthToken,
+  getSocket,
+  loadSession,
+  saveSession,
+  setAuth,
+} = socketModule;
 
 beforeEach(() => {
   localStorage.clear();
   emit.mockClear();
   disconnect.mockClear();
+  ackEmit.mockClear();
+  timeout.mockClear();
+  socketStub.auth = {};
   // The module keeps one socket for the life of the page; make sure it exists
   // before the auth calls, which is the real order of events.
   getSocket();
@@ -73,11 +117,24 @@ describe('signing in', () => {
     setAuth('a-token', 'Ada');
     expect(disconnect).not.toHaveBeenCalled();
     expect(emit).toHaveBeenCalledWith('auth:token', { token: 'a-token' });
+    /*
+      The other half of R111, which nothing asserted: the live socket is told
+      now, AND `socket.auth` is updated so a genuine reconnect later carries the
+      token in its handshake. Deleting that line left this file green.
+    */
+    expect(socketStub.auth).toEqual({ token: 'a-token' });
   });
 
   it('remembers who signed in, for the next page load', () => {
     setAuth('a-token', 'Ada');
     expect(getAuthName()).toBe('Ada');
+    /*
+      This test is named for the next page load, and a page load restores the
+      session from the TOKEN, not the name — `AuthGate` decides signed-in from
+      `getAuthToken()`. It asserted only the name, so deleting the line that
+      persists the token left it green while every reload signed the user out.
+    */
+    expect(getAuthToken()).toBe('a-token');
   });
 
   it('tells the socket when the browser signs out', () => {
@@ -88,6 +145,57 @@ describe('signing in', () => {
     clearAuth();
     expect(emit).toHaveBeenCalledWith('auth:token', {});
     expect(getAuthName()).toBeNull();
+    /*
+      And forgets it everywhere, which is the part that matters: the test
+      checked the emit and the name and never the token key it also claims to
+      clear, so signing out could leave the credential in storage for the next
+      person to open the browser.
+    */
+    expect(getAuthToken()).toBeNull();
+    expect(socketStub.auth).toEqual({});
+  });
+});
+
+describe('the connection itself', () => {
+  it('keeps one socket for the life of the page', () => {
+    /*
+      R129, and R111's failure mode by another route. Without the `if (!socket)`
+      guard every call constructs a fresh connection — and the server reads a
+      teardown as the member leaving, which is exactly how signing in used to
+      destroy the seat it was signing in for. Nothing observed this, because the
+      mock handed out a new object each time and no test compared two.
+    */
+    const a = getSocket();
+    const b = getSocket();
+    expect(a).toBe(b);
+    expect(handshake.calls).toBe(1);
+  });
+
+  it('carries the stored token in the handshake, so a refresh stays signed in', () => {
+    // The module builds the socket once, at first use, with an auth callback
+    // the server calls on every (re)connect. Captured at construction.
+    setAuth('a-token', 'Ada');
+    let carried: unknown = null;
+    handshake.opts?.auth?.((d) => {
+      carried = d;
+    });
+    expect(carried).toEqual({ token: 'a-token' });
+  });
+
+  it('waits longer than the server does before calling an action failed', () => {
+    /*
+      R99. This was 10s while the server's UPSTREAM_TIMEOUT_MS is 15s, so a slow
+      Jellyseerr was reported to the phone as failed while the server was still
+      working — the screen said "Request failed", put the button back, and the
+      retry it invited landed in Radarr as a second download.
+
+      The ruling's comment sits in this module and was guarded by nothing:
+      `emitAck` was never once invoked by this file.
+    */
+    void emitAck('winner:request', { roomId: 'AB12' });
+    expect(timeout).toHaveBeenCalledWith(20_000);
+    expect(ackEmit).toHaveBeenCalled();
+    expect(timeout.mock.calls[0]![0]).toBeGreaterThan(15_000);
   });
 });
 

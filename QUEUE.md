@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 597 test cases, 37 files, 190 pinned claims, all green.
+**Today's numbers:** 606 test cases, 37 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
@@ -48,6 +48,19 @@ This is the only item left here. It is the one that needs a machine, not a
 decision.
 
 ## Next
+
+- [ ] **Twenty-six hollow claims remain (R129).** An eight-agent audit
+      reintroduced the historical defect behind every claim the render tests
+      make: 97 audited, 44 sound, 4 weak, **49 hollow**. Twenty-three are fixed,
+      each re-run against the exact mutation that had passed it. What is left:
+      six in `lobby.render.test.tsx`, twelve sampled in `pins.test.ts`, and the
+      handful the audit itself filed as out of a rendering test's reach and
+      guarded elsewhere — R97 in `unanimousNo.test.ts`, R99's mechanism in
+      `handlers.test.ts`, R86 in the typecheck, R85's capture half in
+      `scripts/screenshots.ts`. Those last ones need a corrected comment, not a
+      test. Every finding carries its mutation, so each is checkable rather than
+      arguable. Full run: task `wvqwv6z96`.
+      Files: `src/ui/__tests__/*.test.ts*`.
 
 - [ ] **Nothing. Every component now renders under the gate** — R115 to R125
       closed the last of them with the details sheet. What R125 found on the way

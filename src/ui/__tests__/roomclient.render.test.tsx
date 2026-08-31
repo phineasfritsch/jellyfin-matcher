@@ -135,6 +135,20 @@ describe('which screen a phone is looking at', () => {
     expect(screen.getByRole('heading', { name: 'AB12' })).toBeTruthy();
   });
 
+  it('reaches the door rather than a spinner when it has neither seat nor room', () => {
+    /*
+      R129, and the guard ordering is the whole test. R101's own fix sets BOTH
+      to null — `setUserId(null); setRoom(null);` — so if the loading branch is
+      checked before the join gate, a refused rejoin sits on "Loading room AB12"
+      for ever instead of being handed back to the door. Swapping the two
+      branches left all seven original cases green.
+    */
+    roomHook.current = hook({ userId: null, room: null });
+    const { container } = render(<RoomClient roomId="AB12" />);
+    expect(screen.getByRole('heading', { name: 'AB12' })).toBeTruthy();
+    expect(container.textContent).not.toMatch(/loading room/i);
+  });
+
   it('says why the gate came back, if the phone did not start there', () => {
     // R101. Reappearing mid-evening with no explanation is indistinguishable
     // from the app losing the room.

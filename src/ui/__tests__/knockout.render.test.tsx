@@ -18,6 +18,12 @@ import type { RoomHook } from '../useRoom';
  *
  * A skeleton is also the state a screen reader used to meet in silence, which
  * is why it carries a `role="status"` label now.
+ *
+ * On R85: the half of it that fixed the *capture* lives in
+ * `scripts/screenshots.ts`, which waits for a real genre button before
+ * shooting. Nothing in this file can see that — reverting it leaves every case
+ * here green (R129) — so the sentence above describes why this screen matters,
+ * not something these tests hold.
  */
 
 afterEach(cleanup);
@@ -72,6 +78,23 @@ function hook(r: ClientRoom, overrides: Partial<RoomHook> = {}): RoomHook {
   } as unknown as RoomHook;
 }
 
+/**
+ * R46/R61: peer progress is a bare count and never an identity.
+ *
+ * The assertion for this used to be `not.toContain('Bex')` — one literal
+ * display name — so leaking the raw user id instead, or naming a third member,
+ * passed (R129). Derived from the fixture, so a member added to a room is
+ * checked without anyone remembering to add them here.
+ */
+function expectNamesNobody(container: HTMLElement, r: ClientRoom = room(), self = 'u_1') {
+  const text = container.textContent ?? '';
+  for (const u of Object.values(r.users)) {
+    if (u.id === self) continue;
+    expect(text, `the screen names ${u.name}, who is not this phone`).not.toContain(u.name);
+  }
+  expect(text, 'a raw user id reached the screen').not.toMatch(/\bu_\d+\b/);
+}
+
 describe('while the genres are still being fetched', () => {
   it('says so out loud, rather than showing silent stripes', () => {
     /*
@@ -87,6 +110,57 @@ describe('while the genres are still being fetched', () => {
     );
     expect(container.textContent).toContain('Loading genres');
     expect(screen.queryByRole('button', { name: /^Pick / })).toBeNull();
+    /*
+      R129. This asserted the words only, via textContent — which cannot see an
+      attribute. Deleting `role="status"` left the paragraph in place as silent
+      `sr-only` text and all eight cases green, which is the exact state R85 was
+      about: a screen reader meeting nothing between "I'm ready" and a list of
+      genres appearing. The role is the claim.
+    */
+    expect(screen.getByRole('status').textContent).toContain('Loading genres');
+  });
+});
+
+describe('once you have answered but the room has not', () => {
+  it('counts the room without naming anyone', () => {
+    /*
+      R129. No case in this file ever set `submissions[userId]`, so the checkbox
+      wait — one of the screen's four states — was never rendered at all. The
+      identical R46/R61 defect could be put back in it silently.
+    */
+    const waiting = room({
+      knockout: {
+        phase: 'CHECKBOX',
+        submissions: { u_1: ['Action'] },
+        pool: [],
+        locked: [],
+        elimVotes: {},
+        needsRevote: false,
+      },
+      submittedCount: 1,
+    });
+    const { container } = render(<Knockout roomHook={hook(waiting)} />);
+    expect(container.textContent).toMatch(/picks locked in/i);
+    expect(container.textContent).toMatch(/1 of 2/);
+    expectNamesNobody(container);
+  });
+
+  it('promises the room cannot see the picks yet', () => {
+    // The reason people answer honestly rather than hedging toward whoever
+    // they think is watching.
+    const waiting = room({
+      knockout: {
+        phase: 'CHECKBOX',
+        submissions: { u_1: ['Action'] },
+        pool: [],
+        locked: [],
+        elimVotes: {},
+        needsRevote: false,
+      },
+      submittedCount: 1,
+    });
+    const { container } = render(<Knockout roomHook={hook(waiting)} />);
+    expect(container.textContent).toMatch(/nobody can see what you picked/i);
   });
 });
 
@@ -167,6 +241,19 @@ describe('the elimination round', () => {
     });
     const { container } = render(<Knockout roomHook={hook(voted)} />);
     expect(container.textContent).toMatch(/1 of 2/);
-    expect(container.textContent).not.toContain('Bex');
+    expectNamesNobody(container, voted);
+  });
+
+  it('keeps the ballot itself a count, not a progress report about people', () => {
+    /*
+      R129. The two cases above assert that the vote-out buttons exist and never
+      look at the bar above them, so turning the ballot's own header into
+      "waiting on Bex" was invisible. R61 is a promise the server keeps by never
+      sending this; the screen must not be able to draw it either.
+    */
+    const { container } = render(<Knockout roomHook={hook(elimination)} />);
+    expect(container.textContent).toMatch(/vote one out/i);
+    expect(container.textContent).toMatch(/\d+ left/);
+    expectNamesNobody(container, elimination);
   });
 });
