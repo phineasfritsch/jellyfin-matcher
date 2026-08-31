@@ -84,12 +84,12 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
         initial={reducedMotion ? { opacity: 0 } : { y: '100%' }}
         animate={reducedMotion ? { opacity: 1 } : { y: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-        className="gel-thick relative max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-[var(--radius-sheet)] p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none"
+        className="scrim-strong relative max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-[var(--radius-sheet)] p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none"
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[1.3125rem] font-semibold leading-tight tracking-[-0.015em]">{card.title}</h2>
-            <p className="tabular text-[0.7812rem] text-muted-fg">
+            <h2 className="text-title font-semibold leading-tight tracking-[-0.015em]">{card.title}</h2>
+            <p className="tabular text-label text-muted-fg">
               {card.year ?? 'Year unknown'}
               {card.runtime != null && ` · ${card.runtime} min`}
               {card.genres.length > 0 && ` · ${card.genres.join(', ')}`}
@@ -98,7 +98,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
                 not a cost, so it belongs here rather than competing with the
                 one chip that means money. */}
             {card.isHybrid && (
-              <p className="mt-1.5 inline-block rounded-full bg-maybe/12 px-2.5 py-1 text-[0.7188rem] font-semibold text-maybe">
+              <p className="mt-1.5 inline-block rounded-full bg-maybe/12 px-2.5 py-1 text-caption font-semibold text-maybe">
                 Tagged both genres
               </p>
             )}
@@ -138,7 +138,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
             <button
               type="button"
               onClick={() => setPlayTrailer(true)}
-              className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-[0.9375rem] font-semibold ring-1 ring-white/15"
+              className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-body font-semibold ring-1 ring-white/15"
             >
               <ExternalLink aria-hidden className="size-4" /> Play trailer
             </button>
@@ -149,7 +149,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
               href={card.trailerUrl}
               target="_blank"
               rel="noreferrer"
-              className="mb-4 flex h-12 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-[0.9375rem] font-semibold ring-1 ring-white/15"
+              className="mb-4 flex h-12 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-body font-semibold ring-1 ring-white/15"
             >
               <ExternalLink aria-hidden className="size-4" /> Watch trailer
             </a>
@@ -164,7 +164,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
             {card.allRatings.map((r) => (
               <li
                 key={r.source}
-                className="flex items-center justify-between rounded-[var(--radius-control)] bg-white/[0.06] px-3 py-2.5 text-[0.875rem] ring-1 ring-white/10"
+                className="flex items-center justify-between rounded-[var(--radius-control)] bg-white/[0.06] px-3 py-2.5 text-body ring-1 ring-white/10"
               >
                 <span className="text-muted-fg">{SOURCE_LABELS[r.source] ?? r.source}</span>
                 <span className="tabular font-semibold">{r.score}</span>

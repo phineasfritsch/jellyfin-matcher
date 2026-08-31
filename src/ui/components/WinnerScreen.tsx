@@ -66,15 +66,15 @@ export function WinnerScreen({
             <h1
               ref={heading}
               tabIndex={-1}
-              className="text-[1.375rem] font-semibold leading-tight tracking-[-0.015em] outline-none"
+              className="text-title font-semibold leading-tight tracking-[-0.015em] outline-none"
             >
               {winner.title}
             </h1>
-            <p className="tabular mt-1.5 text-[0.8125rem] text-muted-fg">
+            <p className="tabular mt-1.5 text-label text-muted-fg">
               {winner.year ?? 'Year unknown'}
               {winner.runtime != null && ` · ${winner.runtime} min`}
             </p>
-            <p className="mt-1 text-[0.8125rem] text-muted-fg">
+            <p className="mt-1 text-label text-muted-fg">
               {match?.viaFallback
                 ? 'Nobody agreed outright, so the points decided.'
                 : 'Everyone said yes.'}
@@ -122,7 +122,7 @@ export function WinnerScreen({
           <div className="flex flex-col gap-2">
             <p
               id="reject-cost"
-              className="rounded-[var(--radius-control)] bg-super/12 px-3.5 py-2.5 text-[0.875rem] font-medium leading-relaxed text-super ring-1 ring-super/35"
+              className="rounded-[var(--radius-control)] bg-super/12 px-3.5 py-2.5 text-body font-medium leading-relaxed text-super ring-1 ring-super/35"
             >
               This throws away what the room just agreed on and puts everyone back in the deck.
               {winner.title} will not be offered again.
@@ -147,7 +147,7 @@ export function WinnerScreen({
           <button
             type="button"
             onClick={() => setConfirmingReject(true)}
-            className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-[1rem] font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985]"
+            className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-row font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985]"
           >
             Not this one — keep swiping
           </button>
@@ -155,7 +155,7 @@ export function WinnerScreen({
         {held && match?.playUrl ? (
           <a
             href={match.playUrl}
-            className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-[1rem] font-semibold tracking-[-0.01em] text-on-primary"
+            className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary"
           >
             Play in Jellyfin
           </a>
@@ -192,7 +192,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
     return (
       <p
         role="status"
-        className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-[0.875rem] font-medium text-accent ring-1 ring-accent/35"
+        className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-body font-medium text-accent ring-1 ring-accent/35"
       >
         <Check aria-hidden className="size-4" /> Asked. It appears in Jellyfin once the host
         approves it and it finishes downloading.
@@ -205,7 +205,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
       <div className="flex flex-col">
         <p
           id="request-cost"
-          className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-[0.8438rem] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
+          className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
         >
           Sends {title}
           {runtime != null && ` (${runtime} min)`} to Jellyseerr. The host approves the
@@ -229,7 +229,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
         Request via Jellyseerr
       </BigButton>
       {state === 'error' && message && (
-        <p role="alert" className="px-1 py-1 text-center text-[0.875rem] text-destructive">
+        <p role="alert" className="px-1 py-1 text-center text-body text-destructive">
           {message}
         </p>
       )}

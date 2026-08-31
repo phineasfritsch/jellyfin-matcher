@@ -57,9 +57,9 @@ export function HomeActions() {
   }
 
   return (
-    <section className="pane flex w-full flex-col gap-5 rounded-[var(--radius-card)] p-4">
+    <section className="gel flex w-full flex-col gap-5 rounded-[var(--radius-card)] p-4">
       <div className="flex flex-col gap-2">
-        <label htmlFor="name" className="text-[0.8438rem] font-medium text-muted-fg">
+        <label htmlFor="name" className="text-label font-medium text-muted-fg">
           Your name
         </label>
         <input
@@ -76,7 +76,7 @@ export function HomeActions() {
         type="button"
         onClick={createRoom}
         disabled={busy !== null}
-        className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-[1rem] font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
+        className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
       >
         {busy === 'create' ? (
           <Loader2 aria-hidden className="size-5 animate-spin" />
@@ -86,7 +86,7 @@ export function HomeActions() {
         Create room
       </button>
 
-      <div className="flex items-center gap-3 text-[0.7812rem] text-muted-fg">
+      <div className="flex items-center gap-3 text-label text-muted-fg">
         <div className="h-px flex-1 bg-white/12" />
         or join one
         <div className="h-px flex-1 bg-white/12" />
@@ -119,7 +119,7 @@ export function HomeActions() {
       </div>
 
       {error && (
-        <p role="alert" className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-[0.9062rem] font-semibold text-destructive ring-1 ring-destructive/35">
+        <p role="alert" className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-body font-semibold text-destructive ring-1 ring-destructive/35">
           {error}
         </p>
       )}

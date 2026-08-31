@@ -87,19 +87,19 @@ export function LoginScreen({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
       <header className="flex w-full flex-col gap-2 px-1 pb-1">
-        <p className="text-[0.8125rem] font-semibold text-super">Jellyfin Matcher</p>
-        <h1 className="text-[1.5rem] font-semibold leading-tight tracking-[-0.02em]">
+        <p className="text-label font-semibold text-super">Jellyfin Matcher</p>
+        <h1 className="text-display font-semibold leading-tight tracking-[-0.02em]">
           {reason ?? 'Sign in with your Jellyfin account'}
         </h1>
-        <p className="flex items-start gap-1.5 text-[0.8438rem] leading-relaxed text-muted-fg">
+        <p className="flex items-start gap-1.5 text-label leading-relaxed text-muted-fg">
           <Lock aria-hidden className="size-3.5" /> Your Jellyfin server checks this. The
           server key never reaches this page.
         </p>
       </header>
 
-      <form onSubmit={submit} className="pane flex w-full flex-col gap-4 rounded-[var(--radius-card)] p-4">
+      <form onSubmit={submit} className="gel flex w-full flex-col gap-4 rounded-[var(--radius-card)] p-4">
         <div className="flex flex-col gap-2">
-          <label htmlFor="jf-user" className="text-[0.8438rem] font-medium text-muted-fg">
+          <label htmlFor="jf-user" className="text-label font-medium text-muted-fg">
             Username
           </label>
           <input
@@ -112,7 +112,7 @@ export function LoginScreen({
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="jf-pass" className="text-[0.8438rem] font-medium text-muted-fg">
+          <label htmlFor="jf-pass" className="text-label font-medium text-muted-fg">
             Password
           </label>
           <input
@@ -127,13 +127,13 @@ export function LoginScreen({
         <button
           type="submit"
           disabled={busy || !username.trim() || !password}
-          className="mt-1 flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-[1rem] font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
+          className="mt-1 flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
         >
           {busy && <Loader2 aria-hidden className="size-5 animate-spin" />}
           Sign in
         </button>
         {error && (
-          <p role="alert" className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-[0.9062rem] font-semibold text-destructive ring-1 ring-destructive/35">
+          <p role="alert" className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-body font-semibold text-destructive ring-1 ring-destructive/35">
             {error}
           </p>
         )}
@@ -151,7 +151,7 @@ export function LoginScreen({
           <button
             type="button"
             onClick={onCancel}
-            className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-white/[0.07] px-4 py-3.5 text-[1rem] font-semibold tracking-[-0.01em] text-foreground ring-1 ring-white/15 transition active:scale-[0.985]"
+            className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-white/[0.07] px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-foreground ring-1 ring-white/15 transition active:scale-[0.985]"
           >
             Carry on without an account
           </button>

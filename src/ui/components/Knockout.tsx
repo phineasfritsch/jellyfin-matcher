@@ -67,7 +67,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
         {room.knockout.needsRevote && (
           <p
             role="alert"
-            className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3 text-[0.9375rem] font-semibold text-destructive"
+            className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3 text-body font-semibold text-destructive"
           >
             Too few shared picks — vote again with more options.
           </p>
@@ -126,7 +126,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
             void submitGenres([]).finally(() => setBusy(false));
           }}
           disabled={busy}
-          className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-[1rem] font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985] disabled:opacity-50"
+          className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-row font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985] disabled:opacity-50"
         >
           No preference — go with the room
         </button>
@@ -211,11 +211,11 @@ function Waiting({ title, detail, count }: { title: string; detail: string; coun
           was reached, and reduced motion does not freeze the only signal into
           a tilted static icon (R35).
         */}
-        <p role="status" className="text-[1.375rem] font-semibold tracking-[-0.01em]">
+        <p role="status" className="text-title font-semibold tracking-[-0.01em]">
           {title}
         </p>
-        <p className="max-w-xs text-[0.875rem] leading-relaxed text-muted-fg">{detail}</p>
-        <p className="tabular rounded-full bg-maybe/12 px-3 py-1 text-[0.8125rem] font-semibold text-maybe">
+        <p className="max-w-xs text-body leading-relaxed text-muted-fg">{detail}</p>
+        <p className="tabular rounded-full bg-maybe/12 px-3 py-1 text-label font-semibold text-maybe">
           {count}
         </p>
       </div>

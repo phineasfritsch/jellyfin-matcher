@@ -88,12 +88,23 @@ body::before {
 }
 
 /*
-  THE MATERIAL. A gel is the translucent coloured sheet a film crew clips in
-  front of a lamp: it takes the light behind it and tints what passes through.
-  These do exactly that to the ambient ground, and the name is the app's own
-  rather than a platform's.
+  TWO MATERIALS, AND THEY DO OPPOSITE JOBS.
 
-  One material, three weights, and they are the ONLY blurred surfaces in the
+  This was one material in three weights, which was not true: `.gel` lightened
+  the ground while `.gel-thin` and `.gel-thick` darkened it, stacked on the
+  same screen, under a comment insisting they were one substance. Naming them
+  honestly is the fix, and film has a word for each.
+
+  A GEL is the translucent sheet clipped in front of a lamp. It is lit, so it
+  sits brighter than what is behind it. Content lives on gels: the grouped
+  cards, the film card.
+
+  A SCRIM is the mesh flown in front of a light to hold it back. It dims, so it
+  sits darker than what is behind it. Chrome lives on scrims: the status bar
+  and the dock, which sit above the content and have to recede while it scrolls
+  underneath them.
+
+  Two materials, and they are the ONLY blurred surfaces in the
   app. backdrop-filter composites the whole layer behind an element on every
   frame, so it belongs on the handful of large, static chrome surfaces -- the
   status bar, the dock, a grouped card, the sheet -- and never on small
@@ -115,8 +126,8 @@ body::before {
     inset 0 -1px 0 rgba(0, 0, 0, 0.24),
     0 12px 32px -12px rgba(0, 0, 0, 0.6);
 }
-.gel-thin {
-  background: rgba(18, 22, 32, 0.7);
+.scrim {
+  background: rgba(9, 12, 15, 0.72);
   backdrop-filter: blur(20px) saturate(165%);
   -webkit-backdrop-filter: blur(20px) saturate(165%);
 }
@@ -125,8 +136,8 @@ body::before {
   border: 1px solid var(--color-hairline);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
-.gel-thick {
-  background: rgba(13, 16, 24, 0.78);
+.scrim-strong {
+  background: rgba(7, 9, 12, 0.86);
   backdrop-filter: blur(22px) saturate(165%);
   -webkit-backdrop-filter: blur(22px) saturate(165%);
   border: 1px solid var(--color-hairline);
@@ -135,21 +146,19 @@ body::before {
 
 /*
   Backdrop-filter is the whole look, and a browser without it would render
-  near-invisible 7%-white panes on a dark ground. Fall back to an opaque fill
-  so the app stays legible rather than pretty.
+  near-invisible translucent panes on a dark ground. Fall back to opaque fills
+  so the app stays legible rather than pretty -- gels still sit above the
+  ground, scrims still sit below it.
 */
 @supports not (backdrop-filter: blur(1px)) {
-  .gel,
-  .gel-thin {
-    background: #171a22;
+  .gel {
+    background: #171b25;
   }
-  .gel-solid {
-  background: #131722;
-  border: 1px solid var(--color-hairline);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
-}
-.gel-thick {
-    background: #10131c;
+  .scrim {
+    background: #0a0d10;
+  }
+  .scrim-strong {
+    background: #070a0c;
   }
 }
 

@@ -76,7 +76,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
       aria-hidden={!active}
     >
       {/*
-        gel-thick, not pane: the cards behind the top one are still in the DOM
+        scrim-strong, not pane: the cards behind the top one are still in the DOM
         and a 7%-white panel let their titles read straight through this one.
         The stack has to look like a stack, not a double exposure.
       */}
@@ -104,7 +104,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
             and it now lives in the details sheet.
           */}
           {notHeld && (
-            <span className="absolute left-3 top-3 rounded-full bg-background/85 px-3 py-1.5 text-[0.75rem] font-semibold text-destructive ring-1 ring-destructive/40">
+            <span className="absolute left-3 top-3 rounded-full bg-background/85 px-3 py-1.5 text-caption font-semibold text-destructive ring-1 ring-destructive/40">
               Not on your server
             </span>
           )}
@@ -156,13 +156,13 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
           cannot vote without knowing what he is voting on. The card carries
           what a vote needs and the sheet carries the rest.
         */}
-        <div className="flex flex-col gap-1 border-t border-[var(--color-hairline)] px-4 py-3">
-          <h2 className="truncate text-[1.1875rem] font-semibold tracking-[-0.01em]">{card.title}</h2>
-          <p className="tabular text-[0.8125rem] text-muted-fg">
+        <div className="flex max-h-[45%] shrink-0 flex-col gap-1 overflow-y-auto border-t border-[var(--color-hairline)] px-4 py-3">
+          <h2 className="truncate text-title font-semibold tracking-[-0.01em]">{card.title}</h2>
+          <p className="tabular text-label text-muted-fg">
             {card.year ?? 'Year unknown'}
             {card.runtime != null && ` · ${card.runtime} min`}
           </p>
-          <p className="tabular text-[0.8125rem] text-muted-fg">{ratingLine(card)}</p>
+          <p className="tabular text-label text-muted-fg">{ratingLine(card)}</p>
         </div>
       </article>
     </motion.div>

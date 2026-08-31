@@ -8,7 +8,7 @@ item to Done only when `npm run gate -- --fast` was green *after* it, run by
 something that is not the agent that did the work. Blocked is a legitimate
 outcome and should be written down, not worked around.
 
-**Today's numbers:** 273 test cases, 18 files, 117 pinned claims, all green.
+**Today's numbers:** 280 test cases, 18 files, 120 pinned claims, all green.
 
 ---
 

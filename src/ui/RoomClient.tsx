@@ -53,12 +53,12 @@ export function RoomClient({ roomId }: { roomId: string }) {
   return (
     <main className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {error && !diagnosis && (
-        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[0.9375rem] font-semibold text-destructive ring-1 ring-destructive/35">
+        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-body font-semibold text-destructive ring-1 ring-destructive/35">
           {error}
         </p>
       )}
       {diagnosis && diagnosis.recoverable && (
-        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[0.8438rem] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35">
+        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35">
           {diagnosis.headline} — {diagnosis.fix}
         </p>
       )}
@@ -106,36 +106,57 @@ function JoinGate({ roomId, join }: { roomId: string; join: (name: string) => Pr
     }
   }
 
+  /*
+    This is the first screen a guest ever sees -- they scanned a QR and landed
+    here -- and it was the last one still wearing the pre-redesign look:
+    rounded-xl, border-border, a lone green button matching nothing else in the
+    app. A redesign that stopped before the door is not finished (R73).
+
+    It says out loud that no account is needed, because the shape of a screen
+    asking for a name and nothing else is the shape a signup funnel also has,
+    and a guest cannot tell those apart by reading.
+  */
   return (
     <Centered>
-      <p className="text-sm font-medium uppercase tracking-widest text-muted-fg">Joining room</p>
-      <h1 className="tabular text-4xl font-bold tracking-[0.3em]">{roomId}</h1>
-      <form onSubmit={submit} className="mt-4 flex w-full max-w-xs flex-col gap-3">
-        <label htmlFor="join-name" className="text-sm font-medium text-muted-fg">
-          Your name
-        </label>
-        <input
-          id="join-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Ferb"
-          autoComplete="given-name"
-          className="h-12 rounded-xl border border-border bg-muted px-4 text-base outline-none focus:ring-2 focus:ring-secondary"
-        />
-        <button
-          type="submit"
-          disabled={busy || !name.trim()}
-          className="flex h-14 cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent text-lg font-semibold text-background transition active:scale-95 disabled:opacity-50"
-        >
-          {busy && <Loader2 aria-hidden className="size-5 animate-spin" />}
-          Join Room
-        </button>
-        {error && (
-          <p role="alert" className="text-center text-sm text-destructive">
-            {error}
-          </p>
-        )}
-      </form>
+      <div className="gel w-full max-w-sm rounded-[var(--radius-card)] p-5">
+        <p className="text-label font-semibold uppercase tracking-[0.12em] text-super">
+          Joining room
+        </p>
+        <h1 className="tabular mt-1 text-display font-bold tracking-[0.28em]">{roomId}</h1>
+        <p className="mt-2 text-body leading-relaxed text-muted-fg">
+          Pick any name — it is what the room calls you tonight. No account needed.
+        </p>
+
+        <form onSubmit={submit} className="mt-4 flex w-full flex-col gap-3">
+          <label htmlFor="join-name" className="text-label font-medium text-muted-fg">
+            Your name
+          </label>
+          <input
+            id="join-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ferb"
+            autoComplete="given-name"
+            className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-row outline-none ring-1 ring-white/15 focus:ring-2 focus:ring-secondary"
+          />
+          <button
+            type="submit"
+            disabled={busy || !name.trim()}
+            className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
+          >
+            {busy && <Loader2 aria-hidden className="size-5 animate-spin" />}
+            Join Room
+          </button>
+          {error && (
+            <p
+              role="alert"
+              className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-body font-semibold text-destructive ring-1 ring-destructive/35"
+            >
+              {error}
+            </p>
+          )}
+        </form>
+      </div>
     </Centered>
   );
 }

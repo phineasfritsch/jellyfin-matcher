@@ -43,8 +43,16 @@ export function VoteRow({
         to a 2x2 block instead of clipping the labels off (R51). The labels are
         rem, so they actually grow when that happens -- they were hardcoded
         pixels for three waves while this comment claimed otherwise (R60).
+
+        The track is 4.5rem, not 9ch. `ch` is the width of a zero in the
+        current font, so it grew at exactly the same rate as the text and the
+        row never fit more than one column at 200% -- it reflowed to a 1x4
+        stack that ran off the bottom of a screen that deliberately cannot
+        scroll, which put the vote controls out of reach entirely. The comment
+        above claimed a 2x2 for four waves and the first capture at 200% text
+        showed a 1x4 (R74).
       */
-      className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2.5 px-3 pb-1 pt-2"
+      className="grid shrink-0 grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-2 px-3 pb-1 pt-2"
       role="group"
       aria-label="Vote"
     >
@@ -56,11 +64,11 @@ export function VoteRow({
           onClick={() => onVote(v.points)}
           className={`flex min-h-[62px] cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[var(--radius-control)] px-1 py-2 ring-1 transition active:scale-95 ${v.skin}`}
         >
-          <span aria-hidden className="text-[1.1875rem] leading-none">
+          <span aria-hidden className="text-title leading-none">
             {v.glyph}
           </span>
-          <span className="text-[0.8438rem] font-semibold">{v.word}</span>
-          <span className="tabular text-[0.7188rem] opacity-70">{signed(v.points)}</span>
+          <span className="text-label font-semibold">{v.word}</span>
+          <span className="tabular text-caption opacity-70">{signed(v.points)}</span>
         </button>
       ))}
     </div>
@@ -70,7 +78,7 @@ export function VoteRow({
 /** The vote row's silhouette while a deck is still building. */
 export function VoteRowSkeleton() {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2.5 px-3 pb-1 pt-2" aria-hidden>
+    <div className="grid shrink-0 grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-2 px-3 pb-1 pt-2" aria-hidden>
       {VOTES.map((v) => (
         <div
           key={v.key}

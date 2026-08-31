@@ -189,3 +189,64 @@ describe('the README does not give unsafe deployment advice', () => {
     expect(auth).toContain("joinRequires: mode === 'all'");
   });
 });
+
+/**
+ * The design director's charge was precise: the type scale was "declared,
+ * pinned, and used zero times while 23 sizes ship". A pin that asserts a token
+ * exists is not a pin that the app uses it, which is the same failure as a
+ * check a blank page would pass.
+ */
+describe('the type scale is used, not merely declared', () => {
+  const files = [
+    'src/ui/components/Listing.tsx',
+    'src/ui/components/VoteRow.tsx',
+    'src/ui/components/SwipeCard.tsx',
+    'src/ui/components/WinnerScreen.tsx',
+    'src/ui/components/Knockout.tsx',
+    'src/ui/components/Lobby.tsx',
+    'src/ui/components/MovieDetails.tsx',
+    'src/ui/RoomClient.tsx',
+    'src/ui/AuthGate.tsx',
+    'src/ui/HomeActions.tsx',
+  ];
+
+  it('has no bespoke font size anywhere in the UI', () => {
+    const offenders: string[] = [];
+    for (const f of files) {
+      for (const m of readDoc(f).matchAll(/text-\[[^\]]*(?:rem|px)\]/g)) {
+        offenders.push(`${f}: ${m[0]}`);
+      }
+    }
+    expect(offenders, offenders.join('\n')).toEqual([]);
+  });
+
+  it('actually references the scale', () => {
+    const used = files.filter((f) =>
+      /text-(caption|label|body|row|title|display)\b/.test(readDoc(f)),
+    );
+    expect(used.length).toBeGreaterThanOrEqual(8);
+  });
+});
+
+/**
+ * One material in three weights was not true: two of the three darkened the
+ * ground while the third lightened it, stacked on the same screen, under a
+ * comment insisting they were one substance.
+ */
+describe('the materials do what they say', () => {
+  const css = readDoc('app/globals.css');
+
+  it('names them as two things, since they do opposite jobs', () => {
+    expect(css).toContain('TWO MATERIALS');
+    expect(css).toMatch(/^\.scrim \{/m);
+    expect(css).toMatch(/^\.gel \{/m);
+  });
+
+  it('gels sit above the ground and scrims sit below it', () => {
+    const gel = /\.gel \{\s*background: (rgba\([^)]*\))/.exec(css)?.[1] ?? '';
+    const scrim = /\.scrim \{\s*background: (rgba\([^)]*\))/.exec(css)?.[1] ?? '';
+    // A gel is lit: white over the ground. A scrim holds light back: near-black.
+    expect(gel).toContain('255, 255, 255');
+    expect(scrim).not.toContain('255, 255, 255');
+  });
+});

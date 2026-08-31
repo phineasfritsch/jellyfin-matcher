@@ -13,9 +13,18 @@
  */
 export function EmptyState({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-      <p className="text-xl font-bold">{title}</p>
-      <p className="text-sm text-muted-fg">{children}</p>
+    <div className="flex flex-1 items-center justify-center p-4">
+      {/*
+        A terminal state on a bare div was the design director's phrase for it,
+        and he was right: this is where a night ends when there is nothing to
+        end it with, and it looked like nothing had rendered yet. It gets the
+        same material as every other panel, and role="status" so a screen
+        reader is told the session reached an end rather than going quiet.
+      */}
+      <div className="gel w-full max-w-sm rounded-[var(--radius-card)] p-5 text-center" role="status">
+        <p className="text-title font-semibold tracking-[-0.01em]">{title}</p>
+        <p className="mt-2 text-body leading-relaxed text-muted-fg">{children}</p>
+      </div>
     </div>
   );
 }

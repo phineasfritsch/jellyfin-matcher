@@ -52,10 +52,10 @@ export function Bar({
           ? 'text-muted-fg'
           : 'text-super';
   return (
-    <div className="gel-thin sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-4 py-3">
-      <span className={`text-[0.9375rem] font-semibold tracking-[-0.01em] ${ink}`}>{left}</span>
+    <div className="scrim sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-4 py-3">
+      <span className={`text-body font-semibold tracking-[-0.01em] ${ink}`}>{left}</span>
       {right && (
-        <span className="tabular shrink-0 text-[0.8125rem] font-medium text-muted-fg">{right}</span>
+        <span className="tabular shrink-0 text-label font-medium text-muted-fg">{right}</span>
       )}
     </div>
   );
@@ -74,7 +74,7 @@ export function Group({
   return (
     <section aria-label={ariaLabel} className="px-3 pt-3">
       {title && (
-        <h2 className="px-1.5 pb-2 text-[0.8125rem] font-medium uppercase tracking-[0.04em] text-muted-fg">
+        <h2 className="px-1.5 pb-2 text-label font-medium uppercase tracking-[0.04em] text-muted-fg">
           {title}
         </h2>
       )}
@@ -102,16 +102,16 @@ function RowBody({
   return (
     <>
       <span
-        className={`flex items-center justify-center py-3.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${TONE[tone]}`}
+        className={`flex items-center justify-center py-3.5 text-caption font-bold uppercase tracking-[0.05em] ${TONE[tone]}`}
       >
         {label}
       </span>
       <span className="flex flex-col justify-center gap-1 py-3.5 pr-4 text-left">
-        <span className="text-[1rem] font-semibold leading-snug tracking-[-0.01em]">{title}</span>
-        {detail && <span className="text-[0.8438rem] leading-relaxed text-muted-fg">{detail}</span>}
+        <span className="text-row font-semibold leading-snug tracking-[-0.01em]">{title}</span>
+        {detail && <span className="text-label leading-relaxed text-muted-fg">{detail}</span>}
         {pill && (
           <span
-            className={`mt-1.5 self-start rounded-full bg-current/12 px-2.5 py-1 text-[0.7188rem] font-semibold ${TONE[pillTone ?? tone]}`}
+            className={`mt-1.5 self-start rounded-full bg-current/12 px-2.5 py-1 text-caption font-semibold ${TONE[pillTone ?? tone]}`}
           >
             {pill}
           </span>
@@ -197,10 +197,10 @@ export function RowButton({
  */
 export function CostLine({ headline, detail }: { headline: string; detail?: string }) {
   return (
-    <p className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3.5 text-[0.9375rem] font-semibold leading-snug text-destructive">
+    <p className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3.5 text-body font-semibold leading-snug text-destructive">
       {headline}
       {detail && (
-        <span className="mt-1.5 block text-[0.8438rem] font-normal leading-relaxed text-foreground/85">
+        <span className="mt-1.5 block text-label font-normal leading-relaxed text-foreground/85">
           {detail}
         </span>
       )}
@@ -234,7 +234,7 @@ export function BigButton({
       onClick={onClick}
       disabled={disabled}
       aria-describedby={ariaDescribedBy}
-      className={`min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-[1rem] font-semibold tracking-[-0.01em] transition active:scale-[0.985] disabled:opacity-50 ${skin}`}
+      className={`min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-row font-semibold tracking-[-0.01em] transition active:scale-[0.985] disabled:opacity-50 ${skin}`}
     >
       {children}
     </button>
@@ -244,7 +244,7 @@ export function BigButton({
 /** The floating action shelf a screen's primary control sits in. */
 export function Dock({ children }: { children: React.ReactNode }) {
   return (
-    <div className="gel-thick sticky bottom-0 z-20 flex flex-col gap-2 border-t border-[var(--color-hairline)] px-3 py-3">
+    <div className="scrim-strong sticky bottom-0 z-20 flex flex-col gap-2 border-t border-[var(--color-hairline)] px-3 py-3">
       {children}
     </div>
   );

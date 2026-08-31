@@ -88,7 +88,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         slow one; now the room only knows how many have finished.
       */}
       {others.length > 0 && (
-        <p className="tabular px-4 py-1.5 text-[0.7812rem] text-muted-fg">
+        <p className="tabular px-4 py-1.5 text-label text-muted-fg">
           {room.othersFinished} of {others.length} others finished
         </p>
       )}
@@ -123,7 +123,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         </EmptyState>
       ) : (
         <>
-          <div className="relative min-h-[420px] flex-1 px-3 pt-3">
+          <div className="relative min-h-[150px] flex-1 shrink px-3 pt-3">
             <AnimatePresence>
               {visible
                 .map((card, i) => (
@@ -213,7 +213,7 @@ function DeckSkeleton({ lockedGenres }: { lockedGenres: string[] }) {
         </p>
         <p className="mt-1 text-sm text-muted-fg">Building your deck…</p>
       </header>
-      <div className="relative min-h-[420px] flex-1 px-3 pt-3" aria-hidden>
+      <div className="relative min-h-[150px] flex-1 shrink px-3 pt-3" aria-hidden>
         <div className="absolute inset-0 animate-pulse rounded-2xl border border-border bg-muted" />
       </div>
       <VoteRowSkeleton />
