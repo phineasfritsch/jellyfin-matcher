@@ -9,9 +9,16 @@
  *                 <2 (degenerate) → REVOTE with the full genre list
  * ELIMINATION: each round every member votes one genre out; the most-voted
  * genre drops (ties break alphabetically, one per round) until 2 remain.
+ * A member may abstain (ABSTAIN): it counts as having voted so the round can
+ * resolve, but adds no weight to any genre. Without it, somebody with no
+ * opinion has to invent one or hold up the room, and inventing one is how a
+ * genre nobody actually objects to gets eliminated (R47).
  */
 
 export type KnockoutPhase = 'CHECKBOX' | 'ELIMINATION' | 'DONE';
+
+/** A cast-but-empty elimination ballot. Counts as voted, weighs nothing. */
+export const ABSTAIN = '__abstain__';
 
 export interface KnockoutState {
   phase: KnockoutPhase;
@@ -101,7 +108,7 @@ export function submitElimination(
   allUserIds: string[],
 ): KnockoutState {
   if (state.phase !== 'ELIMINATION') return state;
-  if (!state.pool.includes(genre)) return state;
+  if (genre !== ABSTAIN && !state.pool.includes(genre)) return state;
   const elimVotes = { ...state.elimVotes, [userId]: genre };
   const next: KnockoutState = { ...state, elimVotes };
 
@@ -111,11 +118,16 @@ export function submitElimination(
   const tally = new Map<string, number>();
   for (const id of allUserIds) {
     const g = elimVotes[id]!;
+    if (g === ABSTAIN) continue;
     tally.set(g, (tally.get(g) ?? 0) + 1);
   }
-  const eliminated = [...tally.entries()].sort(
-    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-  )[0]![0];
+  // A whole room abstaining still has to make progress, or the round loops
+  // forever with everyone waiting on everyone. Alphabetical, same as a tie.
+  const ranked =
+    tally.size > 0
+      ? [...tally.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      : [...state.pool].sort().map((g) => [g, 0] as const);
+  const eliminated = ranked[0]![0];
 
   const pool = state.pool.filter((g) => g !== eliminated);
   if (pool.length === 2) {

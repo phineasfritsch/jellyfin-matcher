@@ -41,7 +41,7 @@ const A11Y: Pin[] = [
   { id: 'A04', why: 'Deck progress bar carries a name', find: 'aria-label="Deck progress"' },
   { id: 'A05', why: 'Genre picking is a labelled group, not loose checkboxes', find: 'aria-label="Genres"' },
   { id: 'A06', why: 'The surviving-genres round is distinguishable from the first', find: 'aria-label="Surviving genres"' },
-  { id: 'A07', why: 'Genre toggles report their state', find: 'aria-pressed={on}' },
+  { id: 'A07', why: 'Genre toggles report their state, now via the RowButton pressed prop, since genres became 54px rows rather than 26px chips (R39)', find: 'pressed={picked.has(g)}' },
   { id: 'A08', why: 'Deck size is a real radio group', find: 'role="radiogroup"' },
   { id: 'A09', why: 'Deck size options report which is chosen', find: 'aria-checked=' },
   { id: 'A10', why: 'The details sheet is a modal dialog, escapable and announced', find: 'role="dialog"' },
@@ -100,7 +100,7 @@ const BEHAVIOUR: Pin[] = [
 const SWEEP: Pin[] = [
   { id: 'S01', why: 'The knockout explains a too-thin round instead of silently re-asking (R13)', find: 'Too few shared picks' },
   { id: 'S02', why: 'The elimination round says how many genres survive, so the end is in sight', find: '2 survive' },
-  { id: 'S03', why: 'A player can see which genre was their own vote, not just the tally', find: 'your vote' },
+  { id: 'S03', why: 'A player can still see which genre carried their own vote. It moved to the confirmation screen because live tallies are now hidden until the round closes, so nobody is watched deciding (R46)', find: 'carries your vote' },
   { id: 'S04', why: 'Waiting states name the state reached, not just a spinner (R35)', find: 'Vote cast' },
   { id: 'S05', why: 'Locked picks are confirmed as locked, so nobody re-picks', find: 'Picks locked in' },
   { id: 'S06', why: 'A trailer that cannot embed still has a named way out to YouTube', find: 'Watch trailer' },

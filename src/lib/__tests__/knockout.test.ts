@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createKnockout, submitElimination, submitGenres, type KnockoutState } from '../knockout';
+import { ABSTAIN, createKnockout, submitElimination, submitGenres, type KnockoutState } from '../knockout';
 
 const USERS = ['u_1', 'u_2'];
 const TRIO = ['u_1', 'u_2', 'u_3'];
@@ -104,5 +104,37 @@ describe('submitElimination', () => {
     state = submitElimination(state, 'u_1', 'Drama', USERS);
     state = submitElimination(state, 'u_2', 'Drama', USERS);
     expect(state.elimVotes).toEqual({});
+  });
+});
+
+describe('abstaining', () => {
+  it('counts as voted so the round can resolve', () => {
+    let s = createKnockout();
+    s = { ...s, phase: 'ELIMINATION', pool: ['Action', 'Comedy', 'Drama'] };
+    s = submitElimination(s, 'a', 'Drama', ['a', 'b']);
+    expect(s.phase).toBe('ELIMINATION');
+    s = submitElimination(s, 'b', ABSTAIN, ['a', 'b']);
+    // One real vote decided it; the abstention did not block the round.
+    expect(s.pool).toEqual(['Action', 'Comedy']);
+    expect(s.phase).toBe('DONE');
+  });
+
+  it('adds no weight to any genre', () => {
+    let s = createKnockout();
+    s = { ...s, phase: 'ELIMINATION', pool: ['Action', 'Comedy', 'Drama'] };
+    s = submitElimination(s, 'a', 'Action', ['a', 'b', 'c']);
+    s = submitElimination(s, 'b', ABSTAIN, ['a', 'b', 'c']);
+    s = submitElimination(s, 'c', ABSTAIN, ['a', 'b', 'c']);
+    // Two abstentions must not out-vote the single real ballot.
+    expect(s.pool).toEqual(['Comedy', 'Drama']);
+  });
+
+  it('still eliminates something when the whole room abstains', () => {
+    let s = createKnockout();
+    s = { ...s, phase: 'ELIMINATION', pool: ['Drama', 'Action', 'Comedy'] };
+    for (const id of ['a', 'b']) s = submitElimination(s, id, ABSTAIN, ['a', 'b']);
+    // Alphabetical, like any other tie. The room must not deadlock.
+    expect(s.pool).toEqual(['Drama', 'Comedy']);
+    expect(s.phase).toBe('DONE');
   });
 });
