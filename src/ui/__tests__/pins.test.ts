@@ -36,7 +36,7 @@ type Pin = { id: string; why: string; find: string };
  */
 const A11Y: Pin[] = [
   { id: 'A01', why: 'Vote buttons exist for every gesture; the README promises this', find: 'aria-label="Vote"' },
-  { id: 'A02', why: 'Each vote button is named, not just an icon', find: 'aria-label={label}' },
+  { id: 'A02', why: 'Each vote button names the film and the weight, not just the verb. "Dislike" does not answer "what did I just vote on", and three cards go by before you notice (R50)', find: '${v.say} ${title}, ${signed(v.points)}' },
   { id: 'A03', why: 'Deck position is announced, not only drawn as a bar', find: 'role="progressbar"' },
   { id: 'A04', why: 'Deck progress bar carries a name', find: 'aria-label="Deck progress"' },
   { id: 'A05', why: 'Genre picking is a labelled group, not loose checkboxes', find: 'aria-label="Genres"' },
@@ -56,7 +56,7 @@ const A11Y: Pin[] = [
   { id: 'A19', why: 'Login fields are bound to their labels', find: 'htmlFor="jf-user"' },
   { id: 'A20', why: 'Password field is bound to its label', find: 'htmlFor="jf-pass"' },
   { id: 'A21', why: 'Runtime slider is bound to its label', find: 'htmlFor="runtime"' },
-  { id: 'A22', why: 'Icon-only details button is named', find: 'aria-label={`Details for ${card.title}' },
+  { id: 'A22', why: 'The icon-only details button says what is behind it, not just that details exist', find: 'Ratings, synopsis and trailer for ${card.title}' },
 ];
 
 /**

@@ -1,11 +1,14 @@
 'use client';
 
 import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion';
-import { Info, Layers } from 'lucide-react';
+import { Info } from 'lucide-react';
 import type { MovieCandidate } from '../../lib/types';
 import { VOTE_POINTS } from '../../lib/match';
 
+/** A vote needs real travel, not just speed. See R49. */
 const SWIPE_DISTANCE = 110;
+/** Velocity is an accelerator past this distance, never a substitute for it. */
+const VELOCITY_FLOOR = 45;
 const SWIPE_VELOCITY = 600;
 
 export interface SwipeCardProps {
@@ -18,6 +21,15 @@ export interface SwipeCardProps {
   onOpenDetails: () => void;
 }
 
+/** Ratings named by source. A bare number is not a rating (R12). */
+function ratingLine(card: MovieCandidate): string {
+  const parts: string[] = [];
+  if (card.scores.imdb != null) parts.push(`IMDb ${card.scores.imdb}`);
+  if (card.scores.letterboxd != null) parts.push(`Letterboxd ${card.scores.letterboxd}`);
+  if (card.scores.rt != null) parts.push(`RT critics ${card.scores.rt}`);
+  return parts.length ? parts.join(' · ') : 'No ratings found for this one.';
+}
+
 export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProps) {
   const reducedMotion = useReducedMotion();
   const x = useMotionValue(0);
@@ -27,19 +39,31 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
   const nopeOpacity = useTransform(x, [-SWIPE_DISTANCE, -40], [1, 0]);
   const maybeOpacity = useTransform(y, [-SWIPE_DISTANCE, -40], [1, 0]);
 
+  /**
+   * R49: a vote commits on distance, or on velocity that has already travelled
+   * VELOCITY_FLOOR. Velocity alone used to be enough, which meant a tremor, a
+   * nudge from the person beside you, or a thumb put down to steady the phone
+   * registered as a real answer on a card you had not read. There is no
+   * gesture for the super like at all -- the vote that most distorts the
+   * outcome is reachable only by a deliberate press.
+   */
   function handleDragEnd(
     _e: unknown,
     info: { offset: { x: number; y: number }; velocity: { x: number; y: number } },
   ) {
     const { offset, velocity } = info;
-    if (offset.x > SWIPE_DISTANCE || velocity.x > SWIPE_VELOCITY) {
+    const fast = (v: number, o: number) => Math.abs(v) > SWIPE_VELOCITY && Math.abs(o) > VELOCITY_FLOOR;
+
+    if (offset.x > SWIPE_DISTANCE || (velocity.x > 0 && fast(velocity.x, offset.x))) {
       onVote(VOTE_POINTS.LIKE);
-    } else if (offset.x < -SWIPE_DISTANCE || velocity.x < -SWIPE_VELOCITY) {
+    } else if (offset.x < -SWIPE_DISTANCE || (velocity.x < 0 && fast(velocity.x, offset.x))) {
       onVote(VOTE_POINTS.DISLIKE);
-    } else if (offset.y < -SWIPE_DISTANCE || velocity.y < -SWIPE_VELOCITY) {
+    } else if (offset.y < -SWIPE_DISTANCE || (velocity.y < 0 && fast(velocity.y, offset.y))) {
       onVote(VOTE_POINTS.MAYBE);
     }
   }
+
+  const notHeld = card.jellyfinItemId == null;
 
   return (
     <motion.div
@@ -48,10 +72,10 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
       drag={active}
       dragSnapToOrigin
       dragElastic={0.7}
-      whileTap={active && !reducedMotion ? { scale: 1.02 } : undefined}
       onDragEnd={active ? handleDragEnd : undefined}
+      aria-hidden={!active}
     >
-      <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-muted shadow-xl shadow-black/40">
+      <article className="flex h-full flex-col overflow-hidden border border-border bg-muted">
         <div className="relative min-h-0 flex-1 bg-primary">
           {card.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -63,76 +87,77 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
               loading="eager"
             />
           ) : (
-            <div className="flex h-full items-center justify-center p-6 text-center text-2xl font-bold text-muted-fg">
+            <div className="flex h-full items-center justify-center p-6 text-center font-display text-2xl uppercase text-muted-fg">
               {card.title}
             </div>
           )}
 
-          {card.isHybrid && (
-            <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-on-primary">
-              <Layers aria-hidden className="size-3.5" /> Both genres
+          {/*
+            One chip, and it means one thing: this film is not on the server,
+            so voting for it can start a download. "Both genres" was cut from
+            the face -- it is a fact about why the card is here, not a cost,
+            and it now lives in the details sheet.
+          */}
+          {notHeld && (
+            <span className="absolute left-3 top-3 border border-destructive bg-background/85 px-2 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-destructive">
+              Not on your server
             </span>
           )}
 
           {active && (
             <button
               type="button"
-              aria-label={`Details for ${card.title}`}
+              aria-label={`Ratings, synopsis and trailer for ${card.title}`}
               onPointerDownCapture={(e) => e.stopPropagation()}
               onClick={onOpenDetails}
-              className="absolute right-3 top-3 flex size-11 cursor-pointer items-center justify-center rounded-full bg-black/50 text-foreground backdrop-blur-sm transition active:scale-90"
+              className="absolute bottom-3 right-3 flex size-12 cursor-pointer items-center justify-center border border-border bg-background/85 text-foreground transition active:scale-90"
             >
               <Info aria-hidden className="size-5" />
             </button>
           )}
 
-          {/* Drag verdict badges */}
+          {/*
+            Drag verdicts. Under reduced motion the card does not track the
+            finger, so these are the only feedback there is; they are words,
+            never colour alone (R18, R26).
+          */}
           <motion.span
             style={{ opacity: likeOpacity }}
-            className="absolute right-4 top-4 -rotate-12 rounded-lg border-4 border-accent px-3 py-1 text-2xl font-black text-accent"
+            className="absolute right-4 top-4 border-4 border-accent px-3 py-1 font-display text-2xl text-accent"
             aria-hidden
           >
-            LIKE
+            YES
           </motion.span>
           <motion.span
             style={{ opacity: nopeOpacity }}
-            className="absolute left-4 top-4 rotate-12 rounded-lg border-4 border-destructive px-3 py-1 text-2xl font-black text-destructive"
+            className="absolute left-4 top-4 border-4 border-destructive px-3 py-1 font-display text-2xl text-destructive"
             aria-hidden
           >
-            NOPE
+            NO
           </motion.span>
           <motion.span
             style={{ opacity: maybeOpacity }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg border-4 border-maybe px-3 py-1 text-2xl font-black text-maybe"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 border-4 border-maybe px-3 py-1 font-display text-2xl text-maybe"
             aria-hidden
           >
             MAYBE
           </motion.span>
         </div>
 
-        <div
-          className={`flex flex-col gap-1.5 p-4 ${active ? 'cursor-pointer' : ''}`}
-          onPointerDownCapture={active ? (e) => e.stopPropagation() : undefined}
-          onClick={active ? onOpenDetails : undefined}
-        >
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="truncate text-xl font-bold">{card.title}</h2>
-            {card.scores.composite != null && (
-              <span className="tabular shrink-0 rounded-lg bg-primary px-2 py-0.5 text-lg font-bold text-accent">
-                {card.scores.composite.toFixed(1)}
-              </span>
-            )}
-          </div>
-          <p className="tabular text-sm text-muted-fg">
-            {card.year ?? '—'}
+        {/*
+          The facts stay on the card. Nour wanted a poster and nothing else,
+          with everything relocated to a sheet and a live region; Margo cannot
+          use a screen whose content is a promise made elsewhere, and Ade
+          cannot vote without knowing what he is voting on. The card carries
+          what a vote needs and the sheet carries the rest.
+        */}
+        <div className="flex flex-col gap-1 border-t border-border px-3 py-2.5">
+          <h2 className="truncate font-display text-xl uppercase leading-tight">{card.title}</h2>
+          <p className="tabular text-[12.5px] text-muted-fg">
+            {card.year ?? 'Year unknown'}
             {card.runtime != null && ` · ${card.runtime} min`}
-            {card.jellyfinItemId != null && ' · In library'}
           </p>
-          <p className="tabular text-xs text-muted-fg">
-            {card.scores.letterboxd != null && `Letterboxd ${card.scores.letterboxd}`}
-            {card.scores.imdb != null && `  ·  IMDb ${card.scores.imdb}`}
-            {card.scores.rt != null && `  ·  RT ${card.scores.rt}%`}
-          </p>
+          <p className="tabular text-[12.5px] text-muted-fg">{ratingLine(card)}</p>
         </div>
       </article>
     </motion.div>

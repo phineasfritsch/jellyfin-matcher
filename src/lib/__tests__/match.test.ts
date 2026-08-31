@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fallbackWinner, isInstantMatch, isValidVote, rankFallback, type Votes } from '../match';
+import { VOTE_POINTS, fallbackWinner, isInstantMatch, isValidVote, rankFallback, type Votes } from '../match';
 import type { MovieCandidate } from '../types';
 
 function card(id: string, composite: number | null, isHybrid = false): MovieCandidate {
@@ -85,5 +85,34 @@ describe('fallbackWinner', () => {
 
   it('returns null on an empty deck', () => {
     expect(fallbackWinner([], {})).toBeNull();
+  });
+});
+
+/**
+ * Undo is implemented in the socket handler, but the invariant it has to keep
+ * is a match one: removing a vote must remove it from the tally, so a card
+ * that was one vote short of unanimous does not stay "matched" after the vote
+ * that made it unanimous is taken back.
+ */
+describe('undoing a vote', () => {
+  const users = ['a', 'b'];
+
+  it('a card that was an instant match stops being one', () => {
+    const votes = { c1: { a: VOTE_POINTS.LIKE, b: VOTE_POINTS.LIKE } };
+    expect(isInstantMatch(votes, 'c1', users)).toBe(true);
+    const undone = { c1: { a: VOTE_POINTS.LIKE } };
+    expect(isInstantMatch(undone, 'c1', users)).toBe(false);
+  });
+
+  it('removing the last vote on a card leaves its fallback score unweighted', () => {
+    const deck = [
+      { id: 'c1', isHybrid: false, scores: { composite: 50 } },
+      // Within one super like of c1, so the vote is what decides it.
+      { id: 'c2', isHybrid: false, scores: { composite: 48 } },
+    ] as never;
+    const withVote = rankFallback(deck, { c2: { a: VOTE_POINTS.SUPER } });
+    expect(withVote[0]!.cardId).toBe('c2');
+    const undone = rankFallback(deck, {});
+    expect(undone[0]!.cardId).toBe('c1');
   });
 });

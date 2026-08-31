@@ -252,6 +252,39 @@ io.on('connection', (socket) => {
     }
   });
 
+  /**
+   * Take back the last card you voted on (R48).
+   *
+   * The deck is the one place in the app where a slip costs something you
+   * cannot get back: a tremor, a neighbour knocking the phone, a thumb put
+   * down to steady it. Only your own last vote, only while the room is still
+   * swiping, and never once a winner has been declared -- undoing a vote that
+   * already locked a match would unlock a room that has moved on.
+   */
+  socket.on('swipe:undo', (_payload: unknown, ack?: Ack) => {
+    try {
+      const room = socketRoom(socket);
+      const { userId } = socket.data as { userId: string };
+      if (!room || room.status !== 'SWIPING') throw new Error('Not swiping');
+      const index = (room.progress[userId] ?? 0) - 1;
+      if (index < 0) throw new Error('Nothing to undo');
+      const card = room.deck[index];
+      if (!card) throw new Error('Nothing to undo');
+
+      const cardVotes = { ...room.votes[card.id] };
+      delete cardVotes[userId];
+      if (Object.keys(cardVotes).length === 0) delete room.votes[card.id];
+      else room.votes[card.id] = cardVotes;
+      room.progress[userId] = index;
+      store.touch(room);
+
+      ack?.({ ok: true, cardId: card.id });
+      broadcast(room);
+    } catch (err) {
+      fail(ack, err);
+    }
+  });
+
   socket.on('swipe:vote', ({ cardId, points }: { cardId: string; points: number }, ack?: Ack) => {
     try {
       const room = socketRoom(socket);

@@ -1,81 +1,76 @@
 'use client';
 
-import { CircleHelp, Heart, Star, X } from 'lucide-react';
 import { VOTE_POINTS } from '../../lib/match';
 
 /**
- * The four vote controls. Shared so a fix reaches every caller at once.
+ * The four vote controls.
  *
- * R05: four weights, always this order, always these colours.
- * R06: every vote is a named button. Swiping is an accelerator, never the
- *      only path -- the README promises this and pins A01/A02 defend it.
- * R07: this row is part of the above-the-fold budget on a 360x640 phone.
+ * R25: a vote control is legible without knowing what its icon means. Every
+ *      button prints its word as well as its glyph, and the glyph is
+ *      aria-hidden so a screen reader says "No" rather than spelling
+ *      "multiplication x".
+ * R06: every vote is a named button. Swiping is an accelerator, never the only
+ *      path -- the README promises this.
+ * R50: each button names the film it votes on. "Dislike" is not an answer to
+ *      "what did I just vote on"; three cards can go by before you notice.
+ * The weights are printed because a scale nobody can see is a scale nobody can
+ * use: a no costs five times what a maybe earns.
  */
-export function VoteRow({ onVote }: { onVote: (points: number) => void }) {
-  return (
-    <div className="flex items-center justify-center gap-3 pb-1" role="group" aria-label="Vote">
-      <VoteButton
-        label="Dislike"
-        className="border-destructive text-destructive"
-        onClick={() => onVote(VOTE_POINTS.DISLIKE)}
-      >
-        <X aria-hidden className="size-7" />
-      </VoteButton>
-      <VoteButton
-        label="Maybe"
-        className="border-maybe text-maybe"
-        onClick={() => onVote(VOTE_POINTS.MAYBE)}
-      >
-        <CircleHelp aria-hidden className="size-6" />
-      </VoteButton>
-      <VoteButton
-        label="Like"
-        className="border-accent text-accent"
-        onClick={() => onVote(VOTE_POINTS.LIKE)}
-      >
-        <Heart aria-hidden className="size-7" />
-      </VoteButton>
-      <VoteButton
-        label="Super Like"
-        className="border-super text-super"
-        onClick={() => onVote(VOTE_POINTS.SUPER)}
-      >
-        <Star aria-hidden className="size-6" />
-      </VoteButton>
-    </div>
-  );
+
+const VOTES = [
+  { key: 'no', glyph: '✕', word: 'NO', points: VOTE_POINTS.DISLIKE, skin: 'border-destructive text-destructive', say: 'Vote no on' },
+  { key: 'maybe', glyph: '?', word: 'MAYBE', points: VOTE_POINTS.MAYBE, skin: 'border-border text-foreground', say: 'Vote maybe on' },
+  { key: 'yes', glyph: '♥', word: 'YES', points: VOTE_POINTS.LIKE, skin: 'border-accent text-accent', say: 'Vote yes on' },
+  { key: 'super', glyph: '★', word: 'STRONG', points: VOTE_POINTS.SUPER, skin: 'border-maybe text-maybe', say: 'Strong yes on' },
+] as const;
+
+function signed(n: number): string {
+  return n > 0 ? `+${n}` : `${n}`;
 }
 
-/** Icon-only by design, so the label is the only name it has. */
-function VoteButton({
-  label,
-  className,
-  onClick,
-  children,
+export function VoteRow({
+  onVote,
+  title,
 }: {
-  label: string;
-  className: string;
-  onClick: () => void;
-  children: React.ReactNode;
+  onVote: (points: number) => void;
+  /** The film being voted on, so each control can name it. */
+  title: string;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      className={`flex size-14 cursor-pointer items-center justify-center rounded-full border-2 bg-muted transition active:scale-90 ${className}`}
+    <div
+      /*
+        auto-fit rather than four locked columns: at 200% OS text this reflows
+        to a 2x2 block instead of clipping the labels off (R51).
+      */
+      className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2 p-2.5"
+      role="group"
+      aria-label="Vote"
     >
-      {children}
-    </button>
+      {VOTES.map((v) => (
+        <button
+          key={v.key}
+          type="button"
+          aria-label={`${v.say} ${title}, ${signed(v.points)}`}
+          onClick={() => onVote(v.points)}
+          className={`flex min-h-[52px] cursor-pointer flex-col items-center justify-center gap-0.5 border bg-muted px-1 py-2 font-mono transition active:scale-95 ${v.skin}`}
+        >
+          <span aria-hidden className="font-display text-lg leading-none">
+            {v.glyph}
+          </span>
+          <span className="text-[13px] font-semibold tracking-[0.06em]">{v.word}</span>
+          <span className="tabular text-[11px] opacity-75">{signed(v.points)}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
 /** The vote row's silhouette while a deck is still building. */
 export function VoteRowSkeleton() {
   return (
-    <div className="flex items-center justify-center gap-3 pb-1" aria-hidden>
-      {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} className="size-14 animate-pulse rounded-full bg-muted" />
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2 p-2.5" aria-hidden>
+      {VOTES.map((v) => (
+        <div key={v.key} className="min-h-[52px] animate-pulse border border-border bg-muted" />
       ))}
     </div>
   );

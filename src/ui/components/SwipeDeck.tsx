@@ -6,6 +6,7 @@ import { VOTE_POINTS } from '../../lib/match';
 import type { MovieCandidate } from '../../lib/types';
 import type { RoomHook } from '../useRoom';
 import { EmptyState } from './EmptyState';
+import { Bar, CostLine, RowButton } from './Listing';
 import { MovieDetails } from './MovieDetails';
 import { SwipeCard } from './SwipeCard';
 import { VoteRow, VoteRowSkeleton } from './VoteRow';
@@ -14,7 +15,7 @@ import { VoteRow, VoteRowSkeleton } from './VoteRow';
 const PREFETCH_AHEAD = 8;
 
 export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
-  const { room, userId, vote } = roomHook;
+  const { room, userId, vote, undoVote } = roomHook;
   const reducedMotion = useReducedMotion();
   /** Exit direction per card id so AnimatePresence knows where it flew. */
   const [exits, setExits] = useState<Record<string, number>>({});
@@ -58,37 +59,64 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
     });
   }
 
+  const top = visible[0];
+  const notHeld = top != null && top.jellyfinItemId == null;
+  const behind = myIndex > 0 ? room.deck[myIndex - 1] : undefined;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <header className="flex flex-col gap-2 pt-1">
-        <div className="flex items-center justify-between text-xs text-muted-fg">
-          <span className="font-semibold uppercase tracking-widest">
-            {room.lockedGenres.join(' + ')}
-          </span>
-          <span className="tabular">
-            {Math.min(myIndex + 1, room.deck.length)}/{room.deck.length}
-          </span>
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* R40: readout only. Nothing in the top bar is tappable. */}
+      <Bar
+        left={room.lockedGenres.join(' + ')}
+        right={`${Math.min(myIndex + 1, room.deck.length)} / ${room.deck.length}`}
+      />
+      <div
+        className="h-1 bg-muted"
+        role="progressbar"
+        aria-valuenow={myIndex}
+        aria-valuemax={room.deck.length}
+        aria-label="Deck progress"
+      >
         <div
-          className="h-1.5 overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuenow={myIndex}
-          aria-valuemax={room.deck.length}
-          aria-label="Deck progress"
-        >
-          <div
-            className="h-full rounded-full bg-secondary transition-[width] duration-300"
-            style={{ width: `${(myIndex / room.deck.length) * 100}%` }}
-          />
-        </div>
-        {others.length > 0 && (
-          <p className="tabular text-xs text-muted-fg">
-            {others
-              .map((u) => `${u.name} ${Math.min(room.progress[u.id] ?? 0, room.deck.length)}/${room.deck.length}`)
-              .join(' · ')}
-          </p>
-        )}
-      </header>
+          className="h-full bg-maybe transition-[width] duration-300"
+          style={{ width: `${(myIndex / room.deck.length) * 100}%` }}
+        />
+      </div>
+      {/*
+        Peer progress as a count, never a per-person figure anyone can compare
+        themselves against (R46). Ade could see the room watching him be the
+        slow one; now the room only knows how many have finished.
+      */}
+      {others.length > 0 && (
+        <p className="tabular border-b border-border px-3 py-1.5 text-[12px] text-muted-fg">
+          {others.filter((u) => (room.progress[u.id] ?? 0) >= room.deck.length).length} of{' '}
+          {others.length} others finished
+        </p>
+      )}
+      {/*
+        R42. The cost of voting yes on a film nobody owns, stated where the
+        vote is cast, at a size a person can read in the dark, with a size in
+        gigabytes rather than a runtime. Nothing downloads from this screen --
+        the request is confirmed later, by the host.
+      */}
+      {notHeld && (
+        <CostLine
+          headline="Not on your server — voting yes can download it."
+          detail="The host is asked to approve it before anything is fetched."
+        />
+      )}
+      {/*
+        One polite live region, fired by the card changing, so a screen reader
+        is told what it is voting on (R22). Without it the deck is silent and
+        the vote buttons are the only thing that speaks.
+      */}
+      <p className="sr-only" role="status">
+        {top
+          ? `Card ${myIndex + 1} of ${room.deck.length}. ${top.title}${top.year ? `, ${top.year}` : ''}${
+              top.runtime ? `, ${top.runtime} minutes` : ''
+            }. ${top.jellyfinItemId ? 'On your server.' : 'Not on your server.'}`
+          : ''}
+      </p>
 
       {done ? (
         <EmptyState title="Deck finished">
@@ -96,7 +124,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         </EmptyState>
       ) : (
         <>
-          <div className="relative min-h-0 flex-1" style={{ minHeight: '55dvh' }}>
+          <div className="relative min-h-0 flex-1">
             <AnimatePresence>
               {visible
                 .map((card, i) => (
@@ -118,7 +146,21 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
             </AnimatePresence>
           </div>
 
-          <VoteRow onVote={(points) => castVote(visible[0]!.id, points)} />
+          <VoteRow onVote={(points) => castVote(visible[0]!.id, points)} title={visible[0]!.title} />
+          {/*
+            R48. The deck is the one place a slip costs a film you cannot get
+            back. A tremor, a nudge, a thumb put down to steady the phone --
+            all of them used to be final.
+          */}
+          {behind && (
+            <RowButton
+              label="BACK"
+              title={`Undo — ${behind.title}`}
+              detail="Puts the card back and clears your vote."
+              ariaLabel={`Undo your vote on ${behind.title}`}
+              onClick={() => void undoVote()}
+            />
+          )}
         </>
       )}
 
