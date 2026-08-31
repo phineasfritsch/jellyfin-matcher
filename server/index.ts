@@ -9,6 +9,16 @@ import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
 import { diagnoseDeckFailure, diagnoseThinDeck } from './diagnose';
 import { viewFor } from './roomView';
+import {
+  asBoolean,
+  asCardId,
+  asGenre,
+  asGenres,
+  asName,
+  asRoomId,
+  asSettings,
+  asUserId,
+} from './validate';
 import { canSettle } from './settlement';
 import {
   beginDeckBuild,
@@ -306,13 +316,14 @@ function socketRoom(socket: Socket): Room | undefined {
 }
 
 io.on('connection', (socket) => {
-  socket.on('room:create', ({ name }: { name: string }, ack?: Ack) => {
+  socket.on('room:create', (payload: unknown, ack?: Ack) => {
     try {
       if (authConfig().createRequires && !authedName(socket)) {
         throw new Error('Sign in with your Jellyfin account to create a room');
       }
+      const { name } = (payload ?? {}) as { name?: unknown };
       const { room, userId } = store.createRoom(
-        String(name || 'Host').slice(0, 30),
+        asName(name, 'Host'),
         Boolean(authedName(socket)),
       );
       socket.data = { roomId: room.roomId, userId };
@@ -326,8 +337,11 @@ io.on('connection', (socket) => {
 
   socket.on(
     'room:join',
-    ({ roomId, name, userId }: { roomId: string; name?: string; userId?: string }, ack?: Ack) => {
+    (payload: unknown, ack?: Ack) => {
       try {
+        const raw = (payload ?? {}) as { roomId?: unknown; name?: unknown; userId?: unknown };
+        const roomId = asRoomId(raw.roomId);
+        const userId = raw.userId == null ? undefined : asUserId(raw.userId);
         // Only a fresh join is gated; reconnecting an existing member is not,
         // so a guest who already joined keeps their seat.
         if (!userId && authConfig().joinRequires && !authedName(socket)) {
@@ -335,7 +349,7 @@ io.on('connection', (socket) => {
         }
         const result = userId
           ? { room: store.reconnect(roomId, userId), userId } // returning member
-          : store.joinRoom(roomId, String(name || 'Guest').slice(0, 30), Boolean(authedName(socket)));
+          : store.joinRoom(roomId, asName(raw.name, 'Guest'), Boolean(authedName(socket)));
         socket.data = { roomId: result.room.roomId, userId: result.userId };
         void socket.join(result.room.roomId);
         ack?.({ ok: true, roomId: result.room.roomId, userId: result.userId });
@@ -346,10 +360,11 @@ io.on('connection', (socket) => {
     },
   );
 
-  socket.on('room:ready', ({ ready }: { ready: boolean }, ack?: Ack) => {
+  socket.on('room:ready', (payload: unknown, ack?: Ack) => {
     try {
+      const { ready } = (payload ?? {}) as { ready?: unknown };
       const { roomId, userId } = socket.data as { roomId: string; userId: string };
-      const room = store.setReady(roomId, userId, Boolean(ready));
+      const room = store.setReady(roomId, userId, asBoolean(ready));
       startKnockout(room, store);
       ack?.({ ok: true });
       broadcast(room);
@@ -358,8 +373,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('room:settings', (settings: Partial<RoomSettings>, ack?: Ack) => {
+  socket.on('room:settings', (payload: unknown, ack?: Ack) => {
     try {
+      const settings = asSettings(payload);
       // "Any Movie" scope unlocks Jellyseerr requests, so switching to it needs
       // an account even when creating and joining did not.
       if (settings.scope === 'wide' && authConfig().wideRequires && !authedName(socket)) {
@@ -384,8 +400,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('knockout:submit_genres', ({ genres }: { genres: string[] }, ack?: Ack) => {
+  socket.on('knockout:submit_genres', (payload: unknown, ack?: Ack) => {
     try {
+      const genres = asGenres((payload as { genres?: unknown })?.genres);
       const room = socketRoom(socket);
       const { userId } = socket.data as { userId: string };
       if (!room || room.status !== 'KNOCKOUT') throw new Error('Not in knockout');
@@ -398,8 +415,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('knockout:eliminate', ({ genre }: { genre: string }, ack?: Ack) => {
+  socket.on('knockout:eliminate', (payload: unknown, ack?: Ack) => {
     try {
+      const genre = asGenre((payload as { genre?: unknown })?.genre);
       const room = socketRoom(socket);
       const { userId } = socket.data as { userId: string };
       if (!room || room.status !== 'KNOCKOUT') throw new Error('Not in knockout');
@@ -435,8 +453,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('swipe:vote', ({ cardId, points }: { cardId: string; points: number }, ack?: Ack) => {
+  socket.on('swipe:vote', (payload: unknown, ack?: Ack) => {
     try {
+      const raw = (payload ?? {}) as { cardId?: unknown; points?: unknown };
+      const cardId = asCardId(raw.cardId);
+      const points = Number(raw.points);
       const room = socketRoom(socket);
       const { userId } = socket.data as { userId: string };
       if (!room || room.status !== 'SWIPING') throw new Error('Not swiping');
@@ -533,3 +554,40 @@ void nextApp.prepare().then(() => {
     console.log(`jellyfin-matcher server listening on :${PORT}`);
   });
 });
+
+/**
+ * Shut down on purpose (R76).
+ *
+ * Pushing main deploys, so a container gets SIGTERM in the middle of whatever
+ * the house is doing. There was no `process.on` anywhere in this repository:
+ * the process died on the spot, every socket dropped without a word, and Docker
+ * waited out its ten second grace period before killing it anyway.
+ *
+ * Rooms live in memory and cannot survive the restart -- that is a real
+ * limitation and it is written down in the README rather than hidden. What can
+ * be fixed is the manner of it: tell every room what happened so the phones
+ * show "the server restarted" instead of a deck that will never advance again,
+ * then stop listening and exit rather than being killed.
+ */
+let shuttingDown = false;
+function shutdown(signal: string): void {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`${signal} received, closing ${store.roomCount()} room(s)`);
+
+  io.emit('room:error', {
+    message: 'The server is restarting. This room is gone — start a new one.',
+  });
+
+  // Give the message a moment to reach the phones, then stop accepting work.
+  setTimeout(() => {
+    io.close();
+    httpServer.close(() => process.exit(0));
+    // Never hang the container waiting on a socket that will not close.
+    setTimeout(() => process.exit(0), 3_000).unref();
+  }, 250);
+}
+
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.on(signal, () => shutdown(signal));
+}
