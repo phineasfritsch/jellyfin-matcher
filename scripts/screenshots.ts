@@ -26,6 +26,16 @@ const URL = process.env.MATCHER_URL ?? 'http://localhost:3000';
 /** iPhone 15-ish. The only viewport this app is really designed for. */
 const PHONE = { width: 402, height: 874, deviceScaleFactor: 2 };
 
+/**
+ * The same phone with the reader's text at 200%.
+ *
+ * Two people on the panel made this a condition and nobody had ever looked:
+ * the app claimed to reflow at exactly this setting while every size in it was
+ * a hardcoded pixel. Captured as its own set so the claim is checkable by
+ * looking rather than by reading a comment (R60).
+ */
+const TEXT_200 = 32; // px root font size, i.e. 200% of the 16px default
+
 const CHROME =
   process.env.CHROME_PATH ??
   [
@@ -252,6 +262,14 @@ async function main() {
       // while this is mid-round, in which case there is nothing left to click
       // and that is success, not failure.
       try {
+        // Wait for the browser to render the round the host can already see.
+        // The two are different clocks: the host's socket gets the broadcast
+        // before React has re-rendered, and driving the click off the host's
+        // view meant asking for a control the page had not drawn yet.
+        await page.waitForSelector(`button[aria-label="Vote out ${target}"]`, {
+          visible: true,
+          timeout: 20_000,
+        });
         await clickButton(page, `Vote out ${target}`);
       } catch (err) {
         const now: any = await withTimeout(
@@ -280,6 +298,17 @@ async function main() {
     await page.locator('::-p-text(Undo)').setTimeout(60_000).waitHandle().catch(() => {});
     await new Promise((r) => setTimeout(r, 4000)); // let posters land
     await shoot(page, '05-deck');
+
+    // The same deck, at 200% text. This is the screen the reflow comment is
+    // about, so it is the one worth photographing.
+    step('re-shooting the deck at 200% text');
+    await page.evaluate((px: number) => {
+      document.documentElement.style.fontSize = `${px}px`;
+    }, TEXT_200);
+    await new Promise((r) => setTimeout(r, 1200));
+    await shoot(page, '06-deck-200-percent');
+
+    await page.goto(`${URL}/room/${host.roomId}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
 
     console.log(`
 Wrote to docs/screenshots. Room ${host.roomId}, ${st.deck.length} cards.`);

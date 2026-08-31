@@ -159,7 +159,19 @@ export class RoomStore {
 
   updateSettings(roomId: string, settings: Partial<RoomSettings>): Room {
     const room = this.requireRoom(roomId);
-    if (room.status !== 'LOBBY') throw new Error('Settings are locked after the lobby');
+    /*
+      Locked once the deck exists, not once the lobby closes (R70).
+  
+      A thin deck tells the room "the host can raise the runtime cap" -- and
+      `updateSettings` then threw `Settings are locked after the lobby`, so the
+      diagnosis named a control the app forbade. Genre picking happens before
+      anything is built, so the cap and the deck size can still move; once
+      there are cards, changing the rules under people mid-swipe would be worse
+      than the thin deck.
+    */
+    if (room.status !== 'LOBBY' && room.status !== 'KNOCKOUT') {
+      throw new Error('Settings are locked once the deck is built');
+    }
     room.settings = { ...room.settings, ...settings };
     this.touch(room);
     return room;

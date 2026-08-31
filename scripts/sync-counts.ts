@@ -29,6 +29,9 @@ const EDITS: Array<[string, RegExp, string]> = [
   ['OPERATING.md', /pinned claims still pinned \| \d+ \|/g, `pinned claims still pinned | ${g.pinnedClaims} |`],
   ['OPERATING.md', /holds \d+ claims/g, `holds ${g.pinnedClaims} claims`],
   ['OPERATING.md', /today's numbers\*\*: \d+ cases, \d+ files, \d+ pins\./g, `today's numbers**: ${g.testCases} cases, ${g.testFiles} files, ${g.pinnedClaims} pins.`],
+  // QUEUE.md sat outside this list and drifted three waves behind, which is
+  // the same class of stale claim G4 exists to stop.
+  ['QUEUE.md', /\*\*Today's numbers:\*\* \d+ test cases, \d+ files, \d+ pinned claims/g, `**Today's numbers:** ${g.testCases} test cases, ${g.testFiles} files, ${g.pinnedClaims} pinned claims`],
 ];
 
 const stale: string[] = [];

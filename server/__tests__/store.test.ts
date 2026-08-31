@@ -58,13 +58,31 @@ describe('RoomStore', () => {
     expect(store.getRoom(room.roomId)).toBeUndefined();
   });
 
-  it('locks settings after the lobby', () => {
+  /*
+    The boundary moved deliberately (R70). It used to be "after the lobby",
+    which made the app forbid the exact thing its own thin-deck diagnosis told
+    the room to do -- raise the runtime cap. Genre picking happens before
+    anything is built, so the rules can still move there; once cards exist,
+    changing them under people mid-swipe is worse than a short deck.
+  */
+  it('keeps settings changeable while nothing has been built yet', () => {
     const store = new RoomStore();
     const { room } = store.createRoom('Host');
     store.updateSettings(room.roomId, { scope: 'wide', maxRuntime: 110 });
     expect(room.settings.scope).toBe('wide');
 
     room.status = 'KNOCKOUT';
+    store.updateSettings(room.roomId, { maxRuntime: 180 });
+    expect(room.settings.maxRuntime).toBe(180);
+  });
+
+  it('locks settings once the deck exists', () => {
+    const store = new RoomStore();
+    const { room } = store.createRoom('Host');
+    room.status = 'SWIPING';
+    expect(() => store.updateSettings(room.roomId, { deckLimit: 10 })).toThrow('locked');
+
+    room.status = 'FINISHED';
     expect(() => store.updateSettings(room.roomId, { deckLimit: 10 })).toThrow('locked');
   });
 

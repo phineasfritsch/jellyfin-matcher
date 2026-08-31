@@ -98,10 +98,12 @@ export function diagnoseThinDeck(
     headline: `Deck is ${deckSize} ${deckSize === 1 ? 'card' : 'cards'}, not ${wanted}`,
     upstream: 'Your library',
     technical: `${genres.join(' + ')}${runtimeClause} matched ${deckSize} of ${wanted}`,
+    // Names only what the room can still do. This used to advise raising the
+    // runtime cap, which the server refused after the lobby (R70).
     fix:
       scope === 'local'
-        ? 'Nothing is broken — those two genres just do not overlap much here. The host can raise the runtime cap or turn on Any movie.'
-        : 'Nothing is broken — those two genres do not overlap much. The host can raise the runtime cap.',
+        ? 'Nothing is broken — those two genres just do not overlap much here. Swipe these, or start again with a longer runtime or Any movie turned on.'
+        : 'Nothing is broken — those two genres do not overlap much. Swipe these, or start again with a longer runtime.',
     recoverable: deckSize > 0,
   };
 }

@@ -18,6 +18,7 @@ export function WinnerScreen({
 }) {
   const { room, rejectWinner } = roomHook;
   const heading = useRef<HTMLHeadingElement>(null);
+  const [confirmingReject, setConfirmingReject] = useState(false);
 
   /**
    * R52: this screen replaces the deck outright. Nothing announced that, so a
@@ -111,14 +112,46 @@ export function WinnerScreen({
           R63: the vote that ends the night was the only one with no take-back.
           Any member can reject -- the person who mis-tapped is often not the
           person holding the host's phone.
+
+          R71: but rejecting throws away what six people just agreed on, so it
+          asks first. Fixing a no-undo problem by adding a second one-tap
+          irreversible control was the same mistake wearing a different hat,
+          and a confirm here costs nothing: nobody rejects a winner in a hurry.
         */}
-        <button
-          type="button"
-          onClick={() => void rejectWinner()}
-          className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-[1rem] font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985]"
-        >
-          Not this one — keep swiping
-        </button>
+        {confirmingReject ? (
+          <div className="flex flex-col gap-2">
+            <p
+              id="reject-cost"
+              className="rounded-[var(--radius-control)] bg-super/12 px-3.5 py-2.5 text-[0.875rem] font-medium leading-relaxed text-super ring-1 ring-super/35"
+            >
+              This throws away what the room just agreed on and puts everyone back in the deck.
+              {winner.title} will not be offered again.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <BigButton
+                onClick={() => {
+                  setConfirmingReject(false);
+                  void rejectWinner();
+                }}
+                tone="ghost"
+                ariaDescribedBy="reject-cost"
+              >
+                Yes, keep swiping
+              </BigButton>
+              <BigButton onClick={() => setConfirmingReject(false)} tone="ghost">
+                Keep this one
+              </BigButton>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingReject(true)}
+            className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-[1rem] font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985]"
+          >
+            Not this one — keep swiping
+          </button>
+        )}
         {held && match?.playUrl ? (
           <a
             href={match.playUrl}

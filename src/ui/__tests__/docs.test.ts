@@ -156,3 +156,36 @@ describe('the palette is the app s own', () => {
     }
   });
 });
+
+/**
+ * The README used to tell people a public hostname was fine "since the
+ * Jellyfin login gates the whole thing". Under the default auth mode it gates
+ * nothing: creating and joining a Jellyfin-only room need no account, so
+ * anyone who finds the URL can read the list of titles in the library. Two
+ * board members found this independently, and the README's own Login section
+ * three paragraphs earlier said the opposite -- the page contradicted itself
+ * and the wrong half was the one giving deployment advice.
+ */
+describe('the README does not give unsafe deployment advice', () => {
+  const readme = readDoc('README.md');
+  const auth = readDoc('server/auth.ts');
+
+  it('never claims the login gates the whole app', () => {
+    expect(readme).not.toMatch(/login gates the whole thing/i);
+    expect(readme).not.toMatch(/a public hostname is fine/i);
+  });
+
+  it('says plainly that the default mode does not gate a public hostname', () => {
+    expect(readme).toContain('A public hostname is not safe on the default auth mode');
+  });
+
+  it('offers the two real mitigations by name', () => {
+    expect(readme).toContain('Cloudflare Access');
+    expect(readme).toContain('MATCHER_AUTH=all');
+  });
+
+  it('matches what the code actually does: joining is open unless mode is all', () => {
+    // If this changes, the paragraph above is wrong and must change with it.
+    expect(auth).toContain("joinRequires: mode === 'all'");
+  });
+});

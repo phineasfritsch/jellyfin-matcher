@@ -142,7 +142,16 @@ ingress:
   - service: http_status:404
 ```
 
-QR codes and room links use whatever hostname the page was opened on, so they'll point at your tunnel domain automatically. Since the Jellyfin login gates the whole thing, a public hostname is fine, but a Cloudflare Access policy on top never hurts.
+QR codes and room links use whatever hostname the page was opened on, so they'll point at your tunnel domain automatically.
+
+**A public hostname is not safe on the default auth mode.** `MATCHER_AUTH=requests` — the default — asks for a Jellyfin login only when someone switches a room to "Any Movie" or fires a request. Creating and joining a Jellyfin-only room need no account at all, which is the point on a LAN and a problem on the open internet: anyone who finds the URL can open a room and swipe through the titles in your library. Nothing is downloadable or playable without an account, but the list of what you own is readable.
+
+If the hostname is public, do one of these:
+
+- put a Cloudflare Access policy in front of it, which is the option that keeps guest-friendly rooms working for people you've let through; or
+- set `MATCHER_AUTH=all`, which requires a Jellyfin account to join as well as create — and gives up the scan-and-play property that makes the app pleasant with visitors.
+
+On a LAN with no tunnel, the default is fine.
 
 ### A help tab inside Jellyfin
 
@@ -188,11 +197,11 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 266 cases across 18 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 273 cases across 18 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
-Another 115 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
+Another 117 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
 
 ## License
 
