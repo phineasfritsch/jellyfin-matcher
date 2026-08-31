@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { isLoggedIn, LoginScreen, useAuthConfig } from './AuthGate';
 import { getAuthName } from './socket';
 import { Knockout } from './components/Knockout';
+import { DiagnosisPanel } from './components/DiagnosisPanel';
 import { Lobby } from './components/Lobby';
 import { SwipeDeck } from './components/SwipeDeck';
 import { WinnerScreen } from './components/WinnerScreen';
@@ -36,17 +37,31 @@ export function RoomClient({ roomId }: { roomId: string }) {
     );
   }
 
+  /*
+    A named failure replaces the screen; a bare error string is only a strip.
+    A diagnosis that arrived while the deck still built fine (a thin deck) does
+    not take the room over -- it sits above the deck as a strip instead.
+  */
+  const { diagnosis } = roomHook;
+  const blocked = diagnosis != null && !diagnosis.recoverable;
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
-      {error && (
-        <p role="alert" className="mb-3 rounded-lg bg-destructive/15 px-4 py-2 text-sm text-destructive">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      {error && !diagnosis && (
+        <p role="alert" className="bg-destructive px-3 py-2 text-[15px] font-semibold text-on-primary">
           {error}
         </p>
       )}
-      {room.status === 'LOBBY' && <Lobby roomHook={roomHook} />}
-      {room.status === 'KNOCKOUT' && <Knockout roomHook={roomHook} />}
-      {room.status === 'SWIPING' && <SwipeDeck roomHook={roomHook} />}
-      {room.status === 'FINISHED' && <WinnerScreen roomHook={roomHook} match={match} />}
+      {diagnosis && diagnosis.recoverable && (
+        <p role="alert" className="bg-destructive px-3 py-2 text-[13px] font-medium text-on-primary">
+          {diagnosis.headline} — {diagnosis.fix}
+        </p>
+      )}
+      {blocked && <DiagnosisPanel diagnosis={diagnosis} />}
+      {!blocked && room.status === 'LOBBY' && <Lobby roomHook={roomHook} />}
+      {!blocked && room.status === 'KNOCKOUT' && <Knockout roomHook={roomHook} />}
+      {!blocked && room.status === 'SWIPING' && <SwipeDeck roomHook={roomHook} />}
+      {!blocked && room.status === 'FINISHED' && <WinnerScreen roomHook={roomHook} match={match} />}
     </main>
   );
 }

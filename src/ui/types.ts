@@ -19,6 +19,15 @@ export interface ClientRoom {
   winner: string | null;
 }
 
+/** A named, actionable account of why the deck is short or missing (R54). */
+export interface Diagnosis {
+  headline: string;
+  upstream: string;
+  technical: string;
+  fix: string;
+  recoverable: boolean;
+}
+
 export interface MatchDeclaredPayload {
   winner: MovieCandidate | null;
   viaFallback: boolean;

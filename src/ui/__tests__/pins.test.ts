@@ -131,6 +131,10 @@ const LATESHOW: Pin[] = [
   { id: 'T08', why: 'Red means it stops, costs, or is missing', find: '--color-destructive: #ff3b2f' },
   { id: 'T09', why: 'Focus is visible on a grid whose rows are the controls', find: 'outline: 3px solid var(--color-maybe)' },
   { id: 'T10', why: 'Fonts are self-hosted by next/font, so nothing is fetched off-LAN at runtime (R17)', find: "from 'next/font/google'" },
+  { id: 'T11', why: 'A deck failure names which upstream failed; three causes used to produce one symptom and all three reached the host as "it is broken" (R54)', find: 'export function diagnoseDeckFailure' },
+  { id: 'T12', why: 'A thin deck is explained as a library fact rather than a fault, so nobody goes looking for a broken key', find: 'export function diagnoseThinDeck' },
+  { id: 'T13', why: 'The request is confirmed by a second tap, never a timed hold: a hold behaves differently for a tremor, a switch and a thumb (R37)', find: "'idle' | 'confirm' | 'busy'" },
+  { id: 'T14', why: 'The winner screen takes focus, since it replaces the deck outright and nothing announced that (R52)', find: 'heading.current?.focus()' },
 ];
 
 /**

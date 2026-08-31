@@ -7,6 +7,7 @@ import { requestMovie } from '../src/lib/jellyseerr';
 import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
 import { fallbackWinner, isInstantMatch, isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
+import { diagnoseDeckFailure, diagnoseThinDeck } from './diagnose';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { RoomStore, type Room, type RoomSettings } from './store';
 
@@ -116,13 +117,24 @@ async function startSwiping(room: Room): Promise<void> {
     room.deck = await buildDeckForRoom(room);
     room.progress = Object.fromEntries(Object.keys(room.users).map((id) => [id, 0]));
     store.touch(room);
+
+    // Built, but thin. Nobody's key is wrong; it just looks that way from the
+    // couch, so the room is told which it is (R54).
+    const thin = diagnoseThinDeck(
+      room.deck.length,
+      room.settings.deckLimit,
+      room.lockedGenres,
+      room.settings.maxRuntime,
+      room.settings.scope,
+    );
+    if (thin) io.to(room.roomId).emit('room:diagnosis', thin);
   } catch (err) {
     console.error(`Deck build failed for ${room.roomId}:`, err);
+    const diagnosis = diagnoseDeckFailure(err, room.deck.length);
     room.status = 'KNOCKOUT'; // let the room retry rather than strand it
     room.knockout = createKnockout();
-    io.to(room.roomId).emit('room:error', {
-      message: 'Deck build failed — pick genres again.',
-    });
+    io.to(room.roomId).emit('room:diagnosis', diagnosis);
+    io.to(room.roomId).emit('room:error', { message: diagnosis.headline });
   }
   broadcast(room);
 }

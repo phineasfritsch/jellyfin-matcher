@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clearSession, emitAck, getSocket, loadSession, saveSession } from './socket';
-import type { ClientRoom, MatchDeclaredPayload } from './types';
+import type { ClientRoom, Diagnosis, MatchDeclaredPayload } from './types';
 
 export interface RoomHook {
   room: ClientRoom | null;
   userId: string | null;
   match: MatchDeclaredPayload | null;
+  /** Named account of a deck failure or a thin deck, when there is one. */
+  diagnosis: Diagnosis | null;
   error: string | null;
   /** True while an automatic reconnect attempt is running. */
   connecting: boolean;
@@ -27,6 +29,7 @@ export function useRoom(roomId: string): RoomHook {
   const [userId, setUserId] = useState<string | null>(null);
   const [match, setMatch] = useState<MatchDeclaredPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
   const [connecting, setConnecting] = useState(true);
   const attempted = useRef(false);
 
@@ -37,6 +40,8 @@ export function useRoom(roomId: string): RoomHook {
     };
     const onMatch = (payload: MatchDeclaredPayload) => setMatch(payload);
     const onRoomError = (payload: { message: string }) => setError(payload.message);
+    const onDiagnosis = (payload: Diagnosis) => setDiagnosis(payload);
+    socket.on('room:diagnosis', onDiagnosis);
     socket.on('room:state', onState);
     socket.on('match:declared', onMatch);
     socket.on('room:error', onRoomError);
@@ -71,6 +76,7 @@ export function useRoom(roomId: string): RoomHook {
       socket.off('room:state', onState);
       socket.off('match:declared', onMatch);
       socket.off('room:error', onRoomError);
+      socket.off('room:diagnosis', onDiagnosis);
       socket.off('connect', onConnect);
     };
   }, [roomId]);
@@ -118,6 +124,7 @@ export function useRoom(roomId: string): RoomHook {
     room,
     userId,
     match,
+    diagnosis,
     error,
     connecting,
     join,
