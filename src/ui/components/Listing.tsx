@@ -187,13 +187,24 @@ export function RowButton({
 
 /**
  * The cost line. R42: anything that spends the host's disk says so at 15px in
- * sentence case, on its own surface, and it states a SIZE.
+ * sentence case, on its own surface.
  *
  * This was 12px uppercase mono in the same class as every decorative caption,
  * separated from them only by colour — so it did not exist for anyone who
- * cannot separate red from grey, and read as garnish to everyone else. Runtime
- * is not a cost: 108 minutes is 2GB or 55GB and only one of those matters to
- * the person who owns the disk.
+ * cannot separate red from grey, and read as garnish to everyone else.
+ *
+ * R91: it does NOT state a size, and this comment used to insist that it did.
+ * The reasoning was sound — runtime is not a cost, since 108 minutes is 2GB or
+ * 55GB and only one of those matters to whoever owns the disk — but no size
+ * datum exists anywhere in this app to print. MovieCandidate has no size field,
+ * and neither Jellyfin's item payload nor Jellyseerr's discover response
+ * carries one; the real figure is not decided until the host's Radarr picks a
+ * release, which happens after the request and after approval.
+ *
+ * So the honest disclosure is the one the copy already gives: that this spends
+ * the host's disk, that the host approves it first, and that how much is not
+ * knowable yet. A number invented to satisfy a ruling would be worse than the
+ * sentence that says nobody knows.
  */
 export function CostLine({ headline, detail }: { headline: string; detail?: string }) {
   return (

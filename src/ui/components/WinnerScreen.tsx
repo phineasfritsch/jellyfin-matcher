@@ -253,7 +253,8 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
           className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
         >
           Sends {title}
-          {runtime != null && ` (${runtime} min)`} to Jellyseerr. The host approves the
+          {runtime != null && ` (${runtime} min)`} to Jellyseerr. How much disk it uses is
+          not known until your host&rsquo;s server picks a release. The host approves the
           download; you will not see it tonight.
         </p>
         <div className="grid grid-cols-2 gap-2">

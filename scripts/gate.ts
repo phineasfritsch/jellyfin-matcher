@@ -158,6 +158,22 @@ else {
   );
 }
 
+// G8 -- every numbered ruling can be found.
+//
+// Thirty-nine numbered rulings were cited from code while being defined in
+// neither design document, with CLAUDE.md pointing readers at DIRECTION.md for
+// a range it does not contain. A citation nobody can follow is a comment
+// pretending to be a reference. docs/RULINGS.md is generated, so this checks it
+// is not stale.
+//
+// Deliberately no example citations in this comment: scripts/rulings.ts scans
+// this file, and prose about the index would be indexed as use of it.
+{
+  const { code, text } = run('npx', ['tsx', 'scripts/rulings.ts', '--check']);
+  record('G8', 'rulings index', code === 0, code === 0 ? 'current' : 'stale -- run npm run rulings');
+  if (code !== 0) console.log(text.trim());
+}
+
 const failures = results.filter((r) => !r.ok);
 console.log(
   `\n${results.length - failures.length}/${results.length} gates pass` +

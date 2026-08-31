@@ -5,10 +5,10 @@
 The condensed version, for anyone who will not:
 
 - **The gate is `npm run gate -- --fast`.** Types, tests, counts, pins.
-  Today: 385 cases in 26 files, 146 pinned claims. Floors in `gates.json`.
+  Today: 386 cases in 26 files, 147 pinned claims. Floors in `gates.json`.
 - **`npm run gate` is not something a worker runs on its own work.** A verifier
   runs it afterwards, serially.
-- **146 claims are pinned** in `src/ui/__tests__/pins.test.ts` — accessibility
+- **147 claims are pinned** in `src/ui/__tests__/pins.test.ts` — accessibility
   hooks, honesty copy, README promises. If one fails, read the rendered page
   before touching the pin, and never weaken a pin to something a blank page
   would pass.
@@ -20,9 +20,13 @@ The condensed version, for anyone who will not:
 - **Pushing `main` deploys.** There is no separate deploy step to get out of
   order, and no reason to add one.
 - **Work goes in [QUEUE.md](QUEUE.md)**, not in a session.
-- Design rulings, cited as `R07` in comments, live in
-  [docs/REDESIGN.md](docs/REDESIGN.md) (R01-R18) and
-  [docs/DIRECTION.md](docs/DIRECTION.md) (R19-R55, the Late Show redesign).
+- Design rulings are cited as `R07` in comments. **Start at
+  [docs/RULINGS.md](docs/RULINGS.md)**, which indexes every one of them to where
+  it is actually explained — generated, gated, never edited by hand. Many are
+  argued in [docs/REDESIGN.md](docs/REDESIGN.md) and
+  [docs/DIRECTION.md](docs/DIRECTION.md); the rest were decided in the comment
+  that cites them. This file used to claim DIRECTION.md held R19-R55. It does
+  not, and never did.
 
 A smaller honest result beats a larger claimed one. Reporting a blocker is a
 success.

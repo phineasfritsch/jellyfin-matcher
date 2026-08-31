@@ -16,7 +16,8 @@
     "prod:read": "tsx --env-file-if-exists=.env scripts/health.ts",
     "e2e:walkout": "node scripts/e2e-walkout.cjs",
     "counts": "tsx scripts/sync-counts.ts",
-    "shots": "tsx scripts/screenshots.ts"
+    "shots": "tsx scripts/screenshots.ts",
+    "rulings": "tsx scripts/rulings.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

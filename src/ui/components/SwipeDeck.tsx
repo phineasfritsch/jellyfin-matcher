@@ -94,9 +94,14 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
       )}
       {/*
         R42. The cost of voting yes on a film nobody owns, stated where the
-        vote is cast, at a size a person can read in the dark, with a size in
-        gigabytes rather than a runtime. Nothing downloads from this screen --
-        the request is confirmed later, by the host.
+        vote is cast, at a size a person can read in the dark. Nothing
+        downloads from this screen -- the request is confirmed later, by the
+        host.
+
+        This comment used to promise "a size in gigabytes rather than a
+        runtime". It never printed one, because there is none to print: no size
+        datum reaches this app from Jellyfin or Jellyseerr, and the real figure
+        is not settled until the host's Radarr picks a release (R91).
       */}
       {notHeld && (
         <CostLine

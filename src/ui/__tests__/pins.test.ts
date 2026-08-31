@@ -125,7 +125,7 @@ const SWEEP: Pin[] = [
  * "tidy up" would remove without any other test noticing.
  */
 const LATESHOW: Pin[] = [
-  { id: 'T01', why: 'The cost line states a size, not a runtime; a disk cost that only names minutes is not a disclosure (R42)', find: 'export function CostLine' },
+  { id: 'T01', why: 'The cost line names the consequence where the vote is cast. Adjudicated: its find was `export function CostLine`, which proves the component exists and nothing about what it says, while the why claimed it states a size -- a pin that could not fail for the reason it named. It never stated a size and cannot: no size datum reaches this app, and the figure is not settled until the host’s Radarr picks a release (R42, R91). Pinning the sentence instead', find: 'Not on your server — voting yes can download it.' },
   { id: 'T02', why: 'Every listings control is a real button, never a div with onClick (R39)', find: 'export function RowButton' },
   { id: 'T03', why: 'The status bar stays a readout; nothing tappable in the cracked top corner (R40)', find: 'export function Bar' },
   { id: 'T04', why: 'Rows meet the minimum target that replaced the 26px chips, now 60px (R39)', find: "min-h-[60px]" },
@@ -171,6 +171,7 @@ const LATESHOW: Pin[] = [
   { id: 'T78', why: 'How the night ended lives on the room, not only in the event that announced it. A rejoin receives room:state and nothing else, so one reload on the winner screen reported a film in the library as not on the server and offered to download it (R90)', find: 'room.winnerViaFallback = outcome.viaFallback' },
   { id: 'T79', why: 'Rejecting a winner clears the account of how the night ended, or the next winner inherits this one’s ranking and a rejected film’s Play link still works', find: 'room.winnerPlayUrl = null' },
   { id: 'T80', why: 'The winner screen reads the room when the transient match:declared event is gone, which is the state every phone is in one reload later', find: 'match?.playUrl ?? room.winnerPlayUrl' },
+  { id: 'T81', why: 'The request confirmation names the uncertainty instead of inventing a number. No size datum reaches this app -- not from Jellyfin, not from Jellyseerr -- and the real figure is not settled until the host’s Radarr picks a release, so three code sites and a ruling promised a size that could never be printed (R91)', find: 'not known until your host' },
   { id: 'T58', why: 'Failed logins are rate limited per address. This endpoint forwards credentials to Jellyfin, so with nothing in front of it Matcher is a rate-limit-free amplifier for guessing passwords against the media server (R77)', find: 'const loginLimiter = new RateLimiter' },
   { id: 'T59', why: 'A successful sign-in clears the address, so a fumbled password does not cost anyone ten minutes', find: 'loginLimiter.clear(who)' },
   { id: 'T60', why: 'Sockets are same-origin unless explicitly configured. cors origin true reflects whatever Origin arrives, so any page on the internet could open a socket into a household room (R77)', find: 'MATCHER_ALLOWED_ORIGINS' },
