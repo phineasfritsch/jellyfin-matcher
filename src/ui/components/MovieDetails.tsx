@@ -84,7 +84,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
         initial={reducedMotion ? { opacity: 0 } : { y: '100%' }}
         animate={reducedMotion ? { opacity: 1 } : { y: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-        className="pane-thick relative max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-[var(--radius-sheet)] p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none"
+        className="gel-thick relative max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-[var(--radius-sheet)] p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none"
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>

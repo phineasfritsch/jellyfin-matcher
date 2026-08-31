@@ -52,7 +52,7 @@ export function WinnerScreen({
       />
 
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
-        <div className="pane mx-3 mt-3 flex items-start gap-3.5 rounded-[var(--radius-card)] p-3.5">
+        <div className="gel mx-3 mt-3 flex items-start gap-3.5 rounded-[var(--radius-card)] p-3.5">
           {winner.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

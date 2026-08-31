@@ -3,7 +3,12 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { useMemo } from 'react';
 
-const COLORS = ['#22C55E', '#4338CA', '#FACC15', '#38BDF8', '#EF4444', '#F8FAFC'];
+/*
+  The app's own dyes, not a generic party palette. These were six unmodified
+  Tailwind hexes left over from the pre-redesign look, so the one moment the
+  app celebrates was the one moment it stopped looking like itself.
+*/
+const COLORS = ['#e8c14a', '#2fbdbd', '#4db06b', '#e0563f', '#f0f1ec'];
 const PIECES = 50;
 
 /** One-shot celebratory confetti. Skipped entirely under reduced motion. */

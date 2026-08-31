@@ -76,11 +76,11 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
       aria-hidden={!active}
     >
       {/*
-        pane-thick, not pane: the cards behind the top one are still in the DOM
+        gel-thick, not pane: the cards behind the top one are still in the DOM
         and a 7%-white panel let their titles read straight through this one.
         The stack has to look like a stack, not a double exposure.
       */}
-      <article className="pane-solid flex h-full flex-col overflow-hidden rounded-[var(--radius-sheet)] shadow-2xl shadow-black/60">
+      <article className="gel-solid flex h-full flex-col overflow-hidden rounded-[var(--radius-sheet)] shadow-2xl shadow-black/60">
         <div className="relative min-h-0 flex-1 bg-white/[0.04]">
           {card.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

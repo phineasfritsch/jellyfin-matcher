@@ -138,7 +138,7 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
                 onChange={(e) =>
                   void updateSettings({ maxRuntime: RUNTIME_STOPS[Number(e.target.value)] })
                 }
-                className="accent-[#5ac8fa]"
+                className="accent-maybe"
               />
             </div>
           </div>

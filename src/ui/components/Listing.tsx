@@ -52,7 +52,7 @@ export function Bar({
           ? 'text-muted-fg'
           : 'text-super';
   return (
-    <div className="pane-thin sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-4 py-3">
+    <div className="gel-thin sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-4 py-3">
       <span className={`text-[0.9375rem] font-semibold tracking-[-0.01em] ${ink}`}>{left}</span>
       {right && (
         <span className="tabular shrink-0 text-[0.8125rem] font-medium text-muted-fg">{right}</span>
@@ -78,7 +78,7 @@ export function Group({
           {title}
         </h2>
       )}
-      <div className="pane overflow-hidden rounded-[var(--radius-card)]">{children}</div>
+      <div className="gel overflow-hidden rounded-[var(--radius-card)]">{children}</div>
     </section>
   );
 }
@@ -226,7 +226,7 @@ export function BigButton({
     tone === 'commit'
       ? 'bg-destructive text-on-primary'
       : tone === 'ghost'
-        ? 'pane text-foreground'
+        ? 'gel text-foreground'
         : 'bg-accent text-on-primary';
   return (
     <button
@@ -244,7 +244,7 @@ export function BigButton({
 /** The floating action shelf a screen's primary control sits in. */
 export function Dock({ children }: { children: React.ReactNode }) {
   return (
-    <div className="pane-thick sticky bottom-0 z-20 flex flex-col gap-2 border-t border-[var(--color-hairline)] px-3 py-3">
+    <div className="gel-thick sticky bottom-0 z-20 flex flex-col gap-2 border-t border-[var(--color-hairline)] px-3 py-3">
       {children}
     </div>
   );

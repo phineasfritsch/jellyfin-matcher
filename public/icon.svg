@@ -1,9 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#4338CA"/>
-  <g fill="none" stroke="#F8FAFC" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="126" y="166" width="260" height="200" rx="28" fill="#1E1B4B"/>
-    <path d="M126 226h260"/>
-    <path d="M170 166l40 60M250 166l40 60M330 166l40 60"/>
+<!--
+  Two cards, one frame.
+
+  The app is a room of people landing on the same film, so the mark is two
+  swipe cards coming into register inside a strip of film. Drawn in the app's
+  own dyes -- yellow for the room, cyan for you, leader green for the one you
+  agreed on -- rather than the Tailwind indigo it used to wear, which belonged
+  to a palette the app stopped using three redesigns ago.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Jellyfin Matcher">
+  <rect width="512" height="512" rx="112" fill="#0b0e11"/>
+
+  <!-- sprocket rails: this is a strip of film, not a rounded square -->
+  <g fill="#2a3330">
+    <rect x="52" y="96" width="34" height="30" rx="7"/>
+    <rect x="52" y="158" width="34" height="30" rx="7"/>
+    <rect x="52" y="220" width="34" height="30" rx="7"/>
+    <rect x="52" y="282" width="34" height="30" rx="7"/>
+    <rect x="52" y="344" width="34" height="30" rx="7"/>
+    <rect x="426" y="96" width="34" height="30" rx="7"/>
+    <rect x="426" y="158" width="34" height="30" rx="7"/>
+    <rect x="426" y="220" width="34" height="30" rx="7"/>
+    <rect x="426" y="282" width="34" height="30" rx="7"/>
+    <rect x="426" y="344" width="34" height="30" rx="7"/>
   </g>
-  <path d="M236 268l84 46-84 46z" fill="#22C55E"/>
+
+  <!-- the card behind: the other person's, tilted, still deciding -->
+  <rect x="150" y="130" width="180" height="250" rx="26"
+        fill="#141a18" stroke="#e8c14a" stroke-width="12"
+        transform="rotate(-9 240 255)"/>
+
+  <!-- the card in front: yours, square to the frame -->
+  <rect x="192" y="146" width="180" height="250" rx="26"
+        fill="#101614" stroke="#2fbdbd" stroke-width="12"/>
+
+  <!-- agreement -->
+  <path d="M243 272l30 32 60-70" fill="none" stroke="#4db06b"
+        stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

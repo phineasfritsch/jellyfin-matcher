@@ -95,3 +95,64 @@ describe('the README shows the app', () => {
     expect(firstLine.toLowerCase()).toContain('swipe');
   });
 });
+
+/**
+ * The panel member who judges provenance said she could name the chrome from
+ * memory: Apple's material vocabulary, systemBlue, and four unmodified
+ * Tailwind hexes in the icon and the confetti. Her point was not that those
+ * colours are ugly -- it is that a palette anyone can name is a palette nobody
+ * chose. These assert the app is wearing its own.
+ */
+describe('the palette is the app s own', () => {
+  const css = readDoc('app/globals.css');
+  const icon = readDoc('public/icon.svg');
+  const confetti = readDoc('src/ui/components/Confetti.tsx');
+
+  /** Defaults from Tailwind and Apple that had been pasted in verbatim. */
+  const BORROWED = [
+    '#4338CA', // tailwind indigo-700, the old icon
+    '#1E1B4B', // indigo-950
+    '#22C55E', // green-500
+    '#FACC15', // yellow-400
+    '#38BDF8', // sky-400
+    '#EF4444', // red-500
+    '#F8FAFC', // slate-50
+    '#5AC8FA', // apple systemBlue
+    '#0F0F23', // the pre-redesign ground
+  ];
+
+  for (const surface of [
+    ['app/globals.css', css],
+    ['public/icon.svg', icon],
+    ['Confetti.tsx', confetti],
+  ] as const) {
+    it(`${surface[0]} carries no borrowed default`, () => {
+      const found = BORROWED.filter((hex) =>
+        surface[1].toLowerCase().includes(hex.toLowerCase()),
+      );
+      expect(found, `borrowed hex in ${surface[0]}: ${found.join(', ')}`).toEqual([]);
+    });
+  }
+
+  it('has no component quietly hardcoding a colour past the tokens', () => {
+    // The runtime slider held `accent-[#5ac8fa]` -- systemBlue, the exact hex
+    // the panel named -- through a whole palette change, because the token
+    // moved and the literal did not.
+    const files = ['src/ui/components/Lobby.tsx', 'src/ui/components/VoteRow.tsx',
+                   'src/ui/components/Listing.tsx', 'src/ui/components/SwipeCard.tsx'];
+    for (const f of files) {
+      const hits = [...readDoc(f).matchAll(/#[0-9a-fA-F]{6}/g)].map((m) => m[0]);
+      expect(hits, `hardcoded colour in ${f}: ${hits.join(', ')}`).toEqual([]);
+    }
+  });
+
+  it('says where the palette comes from, so the next person can argue with it', () => {
+    expect(css).toContain('subtractive dyes');
+  });
+
+  it('keeps the app icon on the same colours as the app', () => {
+    for (const dye of ['#e8c14a', '#2fbdbd', '#4db06b']) {
+      expect(icon.toLowerCase()).toContain(dye);
+    }
+  });
+});

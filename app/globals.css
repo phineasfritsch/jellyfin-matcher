@@ -1,48 +1,60 @@
 @import 'tailwindcss';
 
 /*
-  Glass. iOS-style materials over an ambient ground.
+  THE PALETTE, AND WHERE IT COMES FROM.
 
-  The information architecture is unchanged from the direction the focus group
-  picked -- a label column, one row per control, one meaning per colour -- but
-  it is now built the way a grouped inset list is built: translucent cards
-  floating on a coloured ground, hairline edges, generous radii, system type.
+  Colour film builds every image from three subtractive dyes -- yellow, magenta
+  and cyan -- laid over a base, with the leader that runs ahead of the picture
+  printed in green. That is the whole system here, and it is a deliberate
+  reference rather than a default: the previous palette was Apple's systemBlue
+  sitting beside four unmodified Tailwind hexes, which is a house style anyone
+  who looks at software can name from memory, and naming it is the same as
+  saying nobody chose it.
 
-  Two different border tokens, on purpose:
+  One meaning per dye, held on every screen. Adding a second meaning to a
+  colour that already has one is how it stops signalling anything:
 
-    --color-border   a real structural divider. Stays above 3:1 against the
-                     ground because it separates one control from another, and
-                     that is information (R41).
-    --color-hairline the glass edge. Decorative: it describes the shape of a
-                     pane, and nothing depends on seeing it. Fill contrast, not
-                     this line, is what separates a card from the ground.
+    yellow dye  (--color-super)        the room's shared state
+    cyan dye    (--color-maybe)        mine alone
+    leader green(--color-accent)       go, safe, already on the server
+    print red   (--color-destructive)  stops, costs money, or is missing
 
-  One meaning per hue, still. Adding a second meaning to a colour that already
-  has one is how it stops signalling anything:
+  Cyan here is the dye, not the sky: #2fbdbd is a green-leaning teal precisely
+  so it cannot be mistaken for the system blue it replaced.
 
-    amber  (--color-super)       the room's shared state
-    blue   (--color-maybe)       mine alone
-    green  (--color-accent)      go, safe, already on the server
-    red    (--color-destructive) stops, costs money, or is missing
+  Two border tokens, because they are two different things. --color-border is a
+  divider between controls and clears 3:1 against the ground, since that is
+  information. --color-hairline is the edge of a translucent sheet; nothing
+  depends on seeing it (R41).
+
+  THE TYPE SCALE. One scale, in rem so it tracks the reader's OS setting (R60).
+  Sizes outside this list are a mistake, not a decision.
 */
 @theme {
-  --color-background: #0a0c12;
-  --color-foreground: #f2f4f8;
+  --color-background: #0b0e11;
+  --color-foreground: #f0f1ec;
   --color-primary: rgba(255, 255, 255, 0.1);
-  --color-on-primary: #0a0c12;
-  --color-secondary: #5ac8fa;
-  --color-accent: #32d583;
+  --color-on-primary: #0b0e11;
+  --color-secondary: #2fbdbd;
+  --color-accent: #4db06b;
   --color-muted: rgba(255, 255, 255, 0.06);
-  --color-muted-fg: #a2a9b8;
-  --color-border: #5c6272;
+  --color-muted-fg: #9ea69f;
+  --color-border: #5f6a63;
   --color-hairline: rgba(255, 255, 255, 0.14);
-  --color-destructive: #ff6b5e;
-  --color-super: #ffc95c;
-  --color-maybe: #5ac8fa;
+  --color-destructive: #e0563f;
+  --color-super: #e8c14a;
+  --color-maybe: #2fbdbd;
 
   --radius-sheet: 22px;
   --radius-card: 16px;
   --radius-control: 13px;
+
+  --text-caption: 0.75rem;
+  --text-label: 0.8125rem;
+  --text-body: 0.875rem;
+  --text-row: 1rem;
+  --text-title: 1.3125rem;
+  --text-display: 1.5rem;
 
   --font-sans: var(--font-plex), -apple-system, BlinkMacSystemFont, 'SF Pro Text',
     'Segoe UI', system-ui, sans-serif;
@@ -70,12 +82,17 @@ body::before {
     pane above it.
   */
   background:
-    radial-gradient(60rem 42rem at 8% -10%, rgba(74, 168, 255, 0.3), transparent 58%),
-    radial-gradient(52rem 40rem at 92% 104%, rgba(46, 214, 140, 0.22), transparent 60%),
-    linear-gradient(168deg, #16203a 0%, #0d1524 40%, #070a12 100%);
+    radial-gradient(60rem 42rem at 8% -10%, rgba(47, 189, 189, 0.24), transparent 58%),
+    radial-gradient(52rem 40rem at 92% 104%, rgba(232, 193, 74, 0.16), transparent 60%),
+    linear-gradient(168deg, #16211f 0%, #0e1416 42%, #080a0c 100%);
 }
 
 /*
+  THE MATERIAL. A gel is the translucent coloured sheet a film crew clips in
+  front of a lamp: it takes the light behind it and tints what passes through.
+  These do exactly that to the ambient ground, and the name is the app's own
+  rather than a platform's.
+
   One material, three weights, and they are the ONLY blurred surfaces in the
   app. backdrop-filter composites the whole layer behind an element on every
   frame, so it belongs on the handful of large, static chrome surfaces -- the
@@ -83,7 +100,7 @@ body::before {
   elements or on anything that moves. Putting it on four vote buttons and three
   drag badges that animate during a swipe wedged the compositor outright.
 */
-.pane {
+.gel {
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(18px) saturate(165%);
   -webkit-backdrop-filter: blur(18px) saturate(165%);
@@ -98,17 +115,17 @@ body::before {
     inset 0 -1px 0 rgba(0, 0, 0, 0.24),
     0 12px 32px -12px rgba(0, 0, 0, 0.6);
 }
-.pane-thin {
+.gel-thin {
   background: rgba(18, 22, 32, 0.7);
   backdrop-filter: blur(20px) saturate(165%);
   -webkit-backdrop-filter: blur(20px) saturate(165%);
 }
-.pane-solid {
+.gel-solid {
   background: #131722;
   border: 1px solid var(--color-hairline);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
-.pane-thick {
+.gel-thick {
   background: rgba(13, 16, 24, 0.78);
   backdrop-filter: blur(22px) saturate(165%);
   -webkit-backdrop-filter: blur(22px) saturate(165%);
@@ -122,16 +139,16 @@ body::before {
   so the app stays legible rather than pretty.
 */
 @supports not (backdrop-filter: blur(1px)) {
-  .pane,
-  .pane-thin {
+  .gel,
+  .gel-thin {
     background: #171a22;
   }
-  .pane-solid {
+  .gel-solid {
   background: #131722;
   border: 1px solid var(--color-hairline);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
-.pane-thick {
+.gel-thick {
     background: #10131c;
   }
 }
