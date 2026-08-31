@@ -139,6 +139,7 @@ export async function getMovies(
     miscounts it cannot spin this for ever.
   */
   const movies: JellyfinMovie[] = [];
+  const seen = new Set<string>();
   for (let page_n = 0; page_n < MAX_PAGES; page_n += 1) {
     const start = page_n * PAGE_SIZE;
     const data = (await jellyfinGet(
@@ -149,10 +150,31 @@ export async function getMovies(
     )) as { Items?: JellyfinItemDto[]; TotalRecordCount?: number };
 
     const page = data.Items ?? [];
-    for (const item of page) movies.push(mapItem(item, cfg));
+    /*
+      Count what is NEW, not what arrived.
 
-    // Three ways to be done, because a server only has to be honest about one:
-    // a short page, an empty page, or the count it told us.
+      A server is not obliged to honour StartIndex and Limit, and one that
+      ignores them answers every page with the whole library. The first version
+      of this paged loop trusted the page it was handed, so against such a
+      server it accumulated the entire library once per page, up to the ceiling
+      -- fifty thousand titles a thousand times over. It was caught because the
+      benchmark's fetch stub ignores paging, which made it an accidental and
+      very good adversary.
+
+      Ids are what identify a title here, so they are what dedupes it.
+    */
+    let fresh = 0;
+    for (const item of page) {
+      if (seen.has(item.Id)) continue;
+      seen.add(item.Id);
+      movies.push(mapItem(item, cfg));
+      fresh += 1;
+    }
+
+    // Four ways to be done, because a server only has to be honest about one:
+    // a page that told us nothing new, a short page, an empty page, or the
+    // count it claimed.
+    if (fresh === 0) break;
     if (page.length < PAGE_SIZE) break;
     if (typeof data.TotalRecordCount === 'number' && movies.length >= data.TotalRecordCount) break;
   }

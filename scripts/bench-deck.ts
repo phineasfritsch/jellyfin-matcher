@@ -918,23 +918,43 @@ async function main(): Promise<void> {
   console.log('Cold ratings cache. Counted, not timed -- a real run is rate-limited.');
   console.log(
     table(
-      ['items', 'titles to rate', 'MDBList requests', 'nights to warm', 'bytes rewritten to warm'],
+      ['items', 'titles to rate', 'MDBList requests', 'nights to warm', 'written: was', 'written: now'],
       results.map((r) => {
         const budget = 40;
         const perNight = budget * 10;
         const nights = Math.ceil(r.matched / perNight);
-        // saveCache serialises the WHOLE cache on every build that fetched
-        // anything. Warming from empty therefore writes 400 + 800 + ... + N
-        // entries: sum of an arithmetic series, i.e. O(N^2) bytes.
-        const entriesWritten = (nights * (nights + 1) * perNight) / 2;
         const bytesPerEntry = (r.cacheMb * 1024 * 1024) / Math.max(1, r.matched);
-        const gb = (entriesWritten * bytesPerEntry) / 1024 / 1024 / 1024;
+        const gb = (entries: number) => (entries * bytesPerEntry) / 1024 / 1024 / 1024;
+
+        /*
+          BEFORE R143. saveCache serialised the WHOLE cache on every build that
+          fetched anything, so warming from empty wrote 400 + 800 + ... + N
+          entries: an arithmetic series, O(N^2). Kept because it is the number
+          that justified the change, and a fix is easier to trust beside the
+          thing it replaced.
+        */
+        const wasEntries = (nights * (nights + 1) * perNight) / 2;
+
+        /*
+          AFTER R143. A night appends what it learned -- N entries across the
+          whole warming -- and the base is folded in only once the log has grown
+          to the size of the base, so compaction happens at 64, 128, 256 ... and
+          the sizes it rewrites sum to about 2N. Roughly 3N in total, i.e.
+          LINEAR, against the old quadratic.
+
+          Modelled rather than measured, like the column beside it: a real run is
+          rate-limited over weeks. The model is stated here so it can be argued
+          with instead of believed.
+        */
+        const nowEntries = r.matched * 3;
+
         return [
           String(r.n),
           String(r.matched),
           String(r.coldRequests),
           String(nights),
-          `${gb.toFixed(2)} GB`,
+          `${gb(wasEntries).toFixed(2)} GB`,
+          `${gb(nowEntries).toFixed(2)} GB`,
         ];
       }),
     ),

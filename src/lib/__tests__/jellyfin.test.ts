@@ -202,3 +202,59 @@ describe('getMovies pages through a large library', () => {
     expect(movies).toHaveLength(0);
   });
 });
+
+describe('a server that ignores StartIndex and Limit', () => {
+  it('does not accumulate the library once per page', async () => {
+    /*
+      R144. A server is not obliged to honour paging, and one that ignores it
+      answers every page with the whole library. The first paged version trusted
+      the page it was handed, so against such a server it collected the entire
+      library once per page up to the ceiling -- at 50,000 titles and 1000 pages
+      that is fifty million objects, and it died on a heap limit.
+
+      Found by accident: the performance benchmark's fetch stub ignores paging,
+      which made it an adversary nobody designed.
+    */
+    const whole = Array.from({ length: 600 }, (_, i) => ({
+      Id: `id-${i}`,
+      Name: `Film ${i}`,
+      ProductionYear: 2001,
+      RunTimeTicks: 100 * 600_000_000,
+      Genres: ['Action'],
+      ProviderIds: { Tmdb: String(i) },
+    }));
+    // Same 600 every time, whatever was asked for.
+    const fetchFn = vi.fn(async () => jsonResponse({ Items: whole }));
+
+    const movies = await getMovies({}, defaultConfig({ ...cfgBase, fetchFn }));
+
+    expect(movies, 'the library was collected more than once').toHaveLength(600);
+    // One page to read it, one to discover there is nothing new.
+    expect(fetchFn.mock.calls.length).toBeLessThanOrEqual(2);
+  });
+
+  it('still returns each title once when pages overlap', async () => {
+    // A server that pages but overlaps -- an item added mid-scan shifts the
+    // window -- must not produce the same film twice in the deck.
+    let call = 0;
+    const item = (i: number) => ({
+      Id: `id-${i}`,
+      Name: `Film ${i}`,
+      ProductionYear: 2001,
+      RunTimeTicks: 100 * 600_000_000,
+      Genres: ['Action'],
+      ProviderIds: { Tmdb: String(i) },
+    });
+    const fetchFn = vi.fn(async () => {
+      const offset = call === 0 ? 0 : 400; // second page overlaps the first
+      call += 1;
+      return jsonResponse({
+        Items: Array.from({ length: call === 1 ? 500 : 200 }, (_, i) => item(offset + i)),
+      });
+    });
+
+    const movies = await getMovies({}, defaultConfig({ ...cfgBase, fetchFn }));
+    const ids = movies.map((m) => m.jellyfinItemId);
+    expect(new Set(ids).size, 'a title appears twice in the deck').toBe(ids.length);
+  });
+});

@@ -2297,3 +2297,39 @@ repository that runs mutations on every gate: a red test names its cause in one
 line, while a hang looks like a slow machine until something times out and
 reports a mystery. The harness would have called this `ERROR` after 120 seconds
 and been right to, but only the shape of the fix makes the next one legible.
+
+### R144, continued — the paged fetch trusted the pages it was handed
+
+Paging the library was right, and the first version of it had a defect worse
+than the one it fixed.
+
+A server is not obliged to honour `StartIndex` and `Limit`. One that ignores
+them answers every page with the whole library — and the loop, trusting the page
+it was handed, collected the entire library once per page up to the ceiling. At
+50,000 titles and 1000 pages that is fifty million objects. It died on a heap
+limit.
+
+**It was found by accident, by a tool built for something else.** The U10
+benchmark's fetch stub ignores paging, because it was written before paging
+existed and had no reason to model it. That made it an adversary nobody
+designed: the exact server behaviour the new code could not survive. The
+benchmark had run clean all session; the first thing it did after this change
+was fall over.
+
+The fix counts what is *new* rather than what arrived, keyed on the item id, and
+stops when a page contributes nothing. Four stopping conditions now, because a
+server only has to be honest about one: nothing new, a short page, an empty
+page, or the count it claimed.
+
+Two things worth carrying forward.
+
+**Verify a performance claim with the tool that measured it.** The point of
+re-running the benchmark was to confirm the cache went from quadratic to linear
+— which it did, 1.36 GB to 0.12 GB modelled at 50,000 titles. The bug was not
+what I was looking for and was worth more than what I was.
+
+**A stale test double is not always a liability.** The correct-looking instinct
+on finding a stub that ignores the parameters the code now sends is to update
+the stub. Doing that first would have hidden this; the stub was modelling a real
+server, just not a well-behaved one. It stays as it is, and there are now unit
+tests that model the same rudeness deliberately.

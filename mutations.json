@@ -475,6 +475,18 @@
         "src/lib/__tests__/jellyfin.test.ts"
       ],
       "note": "Removing this guard used to HANG the suite rather than fail it, because termination depended on the server being honest about TotalRecordCount. MAX_PAGES makes it fail cleanly at the ceiling instead -- a hang is a worse failure than a red test, and in a deck build it is the skeleton that never resolves."
+    },
+    {
+      "id": "R144-trusts-the-page-it-is-handed",
+      "ruling": "R144",
+      "claim": "a server that ignores StartIndex and Limit cannot make the client collect the library once per page",
+      "file": "src/lib/jellyfin.ts",
+      "find": "      if (seen.has(item.Id)) continue;",
+      "replace": "      if (false) continue;",
+      "expect": [
+        "src/lib/__tests__/jellyfin.test.ts"
+      ],
+      "note": "A server is not obliged to honour paging. Without the dedupe the loop collected the whole library once per page up to MAX_PAGES -- fifty million objects at 50k titles, which died on a heap limit. Found because the performance benchmark stub ignores paging and was an adversary nobody designed."
     }
   ]
 }
