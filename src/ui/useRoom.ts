@@ -21,6 +21,7 @@ export interface RoomHook {
   submitGenres: (genres: string[]) => Promise<void>;
   eliminate: (genre: string) => Promise<void>;
   undoVote: () => Promise<void>;
+  rejectWinner: () => Promise<void>;
   vote: (cardId: string, points: number) => Promise<void>;
 }
 
@@ -108,6 +109,10 @@ export function useRoom(roomId: string): RoomHook {
     await emitAck('knockout:submit_genres', { genres });
   }, []);
 
+  const rejectWinner = useCallback(async () => {
+    await emitAck('winner:reject', {});
+  }, []);
+
   const undoVote = useCallback(async () => {
     await emitAck('swipe:undo', {});
   }, []);
@@ -134,6 +139,7 @@ export function useRoom(roomId: string): RoomHook {
     submitGenres,
     eliminate,
     undoVote,
+    rejectWinner,
     vote,
   };
 }

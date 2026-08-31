@@ -60,14 +60,18 @@ export function canSettle(room: Room, justVoted: string | null): Settlement | nu
   const active = activeUserIds(room);
   if (active.length === 0) return null;
 
-  // A card everybody still here has said yes to ends the room immediately.
-  if (justVoted && isInstantMatch(room.votes, justVoted, active)) {
+  // A card everybody still here has said yes to ends the room immediately --
+  // unless the room already turned it down, in which case offering it again is
+  // the app arguing with them (R63).
+  const rejected = new Set(room.rejected);
+  if (justVoted && !rejected.has(justVoted) && isInstantMatch(room.votes, justVoted, active)) {
     return { cardId: justVoted, viaFallback: false };
   }
 
   if (!deckExhausted(room)) return null;
 
-  // Out of cards: the points decide. A deck with nothing in it has no winner,
-  // and says so rather than pretending.
-  return { cardId: fallbackWinner(room.deck, room.votes), viaFallback: true };
+  // Out of cards: the points decide, among the ones still standing. A deck
+  // with nothing left has no winner, and says so rather than pretending.
+  const standing = room.deck.filter((c) => !rejected.has(c.id));
+  return { cardId: fallbackWinner(standing, room.votes), viaFallback: true };
 }

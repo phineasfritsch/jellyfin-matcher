@@ -113,6 +113,23 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
         >
           {busy ? 'Sending…' : `Lock in ${picked.size}`}
         </BigButton>
+        {/*
+          R62. This is the first screen that demands an opinion, and it was the
+          only one with no way to decline: twenty genres and a greyed-out
+          button. The abstain row existed one screen later, which is exactly one
+          screen too late for somebody who does not have a preference.
+        */}
+        <button
+          type="button"
+          onClick={() => {
+            setBusy(true);
+            void submitGenres([]).finally(() => setBusy(false));
+          }}
+          disabled={busy}
+          className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-[1rem] font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985] disabled:opacity-50"
+        >
+          No preference — go with the room
+        </button>
       </Dock>
     </div>
   );

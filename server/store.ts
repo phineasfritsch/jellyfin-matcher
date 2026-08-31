@@ -37,6 +37,12 @@ export interface Room {
   /** Index of the next card each user swipes. */
   progress: Record<string, number>;
   votes: Votes;
+  /**
+   * Cards the room looked at, locked in, and then rejected. They stay out of
+   * every later settlement so "not this one" cannot hand back the same film
+   * (R63).
+   */
+  rejected: string[];
   winner: string | null;
   createdAt: number;
   lastActivity: number;
@@ -91,6 +97,7 @@ export class RoomStore {
       deck: [],
       progress: {},
       votes: {},
+      rejected: [],
       winner: null,
       createdAt: this.now(),
       lastActivity: this.now(),

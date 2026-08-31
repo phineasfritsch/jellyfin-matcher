@@ -82,3 +82,40 @@ describe('who counts toward settling a room', () => {
     expect(verdict!.cardId).toBe('c2');
   });
 });
+
+/**
+ * "Not this one." The vote that ends the night used to be the only vote with
+ * no take-back, and the only recovery was a new room code and a repeated
+ * knockout.
+ */
+describe('rejecting a winner', () => {
+  it('never hands back a card the room already turned down', () => {
+    const { room, a, b, c } = swipingRoom(2);
+    room.votes.c1 = { [a]: 2, [b]: 2, [c]: 2 };
+    expect(canSettle(room, 'c1')).toEqual({ cardId: 'c1', viaFallback: false });
+
+    room.rejected.push('c1');
+    expect(canSettle(room, 'c1')).toBeNull();
+  });
+
+  it('settles on the next best card once one is rejected', () => {
+    const { room, a, b, c } = swipingRoom(2);
+    room.deck = [
+      { id: 'c1', isHybrid: false, scores: { composite: 90 } },
+      { id: 'c2', isHybrid: false, scores: { composite: 70 } },
+    ] as never;
+    for (const id of [a, b, c]) room.progress[id] = 2;
+
+    expect(canSettle(room, null)).toEqual({ cardId: 'c1', viaFallback: true });
+    room.rejected.push('c1');
+    expect(canSettle(room, null)).toEqual({ cardId: 'c2', viaFallback: true });
+  });
+
+  it('says there is no winner rather than re-offering the rejected one', () => {
+    const { room, a, b, c } = swipingRoom(1);
+    room.deck = [{ id: 'c1', isHybrid: false, scores: { composite: 90 } }] as never;
+    for (const id of [a, b, c]) room.progress[id] = 1;
+    room.rejected.push('c1');
+    expect(canSettle(room, null)).toEqual({ cardId: null, viaFallback: true });
+  });
+});

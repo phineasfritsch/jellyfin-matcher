@@ -1,7 +1,10 @@
 /**
  * Genre knockout engine — a pure state machine, N-user safe.
  *
- * CHECKBOX: every member submits the genres they're open to tonight.
+ * CHECKBOX: every member submits the genres they're open to tonight. An empty
+ * submission is an abstention -- "I'm fine with anything" -- and is left out of
+ * both the intersection and the union rather than emptying them (R62). Without
+ * that, the one person with no preference forces a revote for everybody.
  * Resolution by overlap (intersection of all members' picks):
  *   overlap = 2 → lock both, DONE
  *   overlap > 2 → pool = overlap, ELIMINATION rounds
@@ -75,7 +78,13 @@ export function submitGenres(
   const allIn = allUserIds.every((id) => submissions[id] !== undefined);
   if (!allIn) return next;
 
-  const lists = allUserIds.map((id) => submissions[id]!);
+  // Abstainers are counted as having answered but do not constrain the room.
+  const lists = allUserIds.map((id) => submissions[id]!).filter((l) => l.length > 0);
+  if (lists.length === 0) {
+    // Everybody abstained. Nobody has an opinion, so the room needs the full
+    // list back rather than a deadlock.
+    return { ...createKnockout(), needsRevote: true };
+  }
   const overlap = intersectAll(lists);
 
   if (overlap.length === 2) {

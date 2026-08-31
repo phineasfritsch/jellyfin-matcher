@@ -19,6 +19,8 @@ export interface ClientRoom {
   /** Only your own votes. */
   votes: Record<string, Record<string, number>>;
   winner: string | null;
+  /** Cards the room locked in and then turned down. */
+  rejected: string[];
   /** How many other members have finished the deck. */
   othersFinished: number;
   /** How many members have submitted genre picks, including you. */

@@ -16,7 +16,7 @@ export function WinnerScreen({
   roomHook: RoomHook;
   match: MatchDeclaredPayload | null;
 }) {
-  const { room } = roomHook;
+  const { room, rejectWinner } = roomHook;
   const heading = useRef<HTMLHeadingElement>(null);
 
   /**
@@ -107,6 +107,18 @@ export function WinnerScreen({
       </div>
 
       <Dock>
+        {/*
+          R63: the vote that ends the night was the only one with no take-back.
+          Any member can reject -- the person who mis-tapped is often not the
+          person holding the host's phone.
+        */}
+        <button
+          type="button"
+          onClick={() => void rejectWinner()}
+          className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-[1rem] font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985]"
+        >
+          Not this one — keep swiping
+        </button>
         {held && match?.playUrl ? (
           <a
             href={match.playUrl}

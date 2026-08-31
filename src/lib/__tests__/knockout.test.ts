@@ -138,3 +138,31 @@ describe('abstaining', () => {
     expect(s.phase).toBe('DONE');
   });
 });
+
+describe('abstaining from the genre picks', () => {
+  it('does not drag the overlap to nothing for everyone else', () => {
+    let s = createKnockout();
+    s = submitGenres(s, 'a', ['Horror', 'Sci-Fi'], ['a', 'b']);
+    // Bex has no preference. Before R62 this emptied the intersection and
+    // forced the whole room to vote again.
+    s = submitGenres(s, 'b', [], ['a', 'b']);
+    expect(s.needsRevote).toBe(false);
+    expect(s.phase).toBe('DONE');
+    expect(s.locked.sort()).toEqual(['Horror', 'Sci-Fi']);
+  });
+
+  it('still counts the abstainer as having answered', () => {
+    let s = createKnockout();
+    s = submitGenres(s, 'a', ['Horror', 'Sci-Fi', 'Crime'], ['a', 'b']);
+    expect(s.phase).toBe('CHECKBOX');
+    s = submitGenres(s, 'b', [], ['a', 'b']);
+    expect(s.phase).not.toBe('CHECKBOX');
+  });
+
+  it('asks again only when nobody at all has an opinion', () => {
+    let s = createKnockout();
+    s = submitGenres(s, 'a', [], ['a', 'b']);
+    s = submitGenres(s, 'b', [], ['a', 'b']);
+    expect(s.needsRevote).toBe(true);
+  });
+});

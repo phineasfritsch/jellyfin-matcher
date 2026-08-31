@@ -416,6 +416,36 @@ io.on('connection', (socket) => {
     }
   });
 
+  /**
+   * "Not this one." (R63)
+   *
+   * The vote that ends the night was the only vote with no take-back: once
+   * `declareWinner` fires the room is FINISHED and `swipe:undo` refuses. A
+   * mis-tap on the last card ended the evening on a film nobody chose, and the
+   * only recovery was a new room code and the whole knockout again.
+   *
+   * Rejecting puts the room back where it was with that card struck out. Any
+   * member may do it -- a host role would make the person holding the phone
+   * the only one who can fix the room's mistake.
+   */
+  socket.on('winner:reject', (_payload: unknown, ack?: Ack) => {
+    try {
+      const room = socketRoom(socket);
+      if (!room || room.status !== 'FINISHED') throw new Error('No winner to reject');
+      if (room.winner) room.rejected.push(room.winner);
+      room.winner = null;
+      room.status = 'SWIPING';
+      store.touch(room);
+      ack?.({ ok: true });
+
+      // The deck may already be finished for everyone, in which case the
+      // points settle it again immediately on whatever is left standing.
+      if (!settleIfPossible(room, null)) broadcast(room);
+    } catch (err) {
+      fail(ack, err);
+    }
+  });
+
   socket.on('disconnect', () => {
     const { roomId, userId } = socket.data as { roomId?: string; userId?: string };
     if (!roomId || !userId) return;
