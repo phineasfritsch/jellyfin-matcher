@@ -157,12 +157,12 @@
       "ruling": "R61",
       "claim": "the elimination ballot's own header is a count, not a progress report about people",
       "file": "src/ui/components/Knockout.tsx",
-      "find": "      <Bar left=\"Vote one out\" right={`${pool.length} left · 2 survive`} liveRight />",
-      "replace": "      <Bar left=\"Waiting on Bex\" right={`${pool.length} left · 2 survive`} liveRight />",
+      "find": "      <Bar left={t('knockout.voteOut')} right={`${pool.length} left · 2 survive`} liveRight />",
+      "replace": "      <Bar left={`Waiting on ${members.filter((u) => u.id !== userId).map((u) => u.name).join(', ')}`} right={`${pool.length} left · 2 survive`} liveRight />",
       "expect": [
         "src/ui/__tests__/knockout.render.test.tsx"
       ],
-      "note": "Two cases asserted the vote-out buttons exist and never looked at the bar above them, so turning the ballot's header into 'waiting on Bex' was invisible (R129). Re-anchored after R136 added liveRight to this line: the harness reported ERROR rather than KILLED, which is the distinction it exists to make -- an unapplied mutation looks exactly like a test that caught nothing."
+      "note": "Two cases asserted the vote-out buttons exist and never looked at the bar above them, so turning the ballot's header into 'waiting on Bex' was invisible (R129). Re-anchored after R136 added liveRight to this line: the harness reported ERROR rather than KILLED, which is the distinction it exists to make -- an unapplied mutation looks exactly like a test that caught nothing. Re-anchored again after R145 moved the label into the catalogue: the harness reported ERROR rather than SURVIVED, which is the distinction it exists to make."
     },
     {
       "id": "R111-lobby-never-grants-scope",
@@ -348,13 +348,14 @@
       "id": "R134-abstain-not-speakable",
       "ruling": "R134",
       "claim": "the abstain row can be spoken to: its accessible name contains the words on it",
-      "file": "src/ui/components/Knockout.tsx",
-      "find": "          ariaLabel=\"No preference — go with the room\"",
-      "replace": "          ariaLabel=\"Abstain — go with the room\"",
+      "file": "src/ui/strings.ts",
+      "find": "    text: 'No preference — go with the room',",
+      "replace": "    text: 'Abstain — go with the room',",
       "expect": [
+        "src/ui/__tests__/strings.test.ts",
         "src/ui/__tests__/a11y.test.tsx"
       ],
-      "note": "WCAG 2.2 A 2.5.3. The row reads \"No preference\" and was named \"Abstain — go with the room\", with not one word in common, so \"click No preference\" did nothing. It is the control R47 added FOR the person who does not want to invent an opinion, and it was the one a voice user could not reach."
+      "note": "WCAG 2.2 A 2.5.3. The row reads \"No preference\" and was named \"Abstain — go with the room\", with not one word in common, so \"click No preference\" did nothing. It is the control R47 added FOR the person who does not want to invent an opinion, and it was the one a voice user could not reach. Moved to the catalogue by R145: the label now lives there and is used for BOTH the visible text and the accessible name, so that is where a translation would break it. It goes red in the catalogue AND in the rendered screen."
     },
     {
       "id": "R134-undo-not-speakable",
@@ -487,6 +488,30 @@
         "src/lib/__tests__/jellyfin.test.ts"
       ],
       "note": "A server is not obliged to honour paging. Without the dedupe the loop collected the whole library once per page up to MAX_PAGES -- fifty million objects at 50k titles, which died on a heap limit. Found because the performance benchmark stub ignores paging and was an adversary nobody designed."
+    },
+    {
+      "id": "R145-catalogue-promises-approval",
+      "ruling": "R145",
+      "claim": "a translation cannot add the approval gate the app cannot enforce",
+      "file": "src/ui/strings.ts",
+      "find": "    text: 'Nothing is fetched from this screen.",
+      "replace": "    text: 'Your host approves it first. Nothing is fetched from this screen.",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "R107/R111 live entirely in wording. Once the sentence moves to a catalogue, a translator is the person most likely to undo them, and they cannot see the ruling from the string."
+    },
+    {
+      "id": "R145-catalogue-names-a-peer",
+      "ruling": "R145",
+      "claim": "the peer count template can interpolate numbers and nothing else",
+      "file": "src/ui/strings.ts",
+      "find": "    text: '{done} of {total} others finished',",
+      "replace": "    text: '{done} of {total} finished, waiting on {who}',",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "R46/R61: peer progress is a count and never a name. A placeholder called who would be the whole defect arriving through the back door of a translation file."
     }
   ]
 }

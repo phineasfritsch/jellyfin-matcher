@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ABSTAIN } from '../../lib/knockout';
 import type { RoomHook } from '../useRoom';
 import { Bar, BigButton, Dock, Group, Row, RowButton } from './Listing';
+import { t } from '../strings';
 
 export function Knockout({ roomHook }: { roomHook: RoomHook }) {
   const { room, userId } = roomHook;
@@ -36,8 +37,8 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
   if (submitted) {
     return (
       <Waiting
-        title="Picks locked in"
-        detail="Nobody can see what you picked until everyone is in."
+        title={t('knockout.locked')}
+        detail={t('knockout.hidden')}
         count={`${submittedCount} of ${members.length} in`}
       />
     );
@@ -55,14 +56,14 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* R136: moves when somebody else answers, so it says so (4.1.3). */}
-      <Bar left="What are you open to?" right={`${submittedCount} of ${members.length} in`} liveRight />
+      <Bar left={t('knockout.prompt')} right={`${submittedCount} of ${members.length} in`} liveRight />
 
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
         <Group>
           <Row
             label="HOW"
             title="Check everything you would watch"
-            detail="Overlap decides the deck. Picking more makes a deck more likely, not worse."
+            detail={t('knockout.overlap')}
           />
         </Group>
         {room.knockout.needsRevote && (
@@ -83,7 +84,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
           */
           <Group>
             <p role="status" className="sr-only">
-              Loading genres
+              {t('knockout.loading')}
             </p>
             <div aria-hidden>
               {Array.from({ length: 8 }, (_, i) => (
@@ -138,7 +139,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
           disabled={busy}
           className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-row font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985] disabled:opacity-50"
         >
-          No preference — go with the room
+          {t('knockout.abstain')}
         </button>
       </Dock>
     </div>
@@ -171,7 +172,7 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* R136: the pool shrinks as the room votes, with focus elsewhere. */}
-      <Bar left="Vote one out" right={`${pool.length} left · 2 survive`} liveRight />
+      <Bar left={t('knockout.voteOut')} right={`${pool.length} left · 2 survive`} liveRight />
 
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
         <Group>
@@ -211,7 +212,7 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
             opinion, and a voice user could not reach it. The name now starts
             with what the row says.
           */
-          ariaLabel="No preference — go with the room"
+          ariaLabel={t('knockout.abstain')}
           onClick={() => void eliminate(ABSTAIN)}
         />
         </Group>

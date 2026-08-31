@@ -2333,3 +2333,50 @@ on finding a stub that ignores the parameters the code now sends is to update
 the stub. Doing that first would have hidden this; the stub was modelling a real
 server, just not a well-behaved one. It stays as it is, and there are now unit
 tests that model the same rudeness deliberately.
+
+### R145 — Extraction, and the promises a translator cannot see
+
+Gate U8. Every string in this app was hardcoded English, and the only locale API
+anywhere in the source was one `localeCompare` in a tally sort. Jellyfin ships
+in dozens of languages, so this is the first thing an upstream maintainer asks
+about and the last thing a household would notice.
+
+`src/ui/strings.ts` is the catalogue. This is **extraction only** — the English
+moves into one file and components ask by key. It is not locale selection: there
+is one catalogue and nothing yet chooses another. `t()` is the single function
+that changes when there is a second, which is the whole reason to do the halves
+in this order.
+
+**Two findings made this tractable, and both were checks rather than guesses.**
+
+The queue item had warned that roughly 190 pins assert English sentences, so
+extraction "has to move the pins in the same commit". It does not. `pins.test.ts`
+greps the comment-stripped source of `app/`, `src/` and `server/`, and the
+catalogue is in `src/` — so a pinned sentence is still found, it simply lives
+somewhere else. Migrating the knockout moved eight strings and broke **zero**
+pins. That turns a feared big-bang into something mechanical.
+
+And the first draft of the catalogue **paraphrased a string it was supposed to
+copy**: "Overlap decides the deck, so picking more makes a deck more likely"
+against the shipped "Overlap decides the deck. Picking more makes a deck more
+likely, not worse." The tests caught it, but the lesson is that a catalogue
+written from memory is a rewrite wearing the clothes of a refactor. It is copied
+from source now, and that is the rule for the rest of the migration.
+
+**The risk extraction introduces is specific.** A translator sees a string, not
+a ruling. Four of this project's rulings live entirely in wording — the
+disclosure that must not promise an approval gate (R107, R111) or state a size
+(R91), the peer count that must never name anybody (R46, R61), the abstain label
+that must contain the words a voice user can say (R134). A well-meaning
+translation could undo all four without touching a line of logic.
+
+So each load-bearing entry carries a `why` in the data, and `strings.test.ts`
+makes the same assertions the rendering tests make, one level earlier. Three
+mutations shaped like plausible translations — adding "your host approves it
+first", adding a `{who}` placeholder to the peer count, restoring "Abstain" over
+"No preference" — all go red, and the last one goes red in the rendered screen
+as well as the catalogue.
+
+**What remains.** Two components of nineteen files are migrated. The rest is
+mechanical now that the pin question is answered, and locale selection is a
+separate piece of work that this deliberately does not pretend to have done.
