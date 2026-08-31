@@ -62,8 +62,11 @@ export function VoteRow({
           type="button"
           aria-label={`${v.say} ${title}, ${signed(v.points)}`}
           onClick={() => onVote(v.points)}
-          className={`flex min-h-[62px] cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[var(--radius-control)] px-1 py-2 ring-1 transition active:scale-95 ${v.skin}`}
+          className={`vote-btn flex min-h-[62px] cursor-pointer items-center justify-center rounded-[var(--radius-control)] px-1 py-2 ring-1 transition active:scale-95 ${v.skin}`}
         >
+          {/* R104: this lies down when the button is wide, which is exactly when
+              the row has reflowed to 2x2 and the height is worth reclaiming. */}
+          <span className="vote-face">
           <span aria-hidden className="text-title leading-none">
             {v.glyph}
           </span>
@@ -82,6 +85,7 @@ export function VoteRow({
             was paying twice for the same emphasis.
           */}
           <span className="tabular text-caption">{signed(v.points)}</span>
+          </span>
         </button>
       ))}
     </div>

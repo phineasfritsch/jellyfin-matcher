@@ -969,3 +969,21 @@ behind the top one are still in the DOM — so it matched a chip four cards down
 committed a picture of a film the server *does* have, with no disclosure visible
 anywhere. R85's lesson reproduced inside the harness written to prevent it. It reads
 the active card only now.
+
+### R104 — The buttons lie down when they get wide.
+
+**Frozen:** each vote button stacked a glyph, a word and a points line, at every size.
+
+**Built:** the stack becomes a row once the button is wide enough to hold one.
+
+**Why.** At 200% text the row reflows to 2×2 (R51, R74) and pays that three-line
+stack twice: about 41% of the viewport for the controls, leaving the poster roughly
+53px. The film being voted on had become a strip above the buttons for voting on it.
+
+**A container query, not a media query.** What changed is the *button's* width, not
+the screen's. Four across, a button is about 90px and the stack is correct; two
+across it is about 195px, which is ample room to set the same three things in a line.
+So the reflow that costs the height is also the signal for reclaiming it, and the
+rule needs no breakpoint guess about screens.
+
+Measured on the recaptured 200% deck: the poster goes from about 53px to about 430.

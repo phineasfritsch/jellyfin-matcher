@@ -227,6 +227,38 @@ body {
   Content scrolls under the sticky dock, the way it does on iOS. Without this
   the last row of a list sits behind the action button and cannot be tapped.
 */
+/*
+  R104: the vote buttons lie down when they get wide.
+
+  At 200% OS text the vote row reflows to 2x2 (R51/R74), and each button stacks
+  a glyph, a word and a points line -- so the row pays that stack twice and
+  takes about 41% of the viewport, leaving the poster roughly 53px. The film
+  being voted on became a strip above the controls for voting on it.
+
+  A container query rather than a media query, because the thing that changed is
+  the BUTTON's width, not the screen's. At four across a button is about 90px
+  and the stack is right; at two across it is about 195px, which is ample room
+  to lay the same three things out in a line. The reflow that costs the height
+  is therefore also the signal for recovering it.
+*/
+.vote-btn {
+  container-type: inline-size;
+}
+.vote-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+}
+@container (min-width: 150px) {
+  .vote-face {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+}
+
 .scroll-body {
   overflow-y: auto;
   padding-bottom: 1.25rem;

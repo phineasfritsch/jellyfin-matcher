@@ -65,7 +65,7 @@ defined at their first citation.
 | **R48** | _at its citation_ | `server/handlers.ts:226` +2 |
 | **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
 | **R50** | _at its citation_ | `src/ui/components/VoteRow.tsx:14` |
-| **R51** | _at its citation_ | `src/ui/components/VoteRow.tsx:43` |
+| **R51** | _at its citation_ | `src/ui/components/VoteRow.tsx:43` +1 |
 | **R52** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:24` +1 |
 | **R53** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:70` |
 | **R54** | _at its citation_ | `server/diagnose.ts:8` +3 |
@@ -84,7 +84,7 @@ defined at their first citation.
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:169` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:146` |
-| **R74** | _at its citation_ | `src/ui/components/Listing.tsx:142` +1 |
+| **R74** | _at its citation_ | `src/ui/components/Listing.tsx:142` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:476` |
 | **R77** | _at its citation_ | `server/handlers.ts:108` +3 |
@@ -105,7 +105,7 @@ defined at their first citation.
 | **R92** | `docs/DIRECTION.md:590` | — |
 | **R93** | `docs/DIRECTION.md:609` | `server/handlers.ts:22` +2 |
 | **R94** | `docs/DIRECTION.md:651` | — |
-| **R95** | `docs/DIRECTION.md:702` | `src/ui/components/VoteRow.tsx:72` +1 |
+| **R95** | `docs/DIRECTION.md:702` | `src/ui/components/VoteRow.tsx:75` +1 |
 | **R96** | `docs/DIRECTION.md:731` | `src/ui/components/SwipeCard.tsx:119` |
 | **R97** | `docs/DIRECTION.md:750` | `server/settlement.ts:77` +1 |
 | **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:50` +3 |
