@@ -2,6 +2,84 @@
 
 Notable changes, newest first. Versions follow [semantic versioning](https://semver.org).
 
+## Unreleased
+
+Ten commits from a board review, adversarially verified before any of it was built.
+Every item the board raised that code could reach is closed. The version is
+deliberately not bumped here: cutting a release is a decision for whoever runs this
+server, and the notes are ready when they want it.
+
+**Upgrading changes one thing on the wire.** Reconnecting to a room now requires a
+seat secret that older clients never stored, so a session saved by 0.9.0 will be
+refused once and the member rejoins by name. Nothing else about a room is affected.
+
+### Fixed — security
+
+- **Anyone could take your seat.** `room:join` reconnected you as whatever member id
+  you named. Ids are a global counter (`u_1`, `u_2`) behind a four-character room
+  code, and the reconnect path only checked that the id existed — so anyone who could
+  reach the socket could join a stranger's room as an existing member, receive that
+  member's private view, and act as them for ready, genre picks, eliminations, votes,
+  undo and rejecting the winner. Supplying an id also skipped the sign-in gate, which
+  defeated the only mitigation the README offers for a public hostname.
+
+  Seats now carry a 32-byte secret, issued on the ack and required to reclaim the
+  seat. It is deliberately not stored on the room object: views are built by
+  spreading the room, so a secret there would be a secret on every phone. Taking a
+  seat is also rate limited per address, because four-character codes and counter ids
+  are enumerable.
+- The Jellyfin sign-in had no timeout at either end. A server that accepted the
+  connection and never answered held the request open forever, was never counted by
+  the rate limiter, and left the sign-in button disabled with nothing said.
+
+### Fixed — the app did not look like what was written
+
+- **The frosted glass was never rendering on Chrome.** The build emitted only
+  `-webkit-backdrop-filter`, which Chrome does not support, because Lightning CSS
+  treats a prefix written after the standard property as superseding it. Every pane
+  in the app shipped as a flat translucent rectangle — correct in dev, correct in
+  Safari, and the `@supports` fallback correctly declined to fire. Gate G7 now reads
+  the built stylesheet, and CI runs the full gate rather than skipping it.
+- **At 200% OS text the app lost the film's name** on the two screens it exists to
+  deliver. The deck card scrolled its own title out of a nested box and sheared the
+  ratings line mid-glyph; the winner screen showed a poster and two buttons. Both now
+  give leftover room to the picture and never to the words.
+- `docs/screenshots/04-knockout.png` was the loading skeleton in every version this
+  repository has ever committed, and the README shipped it above the fold promising
+  "a list of genres to pick from". The capture was waiting on a row that is present
+  in the skeleton too.
+- Row dividers were chosen against a background colour that is never on screen, and
+  measured 2.67–2.85:1 against the surface they are actually drawn on. Now 3.57–3.80.
+
+### Fixed — the app said things that were not so
+
+- **A phone closing during the knockout stranded the room permanently**, reading
+  "2 of 3 in" until the two-hour timeout reaped it. The rule that only connected
+  members decide when a room ends had been applied to the deck and not the knockout.
+- **A reload on the winner screen misreported the night.** How the night ended lived
+  only in the announcement event, so one refresh reported a film sitting in your
+  library as "Not on your server" and offered to download it.
+- Three code sites and two design rulings promised the download disclosure would
+  state a size. No size datum reaches this app from anywhere, and the real figure is
+  not settled until the host's server picks a release. The copy names the uncertainty
+  instead of inventing a number.
+
+### Changed — so this is checkable next time
+
+- The socket layer is now functions a test can call. Nothing imported `server/index.ts`,
+  so the join gating, reconnect, disconnect and vote guards never ran under the gate —
+  and three of the bugs above lived in exactly that gap while staying green.
+- The screenshot harness asserts behaviour while it is in each state, and exits
+  non-zero: focus moves into the details sheet, focus returns on close, and a reload
+  on the winner screen still tells the truth.
+- `docs/RULINGS.md` indexes all 86 numbered rulings to where each is actually
+  explained. Thirty-nine were cited in code and defined in neither design document,
+  while `CLAUDE.md` pointed at a range that document does not contain.
+- `docs/BOARD.md` records the review board — its mandates, how a round runs, and the
+  rule that the product is finished only when all five vote finished. It had existed
+  only inside chat sessions.
+- The gate is 8 checks: 415 test cases in 27 files, 150 pinned claims.
+
 ## 0.9.0 — 2026-08-31
 
 The first release with a version you can pin. Not 1.0: see [Why not 1.0](#why-not-10).
