@@ -12,7 +12,7 @@ next-env.d.ts
 .env.local
 .env.*.local
 
-# runtime cache (MDBList ratings)
+# runtime cache: MDBList ratings, and the household watch history (R105)
 .cache/
 
 # logs & misc

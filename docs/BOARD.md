@@ -191,3 +191,104 @@ readers R19-R55 live in DIRECTION.md. A reviewer chasing a cited ruling is sent
 to a document that does not contain it. `R41`'s 3:1 divider requirement and
 `R33`'s size disclosure exist only as prose that contradicts `R36`. This is
 queue item 9 and it should not be allowed to grow.
+
+## Round 2 — 2026-08-31
+
+Convened after every code-reachable item from round 1 shipped: R82-R93, twelve
+commits, `5088332..d9dc9f8`. The gate is now eight checks — 415 test cases in 27
+files, 150 pinned claims — and the nine screenshots were recaptured against a
+live Jellyfin after all of it. Each mandate confirmed its own round-1 blocking
+reason closed before looking for a new one.
+
+**Result: 0 of 5 finished.**
+
+| Mandate | Vote | Blocking reason |
+| --- | --- | --- |
+| Product | not finished | `settlement.ts:75` filters standing cards only by `room.rejected` and `match.ts:50-68` ranks with no sign check, so a film every connected member voted No on can be declared the winner and captioned "Nobody agreed outright, so the points decided." (`WinnerScreen.tsx:123-124`). |
+| Growth | not finished | The three-image hero row leads with `04-knockout.png`, the genre screen before anyone has touched it — every row `—`, a disabled 50%-opacity "Lock in 0" — then names the same film in the alt text of both of the next two images. |
+| Engineering | not finished | Every deck-build failure is classified unrecoverable at the only place it is classified (`index.ts:362` passes `room.deck.length`, which `beginDeckBuild` guarantees is 0, into `diagnose.ts:48`'s `recoverable: deckSize > 0`) and `useRoom.ts` never clears the diagnosis, so `RoomClient.tsx:46` hides the KNOCKOUT the server just restored behind a panel with no control — the exact stranding `deckBuildFailed` exists to prevent. |
+| Design Director | not finished | `06-deck-200-percent.png`: at 200% text the deck card gives the film ~53 CSS px of poster, punches a 96 CSS px blank disc through it whose glyph and 70% of whose body are clipped away, and pays ~357 CSS px — 41% of the viewport — to the vote row. |
+| Access and Honesty | not finished | Measured off `05-deck.png`, three of four vote point weights render below 4.5:1 (`-5` 2.82:1, `+2` 3.28:1, `+3` 3.54:1) because of `opacity-70` at `VoteRow.tsx:71` — on the screen a person uses fifty times a night in a dark room. |
+
+**Every one of those five blocking reasons has since been closed** — R95 through
+R105, in the commits between `c980928` and `d3ec21a`. The votes above were cast
+against the state before those fixes existed; they are the record of what the
+board found, not of what the product is now.
+
+### What changed since round 1
+
+All twelve round-1 items that were reachable by code are closed, and every
+mandate verified its own rather than taking the summary on trust. R84 named the
+film at 200% on both screens; R85 replaced the skeleton in the README's lead
+image with the real knockout; R86 made a seat something a phone proves rather
+than asserts; R87 stopped a dropped phone stranding a knockout; R88 capped the
+sign-in; R89 recomputed `--color-border` against the ground it is drawn on; R90
+stopped a reload misreporting the night; R91 stopped three code sites promising
+a download size the app has no data for; R92 indexed 39 undefined rulings; R93
+put the socket layer behind a seam that 26 tests execute. R82's fix is guarded
+by G7 grepping the *built* stylesheet, and CI moved off `--fast` so G7 runs.
+
+Two round-1 complaints were withdrawn on evidence. The glass is a real material
+now — sampling `03-lobby` at x=12 against x=60 shows the gel lifting `#0b1012`
+to `#182124`, a ~3x luminance step — though `blur(18px)` is still identity
+because nothing structured is ever painted behind a `.gel`; that is a cost
+question, not a look question, and no member asked for it. And the R93
+extraction was diffed body by body against the deleted handlers and found
+faithful, with three unmentioned improvements; the one inversion, that `wrap`
+now fires the ack after the broadcast, could not be shown to do harm today.
+
+One commit landed after the votes were cast and before this ranking: `3ea966c`,
+which added R94 and `npm run e2e:two` — two Chrome pages in two browser
+contexts through a whole night, fourteen assertions, verified by breaking it.
+It shrinks one below-the-line item and adds an eleventh unrecorded entry to
+queue item 7.
+
+### The ranked queue from this round
+
+1. Lift the vote weights off the floor of readable contrast — Access. `VoteRow.tsx:71`. critical/small.
+2. Stop the details button eating the poster at 200% text — Design. `SwipeCard.tsx:112-122`; the tappable region is ~88x29 CSS px. critical/small.
+3. Make the one control that spends the host's disk honest, idempotent and visible — Engineering. `socket.ts:65` vs `deadline.ts:15`, `index.ts:442-463`, and the dead `winner:requested` emit at `:459`. critical/medium.
+4. Give a failed deck build a way out that is not "reload every phone" — Engineering. `index.ts:362`, `diagnose.ts:48`, `useRoom.ts:44`, `RoomClient.tsx:46`. critical/medium.
+5. Photograph the download disclosure — Access. `screenshots.ts:94`, `store.ts:74`. The copy R91 rewrote has never been seen rendered, and no test renders it either. critical/medium.
+6. Refuse to declare a film the whole room said no to — Product. `settlement.ts:71-77`. critical in effect, high as ranked; ~4 lines. high/small.
+7. Move the ten shipped items in QUEUE.md to Done — Engineering. `QUEUE.md`. high/small.
+8. Reshoot the hero row so it shows a choice being made, and two different films — Growth. `screenshots.ts:234,:386`, `README.md:18-20`. high/small.
+9. Tell the truth on the reject confirm — Product. `WinnerScreen.tsx:172,:197`; branch on deck exhaustion, not `viaFallback`. high/small.
+10. Stop a lobby drop stranding the phone on a room it will never hear from again — Engineering. `useRoom.ts:71-88`, `RoomClient.tsx:27`. high/small.
+11. Make the label gutter scale, and photograph a row screen at 200% — Design. `Listing.tsx:131`, `Lobby.tsx:123,:163`. high/small.
+12. Give the deck card back its picture and its whole title at 200% — Design, Access. `VoteRow.tsx:55-74`, `SwipeCard.tsx:175`. Land the vote-row height first; the title fix is unsafe without the space. high/medium.
+
+Six of the twelve end in `npm run shots` against a live library. Batch the
+harness edits and re-capture once, then check `git status --short
+docs/screenshots/` before the next round measures anything.
+
+### Below the line, surviving but not queued
+
+The nameless busy state and dropped focus on the winner-request confirm
+(`WinnerScreen.tsx:262`, `:236-245`); three documentation promises the code does
+not keep, mergeable into one commit (`README.md:40` "Every control is a 60px
+row", the unstated movies-only library scope, and `docker-compose.yml:3-4`
+instructing the opposite of the line beneath it); the lobby's named roster below
+the fold — cut down in verification, since the live counts are above it and the
+screen leads with a person, not configuration; the deck card's blue-black
+`--gel-solid` in a green-black palette; captures from the new two-phone drive;
+a `room:again` handler — also cut down, since `winner:reject` already yields a
+second film the same evening, and the carry-forward it wants is the blocked
+household item; and seeding the name field from the last name used, which needs
+its own clear because `clearAuth` has no call sites.
+
+### Struck in verification
+
+Product's "the app has no memory of the household between nights". The gap is
+real but the claim restated `QUEUE.md:56` almost verbatim while dropping that
+entry's own two corrections, and its headline — that last night's winner is card
+1 tonight — does not follow, since winners come from an instant match on any
+voted card or the points fallback, never from `deck[0]`. Its proposed write
+point is also wrong: writing at `declare()` would record films the room then
+rejected under R63. The item stays in Blocked, where it belongs.
+
+### Not reachable by code alone
+
+Nothing in the twelve items above needs a real household. The two that do are
+already in `QUEUE.md`'s Blocked section and stay there: memory of the household
+between nights, and a way for the room to say "fine, let's just watch that one".
