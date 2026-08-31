@@ -427,6 +427,30 @@
         "src/ui/__tests__/css.test.ts"
       ],
       "note": "WCAG 2.2 AA 1.4.10. Measured at 320x256 (a 1280x1024 desktop at 400% zoom): the vote row ended at 372px on a surface that could not scroll, 116px out of reach. The first version of the guard was toContain(app-shell) over the whole file and this mutation PASSED it, because the comment above the element mentions the class."
+    },
+    {
+      "id": "R139-home-forgets-typed-name",
+      "ruling": "R139",
+      "claim": "the home screen carries a typed name to the join gate",
+      "file": "src/ui/HomeActions.tsx",
+      "find": "    rememberTypedName(name);\n",
+      "replace": "",
+      "expect": [
+        "src/ui/__tests__/home.render.test.tsx"
+      ],
+      "note": "WCAG 2.2 A 3.3.7. Deleting this left the whole suite green before home.render.test.tsx existed: the CONSUMING half was covered in roomclient.render, the producing half nowhere. HomeActions was the only component in the app with no test of any kind."
+    },
+    {
+      "id": "R139-gate-ignores-typed-name",
+      "ruling": "R139",
+      "claim": "the join gate offers back the name the guest already gave",
+      "file": "src/ui/RoomClient.tsx",
+      "find": "useState(() => getAuthName() ?? typedName() ?? '')",
+      "replace": "useState(() => getAuthName() ?? '')",
+      "expect": [
+        "src/ui/__tests__/roomclient.render.test.tsx"
+      ],
+      "note": "A guest has no account, so getAuthName() is null for exactly the person asked twice."
     }
   ]
 }

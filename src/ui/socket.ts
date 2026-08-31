@@ -7,6 +7,22 @@ let socket: Socket | null = null;
 const AUTH_TOKEN_KEY = 'matcher:auth-token';
 const AUTH_NAME_KEY = 'matcher:auth-name';
 
+/**
+ * R139: the name a guest typed on the home screen, so the join gate does not
+ * ask for it again (WCAG 2.2 A 3.3.7 Redundant Entry).
+ *
+ * Separate from AUTH_NAME_KEY on purpose. That one is who you signed in AS, and
+ * `AuthGate` decides things from it; this is a convenience for somebody with no
+ * account at all, and conflating them would make a typed name look like a
+ * session to every reader of this module.
+ *
+ * Not a URL parameter, which is the other obvious way to carry it across the
+ * navigation: a name in a path lands in browser history, in any proxy log, and
+ * in whatever the host's reverse proxy writes to disk. It is the one piece of
+ * personal data this app handles for a guest and it should not leave the phone.
+ */
+const TYPED_NAME_KEY = 'matcher:typed-name';
+
 export function getAuthToken(): string | null {
   try {
     return localStorage.getItem(AUTH_TOKEN_KEY);
@@ -18,6 +34,23 @@ export function getAuthToken(): string | null {
 export function getAuthName(): string | null {
   try {
     return localStorage.getItem(AUTH_NAME_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Remember what a guest typed, so the next screen can offer it back (R139). */
+export function rememberTypedName(name: string): void {
+  try {
+    if (name.trim()) localStorage.setItem(TYPED_NAME_KEY, name.trim());
+  } catch {
+    /* private mode: the gate simply asks again, which is the old behaviour */
+  }
+}
+
+export function typedName(): string | null {
+  try {
+    return localStorage.getItem(TYPED_NAME_KEY);
   } catch {
     return null;
   }

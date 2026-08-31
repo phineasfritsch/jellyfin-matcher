@@ -44,7 +44,17 @@ vi.mock('../AuthGate', () => ({
   isLoggedIn: () => true,
   LoginScreen: () => <div>login</div>,
 }));
-vi.mock('../socket', () => ({ getAuthName: () => 'Ada' }));
+/*
+  R139: the gate seeds from the signed-in name, then from whatever was typed on
+  the home screen. Both are mocked so a case can choose which exists -- and the
+  mock has to export BOTH, or the module under test calls undefined the moment
+  `getAuthName` returns null, which is exactly the guest path this is about.
+*/
+const stored = vi.hoisted(() => ({ authName: null as string | null, typed: null as string | null }));
+vi.mock('../socket', () => ({
+  getAuthName: () => stored.authName,
+  typedName: () => stored.typed,
+}));
 
 const { RoomClient } = await import('../RoomClient');
 
@@ -125,6 +135,8 @@ function hook(overrides: Partial<RoomHook> = {}): RoomHook {
 
 beforeEach(() => {
   roomHook.current = hook();
+  stored.authName = 'Ada';
+  stored.typed = null;
 });
 afterEach(cleanup);
 
@@ -256,5 +268,40 @@ describe('which screen a phone is looking at', () => {
     roomHook.current = hook({ connecting: true, room: null });
     const { container } = render(<RoomClient roomId="AB12" />);
     expect(container.textContent).toMatch(/reconnecting/i);
+  });
+});
+
+describe('the name a guest already gave', () => {
+  /*
+    R139 / WCAG 2.2 A 3.3.7 Redundant Entry. The join gate collects a name
+    because the QR path arrives here without passing the home screen. Somebody
+    who came THROUGH the home screen typed it there, and was asked again on the
+    next page. A guest has no account, so `getAuthName()` is null for precisely
+    the person this hurts.
+  */
+  it('offers back what was typed on the home screen', () => {
+    stored.authName = null;
+    stored.typed = 'Ravi';
+    roomHook.current = hook({ userId: null });
+    const { container } = render(<RoomClient roomId="AB12" />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    expect(input?.value, 'the guest is asked for a name they already gave').toBe('Ravi');
+  });
+
+  it('prefers the signed-in name when there is one', () => {
+    // Who you signed in AS beats what you once typed on a shared phone.
+    stored.authName = 'Ada';
+    stored.typed = 'Ravi';
+    roomHook.current = hook({ userId: null });
+    const { container } = render(<RoomClient roomId="AB12" />);
+    expect((container.querySelector('input') as HTMLInputElement)?.value).toBe('Ada');
+  });
+
+  it('still asks when it has never been told', () => {
+    stored.authName = null;
+    stored.typed = null;
+    roomHook.current = hook({ userId: null });
+    const { container } = render(<RoomClient roomId="AB12" />);
+    expect((container.querySelector('input') as HTMLInputElement)?.value).toBe('');
   });
 });

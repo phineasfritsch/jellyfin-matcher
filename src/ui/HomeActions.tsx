@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ArrowRight, Loader2, Plus } from 'lucide-react';
 import { isLoggedIn, LoginScreen, useAuthConfig } from './AuthGate';
-import { emitAck, saveSession } from './socket';
+import { emitAck, rememberTypedName, saveSession } from './socket';
 
 export function HomeActions() {
   const router = useRouter();
@@ -55,7 +55,15 @@ export function HomeActions() {
   function joinRoom() {
     if (!code.trim()) return setError('Enter a room code');
     setBusy('join');
-    // Name is collected on the room page's join gate (also the QR path).
+    /*
+      R139 / WCAG 2.2 A 3.3.7. The join gate on the room page collects the name,
+      because the QR path arrives there without passing through this screen. But
+      somebody who came THROUGH this screen has already typed it, and was asked
+      for it a second time on the very next page for no reason they could see.
+      Carried in storage rather than in the URL: a name in a path lands in
+      history and in every log between here and the server.
+    */
+    rememberTypedName(name);
     router.push(`/room/${code.trim().toUpperCase()}`);
   }
 

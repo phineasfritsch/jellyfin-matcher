@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { isLoggedIn, LoginScreen, useAuthConfig } from './AuthGate';
-import { getAuthName } from './socket';
+import { getAuthName, typedName } from './socket';
 import { Knockout } from './components/Knockout';
 import { DiagnosisPanel } from './components/DiagnosisPanel';
 import { Lobby } from './components/Lobby';
@@ -116,7 +116,11 @@ function JoinGate({
   notice?: string | null;
 }) {
   const { config } = useAuthConfig();
-  const [name, setName] = useState(() => getAuthName() ?? '');
+  /*
+    R139: the signed-in name first, then whatever was typed on the home screen.
+    A guest who came through that screen has already answered this question.
+  */
+  const [name, setName] = useState(() => getAuthName() ?? typedName() ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);

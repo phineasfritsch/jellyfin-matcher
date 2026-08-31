@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-133 rulings. 98 argued in a design document; the rest are
+134 rulings. 99 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -83,7 +83,7 @@ defined at their first citation.
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:176` |
-| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:148` |
+| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:152` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:150` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:548` |
@@ -148,5 +148,6 @@ defined at their first citation.
 | **R136** | `docs/DIRECTION.md:1952` | — |
 | **R137** | `docs/DIRECTION.md:1986` | — |
 | **R138** | `docs/DIRECTION.md:2034` | — |
+| **R139** | `docs/DIRECTION.md:2070` | — |
 
 No ruling is orphaned.

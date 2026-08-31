@@ -88,8 +88,10 @@ const {
   getAuthToken,
   getSocket,
   loadSession,
+  rememberTypedName,
   saveSession,
   setAuth,
+  typedName,
 } = socketModule;
 
 beforeEach(() => {
@@ -236,5 +238,38 @@ describe('the stored seat', () => {
   it('treats unreadable storage as no session rather than an error', () => {
     localStorage.setItem('matcher:room:AB12', 'not json');
     expect(loadSession('AB12')).toBeNull();
+  });
+});
+
+describe('the name a guest already typed', () => {
+  /*
+    R139 / WCAG 2.2 A 3.3.7 Redundant Entry. The join gate on the room page
+    collects a name, because the QR path arrives there without passing through
+    the home screen. But somebody who came THROUGH the home screen typed it
+    already, and was asked again on the very next page for no reason they could
+    see. A guest has no account, so `getAuthName()` is null for exactly the
+    person this hurts.
+  */
+  it('is remembered across the navigation', () => {
+    rememberTypedName('Ravi');
+    expect(typedName()).toBe('Ravi');
+  });
+
+  it('is kept apart from the signed-in name', () => {
+    // Conflating them would make a typed name look like a session to every
+    // reader of this module, and to AuthGate, which decides from the token.
+    rememberTypedName('Ravi');
+    expect(getAuthName()).toBeNull();
+    expect(getAuthToken()).toBeNull();
+  });
+
+  it('ignores an empty answer rather than storing a blank', () => {
+    rememberTypedName('   ');
+    expect(typedName()).toBeNull();
+  });
+
+  it('trims what it keeps, so the gate does not offer back a stray space', () => {
+    rememberTypedName('  Ravi  ');
+    expect(typedName()).toBe('Ravi');
   });
 });

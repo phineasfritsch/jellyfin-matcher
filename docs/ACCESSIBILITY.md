@@ -136,6 +136,13 @@ would satisfy the criterion and read the same.
 
 ### F4 — 3.3.7 Redundant Entry (A). The name is asked for twice.
 
+> **Fixed (R139).** The home screen remembers the typed name and the join gate
+> offers it back; the signed-in name still wins when there is one. Kept in
+> storage rather than a URL parameter, because a name in a path lands in
+> history and in every log between the phone and the server. Both halves are
+> mutation-tested — and removing the producing half used to leave the whole
+> suite green, because `HomeActions` had no test file at all.
+
 `HomeActions.tsx` collects "Your name" into an input at the top of the home
 screen. `joinRoom()` then routes to `/room/<CODE>` and carries nothing.
 `RoomClient.tsx`'s `JoinGate` seeds its own name field from `getAuthName()` —

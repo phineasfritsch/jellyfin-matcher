@@ -2066,3 +2066,38 @@ The general form, which is the opposite of R129's and worth holding beside it:
 **a well-reasoned suspicion is not a finding.** R129 was about tests that claim
 more than they check. This is about a claim of a *defect* resting on the same
 kind of unexamined reasoning, and it deserves the same treatment — go and look.
+
+### R139 — Asked for your name twice, by the screen after the one you gave it to
+
+WCAG 2.2 A 3.3.7 Redundant Entry: do not ask again for something the person has
+already told you in the same session. The home screen collects a name, then
+routes to `/room/<CODE>` carrying nothing, and the join gate there seeds itself
+from `getAuthName()` — which is null for a guest. So the one person this hurts
+is precisely the one the app is friendliest to otherwise: somebody with no
+Jellyfin account, four seconds into their evening, typing their name into a
+second box for no reason they can see.
+
+Carried in storage, not in the URL. A name in a path lands in browser history,
+in any proxy log, and in whatever the host's reverse proxy writes to disk — and
+it is the one piece of personal data this app handles for a guest. Under its own
+key rather than the auth name's, because that one is who you signed in *as* and
+`AuthGate` decides things from it; conflating them would make a typed name look
+like a session to every reader of that module.
+
+**The interesting part is what the mutation found.** Removing the line that
+remembers the name left the entire suite green — because the *consuming* half is
+covered by the screen chooser's tests and the *producing* half was covered
+nowhere. `HomeActions` was the only component in the app with no test of any
+kind, and had been through 139 rulings and six board rounds without anyone
+noticing, this session included: R115–R125 went screen by screen and skipped it,
+because it is not one of the six screens `RoomClient` chooses between.
+
+A component that no other component renders is a component that a
+coverage-by-screen sweep will miss by construction. It has a test file now, and
+both halves of the fix are in the catalogue, so neither can silently rot back.
+
+One smaller thing found on the way: the screen chooser's socket mock exported
+only `getAuthName`. Once `RoomClient` also called `typedName`, that mock would
+have thrown the moment a case exercised the guest path — the path the whole
+ruling is about. Mocks that export half a module fail exactly where the new
+behaviour lives.
