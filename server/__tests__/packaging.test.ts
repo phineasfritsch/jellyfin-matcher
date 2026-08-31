@@ -242,3 +242,40 @@ describe('concurrent runs do not cancel a deploy', () => {
     expect(cancel.trim(), 'unconditional cancelling can kill a deploy').not.toBe('true');
   });
 });
+
+/**
+ * R142: a major upgrade arrives on its own, not inside a group.
+ *
+ * The first grouped pull request this bot opened bundled eight dev
+ * dependencies, one of which was TypeScript 5 -> 7 -- a rewrite the rest of the
+ * toolchain cannot drive yet. `tsx` failed to load `next.config.ts`
+ * ("Cannot read properties of undefined (reading 'fileExists')"), which took
+ * the production build, every jsdom suite and the mutation audit with it. Seven
+ * safe updates, including the kind that carry security fixes, could not land
+ * because of the eighth.
+ *
+ * Grouping is still right for the routine stream. A major is a decision.
+ */
+describe('dependency groups do not smuggle a major', () => {
+  const config = readDoc('.github/dependabot.yml');
+  const groups = [...config.matchAll(/^ {6}([a-z-]+):$/gm)].map((m) => m[1]!);
+
+  it('declares groups at all, or this test is vacuous', () => {
+    expect(groups.length, 'no groups found to check').toBeGreaterThan(0);
+  });
+
+  it('restricts every group to minor and patch', () => {
+    /*
+      Checked per group rather than by counting: a group added later without the
+      restriction is exactly the case this exists to catch, and a count would
+      pass as long as the others still had theirs.
+    */
+    const blocks = config.split(/^ {6}(?=[a-z-]+:$)/m).slice(1);
+    for (const block of blocks) {
+      const name = /^([a-z-]+):/.exec(block)?.[1] ?? '(unnamed)';
+      expect(block, `the "${name}" group would accept a major`).toMatch(
+        /update-types:\s*\['minor',\s*'patch'\]/,
+      );
+    }
+  });
+});

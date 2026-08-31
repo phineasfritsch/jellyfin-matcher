@@ -9,14 +9,28 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
-      # Framework moves together or not at all: a Next major without its React
-      # is a broken tree, and reviewing them apart wastes the review.
+      # R142: groups carry minor and patch ONLY. A major arrives on its own.
+      #
+      # The first grouped pull request this bot opened bundled eight dev
+      # dependencies, and one of them was TypeScript 5 -> 7 -- a rewrite the
+      # rest of the toolchain cannot drive yet, so `tsx` failed to load
+      # next.config.ts and took the build, the whole jsdom suite and the
+      # mutation audit down with it. Seven safe updates, including ones that
+      # exist to carry security fixes, could not land because of the eighth.
+      #
+      # That is the opposite of what the weekly check is for. Grouping is still
+      # right for the routine stream -- one pull request rather than nine -- but
+      # a major is a decision, not a routine, and it should fail alone, labelled
+      # as itself, where the failure names the cause.
       framework:
         patterns: ['next', 'react', 'react-dom', '@types/react', '@types/react-dom']
+        update-types: ['minor', 'patch']
       realtime:
         patterns: ['socket.io', 'socket.io-client']
+        update-types: ['minor', 'patch']
       dev:
         dependency-type: development
+        update-types: ['minor', 'patch']
   - package-ecosystem: github-actions
     directory: /
     schedule:

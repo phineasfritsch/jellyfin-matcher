@@ -2183,3 +2183,45 @@ investigation was "why is the dependabot PR red", the answer to that was two
 genuine incompatibilities (R140), and this was sitting underneath as the reason
 a *different* PR was red. Fixing only the thing you set out to fix would have
 left it.
+
+### R142 — One major blocked seven safe updates, and my prediction was half right
+
+R140 ended with a prediction, deliberately labelled as one: with the two known
+incompatibilities fixed on `main`, the bot's pull request "should now rebase onto
+a tree that already accommodates it. Should, not does."
+
+It rebased. It still failed. The prediction was half right and the half it got
+wrong is the interesting half.
+
+**Right:** G1 typecheck went green. `src/css.d.ts` fixed TS2882 exactly as
+argued, verified by a real run rather than by me asserting it.
+
+**Wrong:** everything else still failed, and not for the reason I had fixed. The
+log said `Failed to load next.config.ts — Cannot read properties of undefined
+(reading 'fileExists')`. The group contained **`typescript: ^5.7.0 → ^7.0.2`** —
+a major, the rewrite — which `tsx` cannot drive yet. That took the production
+build, every jsdom suite and the mutation audit down together, and none of it
+had anything to do with `environmentMatchGlobs`.
+
+So the fix is not another compatibility patch. It is that **a group carrying
+eight dev dependencies let one of them veto the other seven**, and among those
+seven are the kind that carry security fixes. That is the opposite of what a
+weekly dependency check is for: the whole argument for it was that updates
+arrive small and often instead of all at once under pressure.
+
+Groups now take `minor` and `patch` only. Grouping is still right for the
+routine stream — one pull request rather than nine, which is the whole reason a
+single maintainer can keep up. But **a major is a decision, not a routine.** It
+should arrive alone, labelled as itself, and fail alone, where the failure names
+the cause instead of hiding inside seven innocent bumps.
+
+Two smaller things this run confirmed, both by behaving correctly under a real
+break rather than a staged one:
+
+- **G9 reported `BASELINE-RED`, not a pile of kills.** With every jsdom suite
+  already failing, twenty-eight mutations would each have "passed" against a
+  broken instrument. The harness refused, named the suites, and said why. That
+  was designed for exactly this and had never been seen doing it in anger.
+- **The vitest migration in R140 was still correct**, just not sufficient. It
+  had to happen for vitest 4 whatever else was in the group; it simply was not
+  the thing standing in front.
