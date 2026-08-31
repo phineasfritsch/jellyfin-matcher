@@ -74,6 +74,16 @@ Rules, in order of how often they are broken:
   into a shared component is not reported as a loss. Comment-stripped, so a
   deleted sentence quoted in the comment explaining its deletion cannot satisfy
   the test protecting it. Both are handled in `scripts/lib/source-scan.ts`.
+- **"The whole app" means `app/`, `src/` and `server/`, minus `__tests__`.**
+  Plus `app/globals.css`, which the pins file reads separately because it is not
+  TypeScript. Nothing under `scripts/` is scanned at all.
+
+  This matters because a pin written for a file outside that set does not fail
+  loudly — it fails *immediately and confusingly*, searching a corpus that
+  cannot contain its subject. Two pins were written that way in one session, one
+  for `scripts/screenshots.ts` and one for a test file, and both were deleted
+  rather than weakened. If the thing worth protecting lives in a script or a
+  test, the guard is a test, not a pin.
 - **Find new candidates mechanically**: `npm run inventory` (optionally
   `npm run inventory -- Lobby`). It produces a shortlist for a human, not a
   decision.

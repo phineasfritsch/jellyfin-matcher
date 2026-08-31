@@ -263,15 +263,33 @@ const DOCS: Pin[] = [
   { id: 'D07', why: 'Sessions expire; says how long', find: 'Sessions last 12 hours' },
 ];
 
-function check(pins: Pin[], haystack: string) {
+/**
+ * R110: a lost pin says where it looked.
+ *
+ * The message used to be "T69 lost: target.focus();", which reads as a deleted
+ * property and sends the reader to the component. Twice in one session the real
+ * answer was that the pin named a file this scanner never walks -- scripts/ is
+ * outside CODE_DIRS and __tests__ is skipped -- so the string was present in the
+ * repository and absent from the haystack. Naming the scope turns a confusing
+ * failure into an obvious one.
+ */
+/** What each haystack actually contains, named at the point of failure. */
+const APP_SCOPE =
+  'app/, src/ and server/, comment-stripped, minus __tests__. Nothing under scripts/ is ' +
+  'scanned: if the thing worth protecting lives there, the guard is a test, not a pin.';
+const CSS_SCOPE = `${APP_SCOPE} Plus app/globals.css, comment-stripped.`;
+const README_SCOPE = 'README.md only. Not OPERATING.md, not CLAUDE.md, not docs/.';
+
+function check(pins: Pin[], haystack: string, scope: string) {
   for (const pin of pins) {
     it(`${pin.id} ${pin.why}`, () => {
-      expect(haystack, `${pin.id} lost: ${pin.find}`).toContain(pin.find);
+      expect(haystack, `${pin.id} lost: ${pin.find}
+  Searched: ${scope}`).toContain(pin.find);
     });
   }
 }
 
-describe('pinned accessibility hooks', () => check(A11Y, APP));
+describe('pinned accessibility hooks', () => check(A11Y, APP, APP_SCOPE));
 
 describe('pinned live regions', () => {
   it('error and status surfaces still announce themselves', () => {
@@ -281,12 +299,12 @@ describe('pinned live regions', () => {
   });
 });
 
-describe('pinned copy', () => check(COPY, APP));
-describe('pinned behaviour', () => check(BEHAVIOUR, APP));
-describe('pinned sweep claims', () => check(SWEEP, APP));
-describe('pinned lobby claims', () => check(LOBBY, APP));
-describe('pinned Late Show claims', () => check(LATESHOW, APP + CSS));
-describe('pinned documentation promises', () => check(DOCS, README));
+describe('pinned copy', () => check(COPY, APP, APP_SCOPE));
+describe('pinned behaviour', () => check(BEHAVIOUR, APP, APP_SCOPE));
+describe('pinned sweep claims', () => check(SWEEP, APP, APP_SCOPE));
+describe('pinned lobby claims', () => check(LOBBY, APP, APP_SCOPE));
+describe('pinned Late Show claims', () => check(LATESHOW, APP + CSS, CSS_SCOPE));
+describe('pinned documentation promises', () => check(DOCS, README, README_SCOPE));
 
 describe('pin inventory', () => {
   it('reports how many claims are pinned', () => {

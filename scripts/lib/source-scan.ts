@@ -11,6 +11,16 @@ import { join, relative, sep } from 'node:path';
 
 export const ROOT = join(import.meta.dirname, '..', '..');
 
+/*
+  What "the whole app" means, exactly.
+
+  Not scripts/: the gate, the harnesses and the generators are not the product,
+  and a pin cannot protect anything in them. That is a real edge and it is
+  documented in OPERATING.md, because a pin written for a file outside this set
+  fails immediately with a message about a missing string rather than about a
+  scanner that never looked -- which reads like a broken pin instead of a
+  misplaced one.
+*/
 const CODE_DIRS = ['app', 'src', 'server'];
 const CODE_EXT = /\.(ts|tsx)$/;
 const SKIP_DIRS = new Set(['node_modules', '.next', '.git', '.cache', '__tests__']);

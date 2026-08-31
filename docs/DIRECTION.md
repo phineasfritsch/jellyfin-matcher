@@ -1170,3 +1170,21 @@ guard here is the test, which runs in the suite; a pin asserting that the test e
 would be a check on a check, and the thing it protects is one file away from the
 thing it reads.
 
+**A third time, immediately after writing that down.** The paragraph above was
+committed, and then a pin was added for the new failure message — in the DOCS group,
+whose haystack is `README.md` alone, for a sentence that lives in `OPERATING.md`. It
+failed for the same reason as the other two: the corpus could not contain the subject.
+
+Three occurrences in one session, the last one minutes after documenting the first
+two, is not a memory problem. It is a shape problem: the pins file has four haystacks
+(`APP`, `APP + CSS`, `README`) and nothing at the point of writing a pin says which
+one a given group searches. The failure message now names the scope, which is the
+part a reader sees when it goes wrong — but the honest note is that documentation did
+not stop the person who had just written it.
+
+**Fixed at the shape, not just written down.** Each pin group now carries a
+description of its own corpus, and the failure prints it: a lost DOCS pin says
+*"Searched: README.md only. Not OPERATING.md, not CLAUDE.md, not docs/."* That is the
+sentence all three mistakes needed, at the moment each of them happened, and it costs
+one string per group.
+
