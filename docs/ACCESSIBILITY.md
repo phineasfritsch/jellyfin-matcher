@@ -277,6 +277,19 @@ pointed at that viewport.
 
 ### R2 — 2.4.11 Focus Not Obscured, Minimum (AA). No scroll padding anywhere.
 
+> **Probed, and not reproduced (R138).** `npm run measure:reflow` now focuses a
+> control in the middle of a long listing at 320×256 and at 402×874 and measures
+> its overlap with both sticky bars. It is **0px at both**. The reasoning below
+> is sound but the conclusion was wrong: `Bar` and `Dock` are *siblings* of
+> `.scroll-body`, not children, so the scrollport is the gap between them and a
+> sticky element has nothing to cover. R137's page-scroll was the case that
+> could have broken it, which is why 320×256 is in the probe.
+>
+> Still not a pass. One synthetic listing, two viewports, `focus()` rather than
+> a real Tab sequence, and nothing here opens the details sheet over a focused
+> row. No `scroll-padding` was added: adding it would be a remedy for a defect
+> nobody has observed, and would then be unfalsifiable.
+
 `Listing.tsx` gives every screen a `Bar` that is `sticky top-0 z-20` and a `Dock`
 that is `sticky bottom-0 z-20`, with a `.scroll-body` scrolling between them.
 There is **no `scroll-padding` or `scroll-margin` in the repository** — grepped

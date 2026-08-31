@@ -107,6 +107,37 @@ const DECK = `
   </div>
 </main>`;
 
+/**
+ * R138: a listing screen, for 2.4.11 Focus Not Obscured.
+ *
+ * The audit filed this as "almost certainly failing": `Bar` is `sticky top-0`,
+ * `Dock` is `sticky bottom-0`, and there is no `scroll-padding` anywhere in the
+ * repository. The reasoning is sound and the conclusion turned out to be wrong,
+ * which is worth having in the tree rather than settled by an argument.
+ *
+ * Both bars are SIBLINGS of `.scroll-body`, not children of it, so the
+ * scrollport is the gap between them and there is nothing for a sticky element
+ * to cover. R137 made the page itself scroll below 520px, which is the case
+ * where a sticky bar could start overlaying content — so it is measured there
+ * too, and at the ordinary size for contrast.
+ */
+const LISTING = `
+<main class="app-shell mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden" data-shell>
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="scrim sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-4 py-3" data-bar>
+      <span class="text-body font-semibold">Room AB12</span>
+    </div>
+    <div class="scroll-body flex min-h-0 flex-1 flex-col" data-scroll>
+      <div style="height:900px"></div>
+      <button data-target class="min-h-[60px] w-full">a row in the middle</button>
+      <div style="height:900px"></div>
+    </div>
+    <div class="scrim-strong sticky bottom-0 z-20 flex flex-col gap-2 border-t border-[var(--color-hairline)] px-3 py-3" data-dock>
+      <button class="min-h-[52px] w-full rounded-[var(--radius-control)] bg-accent">Start the night</button>
+    </div>
+  </div>
+</main>`;
+
 async function main() {
   if (!CHROME) throw new Error('no Chrome found; set CHROME_PATH');
   const css = stylesheet();
@@ -194,6 +225,37 @@ async function main() {
       problems += 1;
     } else {
       console.log('  everything the screen needs is inside the viewport');
+    }
+  }
+
+  // --- 2.4.11 Focus Not Obscured, on the shape that actually scrolls -------
+  for (const vp of [VIEWPORTS[0]!, VIEWPORTS[2]!]) {
+    await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: 1 });
+    await page.setContent(
+      `<!doctype html><html><head><style>${css}</style>
+       <style>html,body{margin:0}</style></head>
+       <body class="bg-background text-foreground">${LISTING}</body></html>`,
+      { waitUntil: 'load' },
+    );
+    const f = await page.evaluate(() => {
+      const target = document.querySelector('[data-target]') as HTMLElement;
+      target.focus();
+      const t = target.getBoundingClientRect();
+      const bar = document.querySelector('[data-bar]')!.getBoundingClientRect();
+      const dock = document.querySelector('[data-dock]')!.getBoundingClientRect();
+      return {
+        underBar: Math.round(Math.max(0, bar.bottom - t.top)),
+        underDock: Math.round(Math.max(0, t.bottom - dock.top)),
+        height: Math.round(t.height),
+      };
+    });
+    console.log(`\n=== focus, listing screen at ${vp.width}x${vp.height} ===`);
+    const worst = Math.max(f.underBar, f.underDock);
+    if (worst > 0) {
+      console.log(`  PROBLEM: a focused ${f.height}px control is ${worst}px under a sticky bar (2.4.11)`);
+      problems += 1;
+    } else {
+      console.log(`  a focused ${f.height}px control is clear of both sticky bars`);
     }
   }
 

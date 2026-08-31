@@ -2030,3 +2030,39 @@ Three mistakes worth keeping:
   what `app-shell` is for. A guard satisfied by the prose describing the thing
   it guards. Found by running the mutation, which is the only reason this
   paragraph exists rather than a green tick.
+
+### R138 — The suspicion was sound and the conclusion was wrong
+
+The accessibility audit filed 2.4.11 Focus Not Obscured as "almost certainly
+failing", and the reasoning was good: `Bar` is `sticky top-0`, `Dock` is
+`sticky bottom-0`, and there is no `scroll-padding` anywhere in the repository.
+Those are the three ingredients of that failure. R137 had just made the page
+scroll at short viewports, which is exactly the condition that turns a sticky
+bar into something that covers content — so it looked worse, not better.
+
+It does not fail. `npm run measure:reflow` now focuses a control in the middle
+of a long listing and measures its overlap with both bars: **0px at 320×256 and
+0px at 402×874.** `Bar` and `Dock` are *siblings* of `.scroll-body` rather than
+children of it, so the scrollport is the gap between them and a sticky element
+has nothing to cover.
+
+Two things follow, and the second is the ruling.
+
+**No `scroll-padding` was added.** It is the standard remedy, it is one line,
+and adding it would have been wrong: a remedy for a defect nobody has observed
+is unfalsifiable, and it would sit in the stylesheet forever with a comment
+citing a criterion it was never shown to affect. The repository already carries
+enough guards whose value is assumed.
+
+**The probe is committed even though it found nothing.** A measurement that
+comes back clean is worth as much as one that comes back red, and costs the
+same to write — it is the difference between "we think this is fine" and "this
+was 0px on the day somebody checked". The audit's grade moved from *unverified,
+suspected failing* to *probed, not reproduced*, with the probe's limits written
+next to it: one synthetic listing, two viewports, `focus()` rather than a real
+Tab sequence, and nothing that opens the details sheet over a focused row.
+
+The general form, which is the opposite of R129's and worth holding beside it:
+**a well-reasoned suspicion is not a finding.** R129 was about tests that claim
+more than they check. This is about a claim of a *defect* resting on the same
+kind of unexamined reasoning, and it deserves the same treatment — go and look.
