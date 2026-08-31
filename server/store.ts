@@ -53,6 +53,11 @@ export class RoomStore {
 
   constructor(private now: () => number = Date.now) {}
 
+  /** Live room count, for /healthz. Read-only; safe to poll from anywhere. */
+  roomCount(): number {
+    return this.rooms.size;
+  }
+
   private generateCode(): string {
     for (;;) {
       let code = '';

@@ -10,7 +10,10 @@
     "e2e": "tsx scripts/e2e-session.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "gate": "tsx scripts/gate.ts",
+    "inventory": "tsx scripts/inventory.ts",
+    "prod:read": "tsx --env-file-if-exists=.env scripts/health.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

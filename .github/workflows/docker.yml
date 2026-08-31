@@ -13,7 +13,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Nothing ships past a red gate. The docker job builds the app anyway, so
+  # this one runs --fast: types, tests, counts and pinned claims.
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-fund --no-audit
+      - run: npm run gate -- --fast
+
   docker:
+    needs: gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +55,16 @@ jobs:
           # linux/arm64 back here if you run on a Pi.
           platforms: linux/amd64
           push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Push happens before this job runs, so the repository is never behind
+      # what is deployed. Anything reading the repo describes live code.
+      - name: Report deployed version
+        run: |
+          echo "deployed ${{ github.sha }}"
+          echo "verify with: MATCHER_URL=http://your-host:3000 npm run prod:read"

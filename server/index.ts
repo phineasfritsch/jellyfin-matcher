@@ -23,7 +23,29 @@ const nextHandler = nextApp.getRequestHandler();
 
 const app = express();
 app.use(express.json());
-app.get('/healthz', (_req, res) => res.json({ ok: true }));
+const STARTED_AT = Date.now();
+
+/**
+ * Read-only state report. `version` is the commit the running image was built
+ * from, so parity between the repository and production is a fact you can
+ * check rather than a hope (`npm run prod:read`). Reports whether each upstream
+ * is configured, never what the credentials are.
+ */
+app.get('/healthz', (_req, res) =>
+  res.json({
+    ok: true,
+    version: process.env.MATCHER_VERSION ?? 'dev',
+    startedAt: new Date(STARTED_AT).toISOString(),
+    uptimeSec: Math.round((Date.now() - STARTED_AT) / 1000),
+    rooms: store.roomCount(),
+    upstreams: {
+      jellyfin: Boolean(process.env.JELLYFIN_URL && process.env.JELLYFIN_API_KEY),
+      jellyseerr: Boolean(process.env.JELLYSEERR_URL && process.env.JELLYSEERR_API_KEY),
+      mdblist: Boolean(process.env.MDBLIST_API_KEY),
+    },
+    auth: authConfig(),
+  }),
+);
 
 // Tells the browser which actions need a Jellyfin login.
 app.get('/api/auth-config', (_req, res) => res.json(authConfig()));
