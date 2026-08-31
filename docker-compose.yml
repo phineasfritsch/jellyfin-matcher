@@ -16,10 +16,22 @@ services:
       - MDBLIST_API_KEY=your_mdblist_api_key
     volumes:
       # Keeps the MDBList ratings cache AND the watch history across restarts.
-      # Without this mount the app forgets what the household already watched
-      # every time the container is replaced, and the same two genres start
-      # dealing the same deck again.
-      - ./cache:/app/.cache
+      # Without this the app forgets what the household already watched every
+      # time the container is replaced, and the same two genres start dealing
+      # the same deck again.
+      #
+      # A NAMED volume, not a bind mount, and that is the whole point (R109).
+      # This image runs as a non-root user; Docker creates an absent bind-mount
+      # source root-owned and it does not inherit the image directory's
+      # ownership, so `./cache:/app/.cache` gives you a container that cannot
+      # write its own cache. Both writers fail open, so nothing appears broken:
+      # ratings silently re-fetch on every deck build against a metered key, and
+      # the watch history silently records nothing.
+      #
+      # If you would rather have the files visible on the host, swap the line
+      # below for `- ./cache:/app/.cache` and first run:
+      #     mkdir -p cache && sudo chown -R 10001:10001 cache
+      - matcher-cache:/app/.cache
     # The image ships a HEALTHCHECK against /healthz; this makes `docker ps`
     # tell you whether the app can actually answer, not just that it started.
     healthcheck:
@@ -28,3 +40,6 @@ services:
       timeout: 5s
       start_period: 40s
       retries: 3
+
+volumes:
+  matcher-cache:

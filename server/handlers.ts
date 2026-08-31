@@ -325,6 +325,28 @@ export function disconnect(ctx: Ctx): void {
   const current = ctx.store.leaveRoom(roomId, userId);
   if (!current) return;
 
+  /*
+    R108: the same rule as R87, one phase earlier.
+
+    A member who drops in the LOBBY is deleted outright, so the room can become
+    all-ready by their leaving. Nothing re-checked that: startKnockout is
+    reachable only from setReady, so three members with two ready and the third's
+    phone in a pocket sat on "Everyone is in. Starting." until the two-hour TTL
+    reaped the room. The lobby rendered the sentence and the server never acted
+    on it.
+
+    settlement.ts states the rule for the deck and R87 extended it to the
+    knockout. This is the third and last phase that can wait for somebody.
+  */
+  if (current.status === 'LOBBY') {
+    // startKnockout is a no-op unless the room is now all-ready, so this is one
+    // broadcast either way: the room is told somebody left, and told the round
+    // started if their leaving started it.
+    startKnockout(current, ctx.store);
+    ctx.fx.broadcast(current);
+    return;
+  }
+
   if (current.status === 'KNOCKOUT') {
     const { done } = knockoutMemberLeft(current, ctx.store);
     if (done) ctx.fx.startSwiping(current);

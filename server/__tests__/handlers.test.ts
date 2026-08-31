@@ -332,6 +332,55 @@ describe('a socket going away', () => {
     expect(h.broadcasts).toHaveLength(0);
   });
 
+  it('starts the round when the last unready member leaves the lobby', () => {
+    /*
+      R108: the same rule as R87, one phase earlier. A member who drops in the
+      LOBBY is deleted outright, so the room can become all-ready by their
+      leaving -- and nothing re-checked that, because startKnockout is reachable
+      only from setReady. Three members with two ready and the third's phone in
+      a pocket sat on "Everyone is in. Starting." until the TTL reaped the room.
+    */
+    const h = harness();
+    const host = handlers.createRoom(h.ctx, { name: 'Ada' });
+    const bex = handlers.joinRoom(h.ctx, { roomId: host.roomId, name: 'Bex' });
+    const room = h.store.getRoom(host.roomId)!;
+
+    // Ada and Bex are ready. Cy, whose socket this is, never was.
+    handlers.joinRoom(h.ctx, { roomId: host.roomId, name: 'Cy' });
+    room.users[host.userId]!.ready = true;
+    room.users[bex.userId]!.ready = true;
+
+    expect(room.status).toBe('LOBBY');
+    handlers.disconnect(h.ctx);
+    expect(room.status).toBe('KNOCKOUT');
+  });
+
+  it('keeps waiting when the room is still not all ready', () => {
+    const h = harness();
+    const host = handlers.createRoom(h.ctx, { name: 'Ada' });
+    handlers.joinRoom(h.ctx, { roomId: host.roomId, name: 'Bex' });
+    const room = h.store.getRoom(host.roomId)!;
+    handlers.joinRoom(h.ctx, { roomId: host.roomId, name: 'Cy' });
+    // Only Ada is ready, so Cy leaving does not make the room all-ready.
+    room.users[host.userId]!.ready = true;
+
+    handlers.disconnect(h.ctx);
+    expect(room.status).toBe('LOBBY');
+  });
+
+  it('does not start a round for one person left alone', () => {
+    // A room of one never starts, however ready that one person is.
+    const h = harness();
+    const host = handlers.createRoom(h.ctx, { name: 'Ada' });
+    const room = h.store.getRoom(host.roomId)!;
+    room.users[host.userId]!.ready = true;
+    handlers.joinRoom(h.ctx, { roomId: host.roomId, name: 'Bex' });
+    room.users[Object.keys(room.users)[1]!]!.ready = true;
+
+    handlers.disconnect(h.ctx);
+    expect(room.status).toBe('LOBBY');
+  });
+
   it('re-checks settlement when a swiper leaves', () => {
     const h = harness();
     const host = handlers.createRoom(h.ctx, { name: 'Ada' });

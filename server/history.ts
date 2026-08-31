@@ -18,7 +18,7 @@
  * reason: a history that cannot be written must never cost anybody their
  * evening, so every path here fails open and says so.
  */
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { MovieCandidate } from '../src/lib/types';
 
@@ -154,5 +154,34 @@ export async function historyHealth(
     return { remembered: history.watched.length, windowDays: cfg.windowDays, newest };
   } catch {
     return { remembered: 0, windowDays: cfg.windowDays, newest: null };
+  }
+}
+
+/**
+ * Can this deployment actually write its cache directory?
+ *
+ * R109. The image runs as a non-root user and chowns /app/.cache to it, which
+ * is correct -- and a bind mount over that path does NOT inherit the image
+ * directory's ownership the way a named volume does. Docker creates an absent
+ * bind-mount source root-owned, so on a Linux host the documented quickstart
+ * produced a container that could not write its own cache.
+ *
+ * Both writers fail open by design, so nothing broke: the ratings cache
+ * silently re-fetched the whole library on every deck build against a metered
+ * key, and the watch history silently recorded nothing at all -- which is
+ * indistinguishable from the repeating deck it was built to fix. A failure this
+ * quiet has to be asked about directly.
+ */
+export async function cacheWritable(
+  cfg: HistoryConfig = defaultHistoryConfig(),
+): Promise<boolean> {
+  const probe = `${cfg.file}.probe.${process.pid}`;
+  try {
+    await mkdir(path.dirname(cfg.file), { recursive: true });
+    await writeFile(probe, 'probe', 'utf8');
+    await rm(probe, { force: true });
+    return true;
+  } catch {
+    return false;
   }
 }

@@ -35,7 +35,7 @@ type Health = {
     quota: { limit: number | null; remaining: number | null; checkedAt: string | null };
     lastBuild: { cached: number; requests: number; skipped: number };
   };
-  history?: { remembered: number; windowDays: number; newest: string | null };
+  history?: { remembered: number; windowDays: number; newest: string | null; writable?: boolean };
   auth?: Record<string, boolean | string>;
 };
 
@@ -139,9 +139,16 @@ async function main() {
         ? `history   off (MATCHER_HISTORY_DAYS=0), ${h.remembered} remembered`
         : `history   ${h.remembered} film(s) remembered, ${h.windowDays}-day window`,
     );
-    if (h.windowDays > 0 && h.remembered === 0 && (health.uptimeSec ?? 0) > 3600) {
+    if (h.writable === false) {
+      // R109: not a note. Nothing will be remembered and every deck build will
+      // re-fetch the whole library against a metered key, and both failures are
+      // silent by design.
+      problems.push(
+        'the cache directory is not writable: ratings re-fetch on every deck build and the household is never remembered. On Docker this is usually a bind mount owned by root — use a named volume, or chown the host directory to uid 10001',
+      );
+    } else if (h.windowDays > 0 && h.remembered === 0 && (health.uptimeSec ?? 0) > 3600) {
       notes.push(
-        'nothing in the watch history after an hour up: if this is Docker, check the .cache volume is mounted, or the household forgets on every restart',
+        'nothing in the watch history after an hour up: nobody has finished a night yet, or the cache is not persisting',
       );
     }
   }

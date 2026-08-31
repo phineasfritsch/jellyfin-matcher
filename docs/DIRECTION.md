@@ -1081,3 +1081,52 @@ size the app does not have.
 the real API never produces, which made every approval check read as false and would
 have hidden the bug in the other direction. Fakes that do not match the shape of the
 thing they stand in for are how a suite agrees with itself.
+
+### R108 — The lobby waits on people too.
+
+**Frozen:** the disconnect handler branched on `KNOCKOUT` and `SWIPING`.
+
+**Built:** it branches on `LOBBY` as well, and re-checks whether the round can start.
+
+**Why.** A member who drops in the lobby is deleted outright, by design — so the room
+can become all-ready *by their leaving*. Nothing re-checked that: `startKnockout` is
+reachable only from `setReady`. Three members with two ready and the third's phone in
+a pocket sat on **"Everyone is in. Starting."** until the two-hour TTL reaped the
+room. The lobby rendered the sentence and the server never acted on it.
+
+This is the third and last phase that can wait for somebody. `settlement.ts` stated
+the rule for the deck, R87 extended it to the knockout, and the lobby was left out of
+both — which is what a rule applied by hand to each case looks like from the outside.
+
+### R109 — The documented install must not produce a broken deployment.
+
+**Frozen:** the quickstart mounted a host directory at `/app/.cache`.
+
+**Built:** a named volume, a fixed uid to chown to if you want a bind mount anyway,
+and a health check that refuses to call it fine.
+
+**Why.** The image runs as a non-root user and chowns `/app/.cache` to it, which is
+correct. A bind mount over that path does **not** inherit the image directory's
+ownership the way a named volume does, and Docker creates an absent bind-mount source
+root-owned — so on a Linux host the documented quickstart produced a container that
+could not write its own cache.
+
+Nothing appeared to break, because both writers fail open on purpose. The ratings
+cache silently re-fetched the whole library on every deck build, against a metered
+key, while the README promised *"after that it's cached for a week"*. And R105 — the
+memory between nights that two consecutive board rounds blocked on — silently recorded
+nothing, which is indistinguishable from the repeating deck it was built to fix. The
+compose file's own comment promised that this mount was what preserved the history.
+The mount was what broke it.
+
+**Three changes, because one would not have been enough.** The default is a named
+volume, so the documented path works. The user has a fixed uid (10001) so anybody who
+wants a bind mount has a concrete number to chown to, rather than whatever
+`adduser -S` happened to pick that build. And `/healthz` now probes writability
+directly, with `prod:read` treating a false as a **failure** rather than a note —
+because the whole character of this bug is that it produces no symptom a host would
+recognise.
+
+Failing open is still right. A cache that cannot be written must never cost anybody
+their evening. But failing open and saying nothing is a different decision, and it
+was never made deliberately.

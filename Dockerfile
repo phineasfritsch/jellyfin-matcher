@@ -33,7 +33,10 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 
 # wget is busybox's, already present on alpine, and is what HEALTHCHECK uses.
-RUN addgroup -S matcher && adduser -S matcher -G matcher
+# Fixed uid/gid, so a host that wants a bind mount has a concrete number to
+# chown to. Without one, `adduser -S` picks whatever is free and the answer to
+# "who should own ./cache" differs between builds (R109).
+RUN addgroup -g 10001 -S matcher && adduser -u 10001 -S matcher -G matcher
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next

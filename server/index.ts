@@ -44,7 +44,7 @@ import {
   undoVote,
 } from './transitions';
 import { buildDeckForRoom, genresForScope } from './deckService';
-import { historyHealth, recordWatched } from './history';
+import { cacheWritable, historyHealth, recordWatched } from './history';
 import { RoomStore, type Room, type RoomSettings } from './store';
 import * as handlers from './handlers';
 import type { Ctx } from './handlers';
@@ -166,7 +166,7 @@ app.get('/healthz', async (_req, res) =>
     // that does not mount .cache writes this into a container layer and loses
     // it on every replacement, which from the couch looks exactly like the
     // repeating deck this was built to fix.
-    history: await historyHealth(),
+    history: { ...(await historyHealth()), writable: await cacheWritable() },
     // The numbers on the things that used to have none.
     limits: {
       rooms: `${store.roomCount()}/${MAX_ROOMS}`,

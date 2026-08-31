@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { defaultHistoryConfig, recentlyWatched, recordWatched } from '../history';
+import { cacheWritable, defaultHistoryConfig, recentlyWatched, recordWatched } from '../history';
 import { buildDeck } from '../../src/lib/deck';
 import type { MovieCandidate } from '../../src/lib/types';
 
@@ -144,5 +144,36 @@ describe('the deck the second night', () => {
     const everything = new Set(library.map((c) => c.id));
     const deck = buildDeck(library, ['Horror', 'Comedy'], { exclude: everything });
     expect(deck).toHaveLength(3);
+  });
+});
+
+describe('whether the deployment can write its cache at all', () => {
+  it('says yes when it can', async () => {
+    await expect(cacheWritable(cfg())).resolves.toBe(true);
+  });
+
+  it('says no rather than throwing when it cannot', async () => {
+    /*
+      R109: the image runs as a non-root user and chowns /app/.cache to it,
+      which is right -- and a bind mount over that path does not inherit that
+      ownership, so the documented quickstart produced a container that could
+      not write its own cache. Both writers fail open, so nothing looked broken:
+      ratings silently re-fetched the whole library on every deck build against
+      a metered key, and the watch history silently recorded nothing.
+
+      A file where the directory should be is the closest a test can portably
+      get to that: the write fails for a reason the code cannot fix, which is
+      the shape of the real thing.
+    */
+    const blocked = path.join(dir, 'a-file', 'history.json');
+    await writeFile(path.join(dir, 'a-file'), 'not a directory', 'utf8');
+    await expect(cacheWritable(cfg({ file: blocked }))).resolves.toBe(false);
+  });
+
+  it('leaves nothing behind when it succeeds', async () => {
+    await cacheWritable(cfg());
+    const { readdir } = await import('node:fs/promises');
+    const left = await readdir(dir);
+    expect(left.filter((f) => f.includes('probe'))).toEqual([]);
   });
 });
