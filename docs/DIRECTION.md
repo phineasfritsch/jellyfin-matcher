@@ -1302,3 +1302,41 @@ is visible rather than deducible.
 **The send is never pressed.** "Request via Jellyseerr" opens the confirmation; the
 send is "Yes, ask" inside it, and the capture stops there. A screenshot script that
 can spend the host's disk is not a screenshot script.
+
+### R115 — The gate can execute the client.
+
+**Frozen:** no test in twenty-nine files rendered a component or ran a hook. The
+client was reachable only as text.
+
+**Built:** `jsdom` and `@testing-library/react` as dev dependencies, a vitest config
+that opts individual files into a DOM, and the first rendering test — on the winner
+screen.
+
+**Why.** Every client defect this project has found was caught by a browser harness,
+by a board member reading source, or by looking at a screenshot: a focus ring on a
+heading nobody navigated to (R80), a sheet that blurred nothing (R81), a focus trap
+closed over null (R83), a failure panel hiding the room it explained (R98), a phone
+stranded on a room it could not hear (R101), a confirm that deleted the control that
+opened it (R113). **Not one could have been caught by `npm run gate`.**
+
+The browser harnesses are better evidence and they stay — `e2e:two` drives two real
+Chrome instances through four rooms. They also need a live Jellyfin and a running
+server, so CI never runs them. Between a push and a person noticing, the client had
+no automated check at all.
+
+**The winner screen first**, because that is where being wrong has cost the most:
+it holds the only control that spends somebody else's disk, and three rulings exist
+(R90, R107, R111) because a sentence on it was wrong. Two of the three were copy
+chosen by a branch — precisely what reading source makes easy to miss and rendering
+makes obvious. R111 shipped for hours because R107 fixed three of four sites and
+nothing rendered the fourth.
+
+**Verified by reintroducing the bug.** Putting R111's sentence back turns two of the
+nine cases red in under a second. Four board rounds and a human reader were needed to
+find it the first time.
+
+**Node stays the default environment.** Most of this suite is server and library code
+with no use for a DOM and no reason to pay for one; files opt in by name. And the
+cleanup is explicit, because auto-cleanup only registers when vitest runs with
+globals enabled — without it every assertion reads the text of every render before
+it, and a test that greps for a sentence passes on one an earlier test drew.
