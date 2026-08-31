@@ -56,3 +56,42 @@ describe('the README does not promise what CI does not do', () => {
     expect(workflow).toMatch(/pull_request:/);
   });
 });
+
+/**
+ * The panel member who decides by looking, not reading, said: "there are no
+ * pictures. Not one." That was true -- the whole repo held a single icon.svg.
+ * These assert the front page keeps showing rather than telling.
+ */
+describe('the README shows the app', () => {
+  const readme = readDoc('README.md');
+
+  it('puts an image above the first section heading', () => {
+    const firstHeading = readme.indexOf('## ');
+    const firstImage = readme.indexOf('<img src="docs/screenshots/');
+    expect(firstImage).toBeGreaterThan(-1);
+    expect(firstImage).toBeLessThan(firstHeading);
+  });
+
+  it('shows the deck, which is the screen the app is actually about', () => {
+    expect(readme).toContain('docs/screenshots/05-deck.png');
+  });
+
+  it('gives every screenshot alt text, since a README is read aloud too', () => {
+    const imgs = [...readme.matchAll(/<img\s[^>]*src="docs\/screenshots\/[^"]+"[^>]*>/g)];
+    expect(imgs.length).toBeGreaterThanOrEqual(3);
+    for (const [tag] of imgs) {
+      const alt = /alt="([^"]*)"/.exec(tag)?.[1] ?? '';
+      // Not just present -- long enough to describe the screen.
+      expect(alt.length, `weak alt text: ${tag.slice(0, 80)}`).toBeGreaterThan(30);
+    }
+  });
+
+  it('says how to regenerate them, so they cannot silently rot', () => {
+    expect(readme).toContain('npm run shots');
+  });
+
+  it('leads with what the app does, not with how it was built', () => {
+    const firstLine = readme.split('\n').find((l) => l.startsWith('**')) ?? '';
+    expect(firstLine.toLowerCase()).toContain('swipe');
+  });
+});

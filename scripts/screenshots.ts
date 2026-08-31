@@ -47,6 +47,20 @@ function ack<T = Record<string, unknown>>(s: Socket, ev: string, p: unknown): Pr
   });
 }
 
+/**
+ * Every wait in this script carries a deadline.
+ *
+ * Silence has to be distinguishable from success: three separate bugs here
+ * presented identically, as a script that printed its last step and then sat
+ * there until an outer timeout killed it with no message at all.
+ */
+function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`timed out waiting for ${what}`)), ms)),
+  ]);
+}
+
 function on<T = any>(s: Socket, ev: string, pred?: (p: T) => boolean): Promise<T> {
   return new Promise((res) => {
     const h = (p: T) => {
@@ -80,16 +94,61 @@ async function hostRoom() {
  * this script fails if those labels ever go missing.
  */
 async function clickButton(page: Page, name: string) {
-  const byLabel = await page.$(`button[aria-label="${name}"]`);
-  if (byLabel) {
-    await byLabel.click();
-    return;
+  /*
+    Wait for the control, then dispatch the click in the page.
+
+    Puppeteer's Locator.click waits for the element to be "stable" -- it
+    compares bounding boxes across frames -- and on this app it never settled:
+    the ambient ground and the blurred panes repaint continuously, so the click
+    sat there past every deadline and the script died silently at an outer
+    timeout with nothing to show for it. Handles were worse; they detach the
+    moment a screen transitions.
+
+    A dispatched click skips the actionability checks, which for a screenshot
+    script is the right trade: the labels are what this drives on, and if a
+    control is missing the error below says what was on screen instead.
+
+    The label is the primary selector because a genre row is named
+    "Vote out Action" and reads only "Action" -- matching visible text finds
+    nothing.
+  */
+  const clicked = await page.evaluate((label: string) => {
+    const buttons = [...document.querySelectorAll('button')];
+    const target =
+      buttons.find((b) => b.getAttribute('aria-label') === label) ??
+      buttons.find((b) => (b.innerText || '').trim().startsWith(label));
+    if (!target) {
+      return buttons.map(
+        (b) => b.getAttribute('aria-label') ?? `text:${(b.innerText || '').trim().slice(0, 24)}`,
+      );
+    }
+    target.scrollIntoView({ block: 'center' });
+    target.click();
+    return true;
+  }, name);
+
+  if (clicked !== true) {
+    throw new Error(`No control named "${name}". On screen: ${JSON.stringify(clicked)}`);
   }
-  const handle = await page
-    .locator(`button::-p-text(${name})`)
-    .setTimeout(20_000)
-    .waitHandle();
-  await handle.click();
+}
+
+
+
+function step(msg: string) {
+  console.log(`  · ${msg}`);
+}
+
+/**
+ * Never `networkidle` on a room page.
+ *
+ * Every room holds a socket.io websocket open for its whole life, so the
+ * network is never idle by definition and `goto` times out after thirty
+ * seconds having rendered the page perfectly well. Wait for something real
+ * instead.
+ */
+async function open(page: Page, url: string, waitFor: string) {
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector(waitFor, { visible: true, timeout: 60_000 });
 }
 
 async function shoot(page: Page, name: string) {
@@ -112,7 +171,7 @@ async function main() {
     await page.setViewport(PHONE);
 
     console.log('capturing:');
-    await page.goto(`${URL}/`, { waitUntil: 'networkidle2' });
+    await open(page, `${URL}/`, '#name');
     await shoot(page, '01-home');
 
     const host = await hostRoom();
@@ -122,8 +181,10 @@ async function main() {
     // participant's view rather than a visitor's. The first version of this
     // script drove both members over sockets and captured the join gate three
     // times without noticing.
-    await page.goto(`${URL}/room/${host.roomId}`, { waitUntil: 'networkidle2' });
-    await page.locator('#join-name').fill('Bex');
+    step('waiting for the join gate');
+    await open(page, `${URL}/room/${host.roomId}`, '#join-name');
+    // Real key events: a controlled React input ignores a set .value.
+    await page.type('#join-name', 'Bex', { delay: 10 });
     await shoot(page, '02-join');
     await clickButton(page, 'Join Room');
     await page.locator('::-p-text(Tonight)').setTimeout(20_000).waitHandle();
@@ -137,23 +198,85 @@ async function main() {
     const genres = await ack<{ genres: string[] }>(host.a, 'genres:list', {});
     const picked = genres.genres.slice(0, 4);
     for (const g of picked) await clickButton(page, `Pick ${g}`);
+
+    // Assert the picks actually landed. A dispatched click on a disabled
+    // button is a silent no-op, and "Lock in" is disabled until something is
+    // picked -- so a missed pick used to present as the whole script hanging
+    // on a broadcast that was never going to come.
+    const pressed = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('button[aria-pressed="true"]')].filter((b) =>
+          (b.getAttribute('aria-label') ?? '').startsWith('Pick ') ||
+          (b.getAttribute('aria-label') ?? '').endsWith(', picked'),
+        ).length,
+    );
+    step(`${pressed} genres picked in the browser`);
+    if (pressed === 0) throw new Error('no genre picks registered in the browser');
+
     await ack(host.a, 'knockout:submit_genres', { genres: picked });
+
+    // Listen before clicking. Both members are now in, so the phase resolves
+    // inside the click itself -- attaching afterwards misses the broadcast and
+    // waits for something that has already happened. This is the second time
+    // this exact race bit in this script.
+    const left = withTimeout(
+      on(host.a, 'room:state', (r: any) => r.knockout.phase !== 'CHECKBOX'),
+      30_000,
+      'the knockout to leave the checkbox phase',
+    );
+    step('locking in genres');
     await clickButton(page, 'Lock in');
 
-    let st: any = await on(host.a, 'room:state', () => true);
+    step('waiting for the knockout to resolve');
+    let st: any = await left;
     let guard = 0;
-    while (st.status === 'KNOCKOUT' && st.knockout.phase === 'ELIMINATION' && guard++ < 8) {
+    while (st.status === 'KNOCKOUT' && st.knockout.phase === 'ELIMINATION' && guard++ < 10) {
+      const before = st.knockout.pool.length;
+      const target = st.knockout.pool[0];
+      step(`elimination round: ${before} left, voting out ${target}`);
+      // Listen BEFORE acting. The round can resolve inside the ack, so
+      // attaching the listener afterwards misses the broadcast entirely and
+      // waits for an event that has already happened.
+      const resolved = withTimeout(
+        on(
+          host.a,
+          'room:state',
+          (r: any) => r.status !== 'KNOCKOUT' || r.knockout.pool.length < before,
+        ),
+        30_000,
+        `elimination round to resolve after voting out ${target}`,
+      );
+      // Browser first, host second: driving the host first let the round move
+      // under the browser before it had rendered the round it was voting in.
+      // The room can also reach two genres and leave the knockout entirely
+      // while this is mid-round, in which case there is nothing left to click
+      // and that is success, not failure.
+      try {
+        await clickButton(page, `Vote out ${target}`);
+      } catch (err) {
+        const now: any = await withTimeout(
+          on(host.a, 'room:state', () => true),
+          5_000,
+          'a room state to confirm the knockout had ended',
+        ).catch(() => null);
+        if (now && now.status !== 'KNOCKOUT') {
+          st = now;
+          break;
+        }
+        throw err;
+      }
       await ack(host.a, 'knockout:eliminate', { genre: '__abstain__' });
-      await clickButton(page, `Vote out ${st.knockout.pool[0]}`);
-      st = await on(host.a, 'room:state', () => true);
+      st = await resolved;
     }
 
+    step('waiting for the deck to build');
     // The deck build asks MDBList for ratings ten titles at a time, so a cold
     // cache is genuinely slow. Wait for it rather than capturing a skeleton.
-    st = await Promise.race([
+    st = await withTimeout(
       on(host.a, 'room:state', (r: any) => r.status === 'SWIPING' && r.deck.length > 0),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('deck never built')), 180_000)),
-    ]);
+      180_000,
+      'the deck to build',
+    );
     await page.locator('::-p-text(Undo)').setTimeout(60_000).waitHandle().catch(() => {});
     await new Promise((r) => setTimeout(r, 4000)); // let posters land
     await shoot(page, '05-deck');
@@ -173,4 +296,11 @@ Wrote to docs/screenshots. Room ${host.roomId}, ${st.deck.length} cards.`);
   }
 }
 
-void main();
+// A rejection out of main was invisible: `void main()` swallows it, so three
+// separate failures all looked like a script that simply stopped talking.
+main().catch((err) => {
+  console.error();
+  console.error('FAILED:', err instanceof Error ? err.message : err);
+  if (err instanceof Error && err.cause) console.error('cause:', err.cause);
+  process.exit(1);
+});

@@ -1,10 +1,43 @@
 # Jellyfin Matcher
 
-A little self-hosted web app that ends the "I don't know, what do you want to watch?" spiral. Everyone opens it on their phone, you knock out genres until two survive, then you all swipe through the same deck of movies at the same time. The moment everybody likes the same film it locks in, confetti and all. If you get through the whole deck without agreeing, the points decide and you still get a winner. No stalemates, that's the whole point.
+**Everyone swipes the same deck on their own phone. The first film you all like wins.**
+No stalemates — that's the whole point.
 
-It talks to a Jellyfin server for your local library, Jellyseerr for the "any movie" mode (winners you don't own get requested automatically), and MDBList for ratings.
+A little self-hosted web app that ends the "I don't know, what do you want to watch?"
+spiral. Knock out genres until two survive, then everyone swipes the same deck at the
+same time. The moment everybody likes the same film it locks in, confetti and all. Get
+through the whole deck without agreeing and the points decide, so you still get a winner.
 
-This project was a collaboration between me and Claude (Anthropic's coding agent). I steered, made the calls on how the app should behave, and tested it on real hardware; Claude wrote most of the code and did the API spelunking. Blame for weird decisions is shared.
+<p align="center">
+  <img src="docs/screenshots/05-deck.png" alt="The swipe deck: a full-bleed poster for Toy Story 3, its year, runtime and ratings named by source, and four vote buttons showing their point weights" width="270">
+  <img src="docs/screenshots/03-lobby.png" alt="The lobby: room code, who is in the room and whether they have an account, the source and runtime settings, and a ready button" width="270">
+  <img src="docs/screenshots/04-knockout.png" alt="The genre knockout: a list of genres to pick from, with a no-preference option" width="270">
+</p>
+
+<p align="center">
+  <em>The deck, the lobby, and the genre knockout. Real films from a real library —
+  <code>npm run shots</code> regenerates these against yours.</em>
+</p>
+
+It talks to a Jellyfin server for your local library, Jellyseerr for the "any movie" mode
+(winners you don't own get requested, behind a confirmation), and MDBList for ratings.
+
+## Why you might want it
+
+- **It always ends.** Unanimous like locks it in; otherwise points decide. Somebody's
+  phone dying mid-deck doesn't hang the room.
+- **Guests don't need an account.** Scan the QR, type a name, swipe. Sign-in is only
+  asked for when an action actually costs something.
+- **Nothing downloads by accident.** "Any Movie" says so on the control, the card says
+  which films aren't on your server, and the request itself takes a second tap.
+- **It works in the dark, one-handed.** Every control is a 60px row, every vote has a
+  button as well as a gesture, and the type scales with your OS text size.
+- **One small container.** Multi-stage image, non-root, healthcheck, no database.
+
+This project was a collaboration between me and Claude (Anthropic's coding agent). I
+steered, made the calls on how the app should behave, and tested it on real hardware;
+Claude wrote most of the code and did the API spelunking. Blame for weird decisions is
+shared.
 
 ## How a session works
 
@@ -155,7 +188,7 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 228 cases across 16 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 233 cases across 16 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
