@@ -117,7 +117,19 @@ describe('while the genres are still being fetched', () => {
       about: a screen reader meeting nothing between "I'm ready" and a list of
       genres appearing. The role is the claim.
     */
-    expect(screen.getByRole('status').textContent).toContain('Loading genres');
+    /*
+      The skeleton's announcement specifically. R136 made the Bar's counters
+      live regions too, so `getByRole('status')` now finds several -- and a
+      query that assumed there was exactly one would fail for a reason that has
+      nothing to do with what this test is about. The screen-reader-only one is
+      the announcement; the visible ones are counts.
+    */
+    const spoken = screen
+      .getAllByRole('status')
+      .find((el) => el.className.includes('sr-only'));
+    expect(spoken?.textContent, 'the skeleton has no spoken announcement').toContain(
+      'Loading genres',
+    );
   });
 });
 

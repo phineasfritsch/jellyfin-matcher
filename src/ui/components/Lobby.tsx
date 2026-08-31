@@ -229,6 +229,13 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
           before he reads the code out, so the list itself is per person.
         */}
         <Row
+          /*
+            R136 / WCAG 2.2 AA 4.1.3. This is the lobby's entire job: people
+            press "I'm ready" on their own phones and this number moves on
+            everybody else's, with focus nowhere near it. A screen reader user
+            was told nothing until they went looking for it.
+          */
+          live
           label="RDY"
           tone={readyCount === members.length ? 'go' : 'plain'}
           title={`${readyCount} of ${members.length} ready`}

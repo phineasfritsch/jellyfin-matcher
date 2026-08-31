@@ -54,7 +54,8 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Bar left="What are you open to?" right={`${submittedCount} of ${members.length} in`} />
+      {/* R136: moves when somebody else answers, so it says so (4.1.3). */}
+      <Bar left="What are you open to?" right={`${submittedCount} of ${members.length} in`} liveRight />
 
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
         <Group>
@@ -169,7 +170,8 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Bar left="Vote one out" right={`${pool.length} left · 2 survive`} />
+      {/* R136: the pool shrinks as the room votes, with focus elsewhere. */}
+      <Bar left="Vote one out" right={`${pool.length} left · 2 survive`} liveRight />
 
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
         <Group>

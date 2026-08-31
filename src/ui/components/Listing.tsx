@@ -38,10 +38,13 @@ export function Bar({
   left,
   right,
   tone = 'room',
+  liveRight,
 }: {
   left: string;
   right?: string;
   tone?: 'room' | 'go' | 'stop' | 'quiet';
+  /** R136: the right-hand count moves because of what other people do. */
+  liveRight?: boolean;
 }) {
   const ink =
     tone === 'go'
@@ -55,7 +58,12 @@ export function Bar({
     <div className="scrim sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-4 py-3">
       <span className={`text-body font-semibold tracking-[-0.01em] ${ink}`}>{left}</span>
       {right && (
-        <span className="tabular shrink-0 text-label font-medium text-muted-fg">{right}</span>
+        <span
+          className="tabular shrink-0 text-label font-medium text-muted-fg"
+          {...(liveRight ? { role: 'status', 'aria-live': 'polite' as const } : {})}
+        >
+          {right}
+        </span>
       )}
     </div>
   );
@@ -148,16 +156,32 @@ const GRID =
   'grid w-full grid-cols-[3.625rem_1fr] items-stretch [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border';
 
 /** A row that only reports. Not focusable, because there is nothing to do to it. */
-export function Row(props: {
+export function Row({
+  live,
+  ...props
+}: {
   label: string;
   tone?: Tone;
   title: string;
   detail?: string;
   pill?: string;
   pillTone?: Tone;
+  /**
+     R136: announce this row when its text changes.
+
+     Opt-in, and it has to be. A screen full of polite regions is a screen that
+     talks over itself, so this is for the counts the whole room is watching --
+     the ones that move because somebody ELSE pressed something, with focus
+     nowhere near them. A row that only changes when you change it does not
+     need announcing; you already know.
+   */
+  live?: boolean;
 }) {
   return (
-    <div className={`${GRID} min-h-[60px]`}>
+    <div
+      className={`${GRID} min-h-[60px]`}
+      {...(live ? { role: 'status', 'aria-live': 'polite' as const } : {})}
+    >
       <RowBody {...props} tone={props.tone ?? 'plain'} />
     </div>
   );

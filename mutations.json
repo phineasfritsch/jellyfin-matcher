@@ -157,12 +157,12 @@
       "ruling": "R61",
       "claim": "the elimination ballot's own header is a count, not a progress report about people",
       "file": "src/ui/components/Knockout.tsx",
-      "find": "      <Bar left=\"Vote one out\" right={`${pool.length} left · 2 survive`} />",
-      "replace": "      <Bar left=\"Waiting on Bex\" right={`${pool.length} left · 2 survive`} />",
+      "find": "      <Bar left=\"Vote one out\" right={`${pool.length} left · 2 survive`} liveRight />",
+      "replace": "      <Bar left=\"Waiting on Bex\" right={`${pool.length} left · 2 survive`} liveRight />",
       "expect": [
         "src/ui/__tests__/knockout.render.test.tsx"
       ],
-      "note": "Two cases asserted the vote-out buttons exist and never looked at the bar above them, so turning the ballot's header into 'waiting on Bex' was invisible (R129)."
+      "note": "Two cases asserted the vote-out buttons exist and never looked at the bar above them, so turning the ballot's header into 'waiting on Bex' was invisible (R129). Re-anchored after R136 added liveRight to this line: the harness reported ERROR rather than KILLED, which is the distinction it exists to make -- an unapplied mutation looks exactly like a test that caught nothing."
     },
     {
       "id": "R111-lobby-never-grants-scope",
@@ -391,6 +391,30 @@
         "src/ui/__tests__/css.test.ts"
       ],
       "note": "Moving the inputs onto the token is only worth anything while the token is bright enough. The test computes the ratio rather than trusting the name -- this mutation reports 1.46:1."
+    },
+    {
+      "id": "R136-lobby-ready-count-silent",
+      "ruling": "R136",
+      "claim": "the lobby ready count announces itself when somebody else presses ready",
+      "file": "src/ui/components/Lobby.tsx",
+      "find": "          live\n          label=\"RDY\"",
+      "replace": "          label=\"RDY\"",
+      "expect": [
+        "src/ui/__tests__/a11y.test.tsx"
+      ],
+      "note": "WCAG 2.2 AA 4.1.3. The lobby entire job: the number moves on everybody else phone with focus nowhere near it."
+    },
+    {
+      "id": "R136-deck-peer-count-silent",
+      "ruling": "R136",
+      "claim": "the deck peer count announces itself",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "          role=\"status\"\n          aria-live=\"polite\"\n          className=\"tabular px-4",
+      "replace": "          className=\"tabular px-4",
+      "expect": [
+        "src/ui/__tests__/a11y.test.tsx"
+      ],
+      "note": "R46 makes this a bare count on purpose, and the count is exactly what the room IS allowed to know. It moved in silence."
     }
   ]
 }

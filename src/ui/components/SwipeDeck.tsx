@@ -87,8 +87,18 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         themselves against (R46). Ade could see the room watching him be the
         slow one; now the room only knows how many have finished.
       */}
+      {/*
+        R136 / 4.1.3. R46 made this a bare count on purpose -- Ade could see the
+        room watching him be the slow one. But the number is exactly what the
+        room IS allowed to know, and it moved in silence: it changes when
+        somebody else finishes, never when you do, so focus is never near it.
+      */}
       {others.length > 0 && (
-        <p className="tabular px-4 py-1.5 text-label text-muted-fg">
+        <p
+          role="status"
+          aria-live="polite"
+          className="tabular px-4 py-1.5 text-label text-muted-fg"
+        >
           {room.othersFinished} of {others.length} others finished
         </p>
       )}

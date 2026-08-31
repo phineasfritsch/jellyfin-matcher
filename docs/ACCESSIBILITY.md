@@ -152,6 +152,14 @@ storage `saveSession` already uses) and seed `JoinGate` from it.
 
 ### F5 — 4.1.3 Status Messages (AA). Three counts change in silence.
 
+> **Fixed (R136).** All three are live regions now — the lobby's ready count,
+> the deck's peer count and the knockout's Bar — and `a11y.test.tsx` asserts
+> each, verified by removing the attributes and watching them go red. The live
+> region is opt-in (`Row live`, `Bar liveRight`) rather than automatic, because
+> a screen full of polite regions talks over itself. The lower-confidence fourth
+> item below — the winner screen's region inserted already containing its text —
+> is **still open**.
+
 R22, R85 and R113 put live regions on the deck, on the loading skeleton, on the
 waiting screens and on the request result. Three status messages were missed,
 and they are the ones the whole room is watching:

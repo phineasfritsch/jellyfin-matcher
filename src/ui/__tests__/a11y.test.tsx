@@ -471,13 +471,18 @@ describe('SC 4.1.3 Status Messages — the deck', () => {
   */
   it('names the card in a polite live region, and follows it when the card changes', () => {
     const { container, rerender } = render(<SwipeDeck roomHook={hook(room())} />);
-    const region = container.querySelector('[role="status"]');
+    /*
+      The sr-only one. R136 made the deck's "N of M others finished" a live
+      region as well, and it comes first in the DOM, so a bare
+      `[role="status"]` now selects the count rather than the card.
+    */
+    const region = container.querySelector('.sr-only[role="status"]');
     expect(region, 'the deck has no live region at all').toBeTruthy();
     expect(region?.textContent).toContain('Film 1');
     expect(region?.textContent).toContain('1 of 3');
 
     rerender(<SwipeDeck roomHook={hook(room({ progress: { u_1: 1 } }))} />);
-    const after = container.querySelector('[role="status"]');
+    const after = container.querySelector('.sr-only[role="status"]');
     expect(after?.textContent).toContain('Film 2');
     expect(after?.textContent).not.toContain('Film 1,');
   });
@@ -487,7 +492,11 @@ describe('SC 4.1.3 Status Messages — the deck', () => {
     // route this fact takes to somebody who cannot see either.
     const wide = room({ deck: [movie('9', { jellyfinItemId: null }), movie('2')] });
     const { container } = render(<SwipeDeck roomHook={hook(wide)} />);
-    expect(container.querySelector('[role="status"]')?.textContent).toMatch(/not on your server/i);
+    // The sr-only region, for the same reason as above: the deck has more than
+    // one live region since R136, and the visible one is a count.
+    expect(container.querySelector('.sr-only[role="status"]')?.textContent).toMatch(
+      /not on your server/i,
+    );
   });
 });
 
@@ -698,5 +707,45 @@ describe('every control can be spoken to (2.5.3)', () => {
     render(<MovieDetails card={card()} onClose={vi.fn()} />);
     // The sheet renders into <body> (R81), so the container is the document.
     expectSpeakableNames(document.body);
+  });
+});
+
+/**
+ * R136 / SC 4.1.3: the counts the room watches announce themselves.
+ *
+ * R22, R85 and R113 put live regions on the deck's card announcement, the
+ * loading skeleton, the waiting screens and the request result. Three counts
+ * were missed, and they are the ones that move because somebody ELSE pressed
+ * something, with focus nowhere near them — which is exactly the condition
+ * 4.1.3 exists for.
+ *
+ * Opt-in rather than automatic: a screen full of polite regions talks over
+ * itself. A row that only changes when you change it does not need announcing,
+ * because you already know.
+ */
+describe('SC 4.1.3 — counts that move because of other people', () => {
+  it('announces the lobby ready count, which is the lobby entire job', async () => {
+    const { Lobby } = await import('../components/Lobby');
+    const lobby = room({ status: 'LOBBY' });
+    const { container } = render(<Lobby roomHook={hook(lobby)} />);
+    const regions = [...container.querySelectorAll('[role="status"]')];
+    const ready = regions.find((r) => /\d+ of \d+ ready/.test(r.textContent ?? ''));
+    expect(ready, 'the ready count is not in a live region').toBeTruthy();
+    expect(ready?.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('announces how many others have finished, which is all R46 lets it say', () => {
+    const { container } = render(<SwipeDeck roomHook={hook(room({ othersFinished: 1 }))} />);
+    const regions = [...container.querySelectorAll('[role="status"]')];
+    const finished = regions.find((r) => /others finished/.test(r.textContent ?? ''));
+    expect(finished, 'the peer count is not in a live region').toBeTruthy();
+    expect(finished?.getAttribute('aria-live')).toBe('polite');
+  });
+
+  it('announces the knockout count as the room answers', async () => {
+    const { container } = render(<Knockout roomHook={hook(picking())} />);
+    const regions = [...container.querySelectorAll('[role="status"]')];
+    const counted = regions.find((r) => /\d+ of \d+ in/.test(r.textContent ?? ''));
+    expect(counted, 'the submitted count is not in a live region').toBeTruthy();
   });
 });

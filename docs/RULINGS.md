@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-130 rulings. 95 argued in a design document; the rest are
+131 rulings. 96 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -36,7 +36,7 @@ defined at their first citation.
 | **R19** | `docs/DIRECTION.md:111` | — |
 | **R20** | `docs/DIRECTION.md:112` | — |
 | **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:74` +1 |
-| **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:114` |
+| **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:124` |
 | **R23** | `docs/DIRECTION.md:115` | — |
 | **R24** | `docs/DIRECTION.md:116` | — |
 | **R25** | `docs/DIRECTION.md:117` | `src/ui/components/VoteRow.tsx:8` |
@@ -49,18 +49,18 @@ defined at their first citation.
 | **R32** | `docs/DIRECTION.md:130` | — |
 | **R33** | `docs/DIRECTION.md:131` | — |
 | **R34** | `docs/DIRECTION.md:135` | — |
-| **R35** | `docs/DIRECTION.md:136` | `src/ui/components/Knockout.tsx:229` |
+| **R35** | `docs/DIRECTION.md:136` | `src/ui/components/Knockout.tsx:231` |
 | **R36** | `docs/DIRECTION.md:140` | — |
 | **R37** | `docs/DIRECTION.md:141` | `src/ui/components/WinnerScreen.tsx:274` |
 | **R38** | `docs/DIRECTION.md:145` | — |
-| **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:97` +3 |
+| **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:98` +3 |
 | **R40** | _at its citation_ | `src/ui/components/Listing.tsx:16` +3 |
 | **R41** | _at its citation_ | `src/ui/components/Listing.tsx:19` +2 |
-| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:206` +1 |
+| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:230` +1 |
 | **R43** | _at its citation_ | `src/ui/components/Lobby.tsx:19` +1 |
 | **R44** | _at its citation_ | `server/store.ts:17` |
 | **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:77` |
-| **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:228` +1 |
+| **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:228` +2 |
 | **R47** | _at its citation_ | `src/lib/knockout.ts:18` +2 |
 | **R48** | _at its citation_ | `server/handlers.ts:232` +2 |
 | **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
@@ -84,7 +84,7 @@ defined at their first citation.
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:176` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:146` |
-| **R74** | _at its citation_ | `src/ui/components/Listing.tsx:142` +2 |
+| **R74** | _at its citation_ | `src/ui/components/Listing.tsx:150` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:548` |
 | **R77** | _at its citation_ | `server/handlers.ts:110` +3 |
@@ -95,13 +95,13 @@ defined at their first citation.
 | **R82** | `docs/DIRECTION.md:297` | `scripts/gate.ts:134` +1 |
 | **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:53` |
 | **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:178` +1 |
-| **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:78` +3 |
+| **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:79` +3 |
 | **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:123` +11 |
 | **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:326` +11 |
 | **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:91` +2 |
 | **R89** | `docs/DIRECTION.md:509` | `app/globals.css:37` |
 | **R90** | `docs/DIRECTION.md:536` | `server/handlers.ts:300` +9 |
-| **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:213` +2 |
+| **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:237` +2 |
 | **R92** | `docs/DIRECTION.md:590` | — |
 | **R93** | `docs/DIRECTION.md:609` | `server/handlers.ts:22` +2 |
 | **R94** | `docs/DIRECTION.md:651` | — |
@@ -145,5 +145,6 @@ defined at their first citation.
 | **R133** | `docs/DIRECTION.md:1842` | — |
 | **R134** | `docs/DIRECTION.md:1866` | — |
 | **R135** | `docs/DIRECTION.md:1909` | — |
+| **R136** | `docs/DIRECTION.md:1952` | — |
 
 No ruling is orphaned.

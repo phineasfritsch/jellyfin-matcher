@@ -1948,3 +1948,37 @@ The ghost buttons and the ratings tiles are still under 3:1 and are deliberately
 left. Their label identifies them, so the criterion is arguable there; for a
 text input it is not arguable at all. That distinction is in
 `docs/ACCESSIBILITY.md` rather than silently in a diff.
+
+### R136 — The numbers the room watches were silent
+
+WCAG 2.2 AA 4.1.3 asks that a status message be announced without taking focus.
+R22, R85 and R113 already put live regions on the deck's card announcement, the
+loading skeleton, the waiting screens and the request result. Three counts were
+missed, and they are the three that matter most, because they are the ones that
+move when **somebody else** presses something:
+
+- The lobby's "N of M ready". This is the lobby's entire job. People press "I'm
+  ready" on their own phones and the number changes on everybody else's, with
+  focus nowhere near it. A screen reader user was told nothing until they went
+  looking, on the one screen whose purpose is to say whether the room can start.
+- The deck's "N of M others finished". R46 made this a bare count on purpose —
+  Ade could see the room watching him be the slow one — but the count is exactly
+  what the room *is* allowed to know, and it changes only when somebody else
+  finishes, never when you do.
+- The knockout's "N of M in" and "N left · 2 survive".
+
+The tell they share is worth naming, because it is what to look for next time:
+**a value that changes for a reason the reader did not cause is a status
+message.** A number you moved yourself needs no announcement — you already know.
+
+So the live region is opt-in, not automatic. `Row` takes `live`, `Bar` takes
+`liveRight`, and both default to off. A screen full of polite regions is a
+screen that talks over itself, and the criterion is not "announce everything".
+
+Two things this broke, both correctly. `getByRole('status')` in the knockout
+tests started matching several elements, and `container.querySelector('[role=
+"status"]')` in the accessibility tests started selecting the new visible count
+instead of the card announcement it was written for. Both now select the
+`sr-only` region explicitly. Neither was a bad test; both were queries that
+assumed there would only ever be one of something, which is a fair assumption
+right up until it is not.
