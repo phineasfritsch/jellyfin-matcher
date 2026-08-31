@@ -64,7 +64,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
   const behind = myIndex > 0 ? room.deck[myIndex - 1] : undefined;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* R40: readout only. Nothing in the top bar is tappable. */}
       <Bar
         left={room.lockedGenres.join(' + ')}
@@ -88,9 +88,8 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         slow one; now the room only knows how many have finished.
       */}
       {others.length > 0 && (
-        <p className="tabular px-4 py-1.5 text-[12.5px] text-muted-fg">
-          {others.filter((u) => (room.progress[u.id] ?? 0) >= room.deck.length).length} of{' '}
-          {others.length} others finished
+        <p className="tabular px-4 py-1.5 text-[0.7812rem] text-muted-fg">
+          {room.othersFinished} of {others.length} others finished
         </p>
       )}
       {/*
@@ -124,7 +123,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         </EmptyState>
       ) : (
         <>
-          <div className="relative min-h-0 flex-1 px-3 pt-3">
+          <div className="relative min-h-[420px] flex-1 px-3 pt-3">
             <AnimatePresence>
               {visible
                 .map((card, i) => (
@@ -207,14 +206,14 @@ function CardShell({
 
 function DeckSkeleton({ lockedGenres }: { lockedGenres: string[] }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <header className="pt-1 text-center">
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-fg">
           {lockedGenres.join(' + ')}
         </p>
         <p className="mt-1 text-sm text-muted-fg">Building your deck…</p>
       </header>
-      <div className="relative flex-1" style={{ minHeight: '55dvh' }} aria-hidden>
+      <div className="relative min-h-[420px] flex-1 px-3 pt-3" aria-hidden>
         <div className="absolute inset-0 animate-pulse rounded-2xl border border-border bg-muted" />
       </div>
       <VoteRowSkeleton />

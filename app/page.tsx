@@ -12,8 +12,8 @@ export default function HomePage() {
       <header className="flex items-center gap-3.5 px-1 pb-1">
         <Clapperboard aria-hidden className="size-8 shrink-0 text-super" />
         <div>
-          <h1 className="text-[26px] font-semibold leading-none tracking-[-0.02em]">Jellyfin Matcher</h1>
-          <p className="mt-1.5 text-[13.5px] text-muted-fg">
+          <h1 className="text-[1.625rem] font-semibold leading-none tracking-[-0.02em]">Jellyfin Matcher</h1>
+          <p className="mt-1.5 text-[0.8438rem] text-muted-fg">
             Everyone swipes the same deck. First film you all like wins.
           </p>
         </div>

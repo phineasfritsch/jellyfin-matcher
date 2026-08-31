@@ -30,9 +30,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
 
   if (!room || !userId) return null;
   const members = Object.values(room.users);
-  const submittedCount = members.filter(
-    (u) => room.knockout.submissions[u.id] !== undefined,
-  ).length;
+  const submittedCount = room.submittedCount;
   const submitted = room.knockout.submissions[userId] !== undefined;
 
   if (submitted) {
@@ -69,7 +67,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
         {room.knockout.needsRevote && (
           <p
             role="alert"
-            className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3 text-[15px] font-semibold text-destructive"
+            className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3 text-[0.9375rem] font-semibold text-destructive"
           >
             Too few shared picks — vote again with more options.
           </p>
@@ -125,7 +123,7 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
   if (!room || !userId) return null;
 
   const members = Object.values(room.users);
-  const votedCount = members.filter((u) => room.knockout.elimVotes[u.id] !== undefined).length;
+  const votedCount = room.votedCount;
   const myVote = room.knockout.elimVotes[userId];
   const pool = room.knockout.pool;
 
@@ -196,11 +194,11 @@ function Waiting({ title, detail, count }: { title: string; detail: string; coun
           was reached, and reduced motion does not freeze the only signal into
           a tilted static icon (R35).
         */}
-        <p role="status" className="text-[22px] font-semibold tracking-[-0.01em]">
+        <p role="status" className="text-[1.375rem] font-semibold tracking-[-0.01em]">
           {title}
         </p>
-        <p className="max-w-xs text-[14px] leading-relaxed text-muted-fg">{detail}</p>
-        <p className="tabular rounded-full bg-maybe/12 px-3 py-1 text-[13px] font-semibold text-maybe">
+        <p className="max-w-xs text-[0.875rem] leading-relaxed text-muted-fg">{detail}</p>
+        <p className="tabular rounded-full bg-maybe/12 px-3 py-1 text-[0.8125rem] font-semibold text-maybe">
           {count}
         </p>
       </div>

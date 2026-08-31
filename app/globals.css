@@ -136,7 +136,18 @@ body::before {
   }
 }
 
+/*
+  Type scales with the reader, not with a design decision made once.
+  Every size in the app is a rem, so raising the OS or browser text size makes
+  the app bigger -- which is the whole mechanism, and it was not working: every
+  size was a hardcoded pixel, including the label under a comment claiming the
+  vote row reflows at 200% text (R60).
+
+  No `-webkit-text-size-adjust: 100%`. That line is in most resets and it is
+  exactly the line that tells a phone to ignore the reader's preference.
+*/
 html {
+  font-size: 100%;
   touch-action: manipulation;
 }
 

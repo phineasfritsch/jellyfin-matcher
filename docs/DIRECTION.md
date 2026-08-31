@@ -208,3 +208,53 @@ exhaustive. Recovering the four lost directions would cost roughly what the whol
 bracket cost; it is not obviously worth it, and that is a judgement call for a person.
 
 Cost of this document: 88 agents, 4.66M tokens, 21 minutes.
+
+---
+
+## Retreats
+
+A frozen document that quietly stops matching the code is worse than no document,
+because the next person reads it as the state of the app. These are the places the
+build deliberately departs from what was frozen above, with the reason. Anything
+not listed here and not matching the code is a bug, not a decision.
+
+### R58 — The card keeps its facts. The poster-only card is withdrawn.
+
+**Frozen:** "Delete the entire meta block below the poster … the poster becomes
+full-bleed across the whole 328×490 card." Every fact relocated to a sheet and a
+polite live region.
+
+**Built:** the poster, and beneath it the title, year, runtime, and three ratings
+named by source.
+
+**Why.** The poster-only card was Nour's direction and it won the bracket on the
+strength of it. Two people on the panel cannot use the result. Margo hears a screen
+with almost nothing in it and does not trust a promise that lives only in a live
+region — she called it "exactly the kind of invisible-layer promise that is generated
+and never tested," which was fair, because at the time it was. Ade cannot vote on a
+poster at all and cannot ask the room to wait while he opens a sheet.
+
+The frozen version served the person who looks at the app. This one serves the people
+who use it. The sheet still carries everything else, and the live region still
+announces each card — but it is no longer the only place a fact exists.
+
+**Cost, stated plainly:** the card is busier than the direction intended, and Nour's
+argument that a poster-only card is the more confident design is not wrong. If a
+future wave finds a way to give Margo and Ade what they need without printing four
+lines under the poster, this retreat should be revisited rather than treated as
+settled.
+
+### R59 — The 640px budget is a floor, not a fixed table.
+
+**Frozen:** a fixed row-by-row budget summing to exactly 640.
+
+**Built:** the card stack is `flex-1 min-h-[420px]` inside an `overflow-hidden`
+column, with the bar, progress rail, cost line and vote row taking their natural
+height around it.
+
+**Why.** The budget table assumed one viewport. Three of the screens it governs now
+carry a cost line that only appears for films the household does not own, and Priya
+runs her OS at 200% text, where every fixed height in the table is wrong at once.
+A floor plus `flex-1` produces the same result on a 360×640 phone and degrades
+honestly everywhere else. R21 — that the deck is physically incapable of scrolling —
+is unchanged and is the part that actually mattered.

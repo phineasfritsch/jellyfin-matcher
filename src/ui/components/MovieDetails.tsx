@@ -88,8 +88,8 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[21px] font-semibold leading-tight tracking-[-0.015em]">{card.title}</h2>
-            <p className="tabular text-[12.5px] text-muted-fg">
+            <h2 className="text-[1.3125rem] font-semibold leading-tight tracking-[-0.015em]">{card.title}</h2>
+            <p className="tabular text-[0.7812rem] text-muted-fg">
               {card.year ?? 'Year unknown'}
               {card.runtime != null && ` · ${card.runtime} min`}
               {card.genres.length > 0 && ` · ${card.genres.join(', ')}`}
@@ -98,7 +98,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
                 not a cost, so it belongs here rather than competing with the
                 one chip that means money. */}
             {card.isHybrid && (
-              <p className="mt-1.5 inline-block rounded-full bg-maybe/12 px-2.5 py-1 text-[11.5px] font-semibold text-maybe">
+              <p className="mt-1.5 inline-block rounded-full bg-maybe/12 px-2.5 py-1 text-[0.7188rem] font-semibold text-maybe">
                 Tagged both genres
               </p>
             )}
@@ -138,7 +138,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
             <button
               type="button"
               onClick={() => setPlayTrailer(true)}
-              className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-[15px] font-semibold ring-1 ring-white/15"
+              className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-[0.9375rem] font-semibold ring-1 ring-white/15"
             >
               <ExternalLink aria-hidden className="size-4" /> Play trailer
             </button>
@@ -149,7 +149,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
               href={card.trailerUrl}
               target="_blank"
               rel="noreferrer"
-              className="mb-4 flex h-12 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-[15px] font-semibold ring-1 ring-white/15"
+              className="mb-4 flex h-12 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-[0.9375rem] font-semibold ring-1 ring-white/15"
             >
               <ExternalLink aria-hidden className="size-4" /> Watch trailer
             </a>
@@ -164,7 +164,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
             {card.allRatings.map((r) => (
               <li
                 key={r.source}
-                className="flex items-center justify-between rounded-[var(--radius-control)] bg-white/[0.06] px-3 py-2.5 text-[14px] ring-1 ring-white/10"
+                className="flex items-center justify-between rounded-[var(--radius-control)] bg-white/[0.06] px-3 py-2.5 text-[0.875rem] ring-1 ring-white/10"
               >
                 <span className="text-muted-fg">{SOURCE_LABELS[r.source] ?? r.source}</span>
                 <span className="tabular font-semibold">{r.score}</span>

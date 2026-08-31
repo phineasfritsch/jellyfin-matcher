@@ -53,12 +53,12 @@ export function RoomClient({ roomId }: { roomId: string }) {
   return (
     <main className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {error && !diagnosis && (
-        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[15px] font-semibold text-destructive ring-1 ring-destructive/35">
+        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[0.9375rem] font-semibold text-destructive ring-1 ring-destructive/35">
           {error}
         </p>
       )}
       {diagnosis && diagnosis.recoverable && (
-        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[13.5px] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35">
+        <p role="alert" className="mx-3 mt-3 rounded-[var(--radius-card)] bg-destructive/[0.14] px-4 py-3 text-[0.8438rem] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35">
           {diagnosis.headline} — {diagnosis.fix}
         </p>
       )}

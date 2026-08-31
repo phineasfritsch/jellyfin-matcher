@@ -40,7 +40,9 @@ export function VoteRow({
     <div
       /*
         auto-fit rather than four locked columns: at 200% OS text this reflows
-        to a 2x2 block instead of clipping the labels off (R51).
+        to a 2x2 block instead of clipping the labels off (R51). The labels are
+        rem, so they actually grow when that happens -- they were hardcoded
+        pixels for three waves while this comment claimed otherwise (R60).
       */
       className="grid grid-cols-[repeat(auto-fit,minmax(9ch,1fr))] gap-2.5 px-3 pb-1 pt-2"
       role="group"
@@ -54,11 +56,11 @@ export function VoteRow({
           onClick={() => onVote(v.points)}
           className={`flex min-h-[62px] cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[var(--radius-control)] px-1 py-2 ring-1 transition active:scale-95 ${v.skin}`}
         >
-          <span aria-hidden className="text-[19px] leading-none">
+          <span aria-hidden className="text-[1.1875rem] leading-none">
             {v.glyph}
           </span>
-          <span className="text-[13.5px] font-semibold">{v.word}</span>
-          <span className="tabular text-[11.5px] opacity-70">{signed(v.points)}</span>
+          <span className="text-[0.8438rem] font-semibold">{v.word}</span>
+          <span className="tabular text-[0.7188rem] opacity-70">{signed(v.points)}</span>
         </button>
       ))}
     </div>

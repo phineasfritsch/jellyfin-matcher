@@ -121,11 +121,11 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
             rather than eight taps.
           */}
           <div className="grid w-full grid-cols-[58px_1fr] items-stretch border-b border-border">
-            <span className="flex items-center justify-center py-3.5 text-[11px] font-bold uppercase tracking-[0.05em] text-muted-fg">
+            <span className="flex items-center justify-center py-3.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-muted-fg">
               MAX
             </span>
             <div className="flex flex-col justify-center gap-2 py-3.5 pr-4">
-              <label htmlFor="runtime" className="text-[15px] font-semibold leading-tight">
+              <label htmlFor="runtime" className="text-[0.9375rem] font-semibold leading-tight">
                 Max runtime — {runtimeLabel}
               </label>
               <input
@@ -165,14 +165,14 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
                   }`}
                 >
                   <span
-                    className={`flex items-center justify-center py-3.5 text-[13px] font-bold ${
+                    className={`flex items-center justify-center py-3.5 text-[0.8125rem] font-bold ${
                       room.settings.deckLimit === n ? 'text-maybe' : 'text-muted-fg'
                     }`}
                   >
                     {room.settings.deckLimit === n ? '✓' : '—'}
                   </span>
                   <span className="flex flex-col justify-center py-3.5 pr-4">
-                    <span className="text-[16px] font-semibold">{n} cards</span>
+                    <span className="text-[1rem] font-semibold">{n} cards</span>
                   </span>
                 </button>
               ))}

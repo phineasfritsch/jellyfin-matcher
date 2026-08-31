@@ -65,15 +65,15 @@ export function WinnerScreen({
             <h1
               ref={heading}
               tabIndex={-1}
-              className="text-[22px] font-semibold leading-tight tracking-[-0.015em] outline-none"
+              className="text-[1.375rem] font-semibold leading-tight tracking-[-0.015em] outline-none"
             >
               {winner.title}
             </h1>
-            <p className="tabular mt-1.5 text-[13px] text-muted-fg">
+            <p className="tabular mt-1.5 text-[0.8125rem] text-muted-fg">
               {winner.year ?? 'Year unknown'}
               {winner.runtime != null && ` · ${winner.runtime} min`}
             </p>
-            <p className="mt-1 text-[13px] text-muted-fg">
+            <p className="mt-1 text-[0.8125rem] text-muted-fg">
               {match?.viaFallback
                 ? 'Nobody agreed outright, so the points decided.'
                 : 'Everyone said yes.'}
@@ -110,7 +110,7 @@ export function WinnerScreen({
         {held && match?.playUrl ? (
           <a
             href={match.playUrl}
-            className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-[16px] font-semibold tracking-[-0.01em] text-on-primary"
+            className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-[1rem] font-semibold tracking-[-0.01em] text-on-primary"
           >
             Play in Jellyfin
           </a>
@@ -147,7 +147,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
     return (
       <p
         role="status"
-        className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-[14px] font-medium text-accent ring-1 ring-accent/35"
+        className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-[0.875rem] font-medium text-accent ring-1 ring-accent/35"
       >
         <Check aria-hidden className="size-4" /> Asked. It appears in Jellyfin once the host
         approves it and it finishes downloading.
@@ -160,7 +160,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
       <div className="flex flex-col">
         <p
           id="request-cost"
-          className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-[13.5px] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
+          className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-[0.8438rem] font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
         >
           Sends {title}
           {runtime != null && ` (${runtime} min)`} to Jellyseerr. The host approves the
@@ -184,7 +184,7 @@ function RequestControl({ title, runtime }: { title: string; runtime: number | n
         Request via Jellyseerr
       </BigButton>
       {state === 'error' && message && (
-        <p role="alert" className="px-1 py-1 text-center text-[14px] text-destructive">
+        <p role="alert" className="px-1 py-1 text-center text-[0.875rem] text-destructive">
           {message}
         </p>
       )}

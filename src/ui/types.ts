@@ -14,9 +14,17 @@ export interface ClientRoom {
   users: Record<string, { id: string; name: string; ready: boolean; connected: boolean; authed: boolean }>;
   knockout: KnockoutState;
   deck: MovieCandidate[];
+  /** Only your own position. Other people's are deliberately not sent (R61). */
   progress: Record<string, number>;
+  /** Only your own votes. */
   votes: Record<string, Record<string, number>>;
   winner: string | null;
+  /** How many other members have finished the deck. */
+  othersFinished: number;
+  /** How many members have submitted genre picks, including you. */
+  submittedCount: number;
+  /** How many members have cast an elimination vote, including you. */
+  votedCount: number;
 }
 
 /** A named, actionable account of why the deck is short or missing (R54). */

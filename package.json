@@ -15,7 +15,8 @@
     "inventory": "tsx scripts/inventory.ts",
     "prod:read": "tsx --env-file-if-exists=.env scripts/health.ts",
     "e2e:walkout": "node scripts/e2e-walkout.cjs",
-    "counts": "tsx scripts/sync-counts.ts"
+    "counts": "tsx scripts/sync-counts.ts",
+    "shots": "tsx scripts/screenshots.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
@@ -24,6 +25,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "postcss": "^8.5.22",
+    "puppeteer-core": "^24.43.1",
     "socket.io-client": "^4.8.3",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.1",

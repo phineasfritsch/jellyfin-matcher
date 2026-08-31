@@ -104,7 +104,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
             and it now lives in the details sheet.
           */}
           {notHeld && (
-            <span className="absolute left-3 top-3 rounded-full bg-background/85 px-3 py-1.5 text-[12px] font-semibold text-destructive ring-1 ring-destructive/40">
+            <span className="absolute left-3 top-3 rounded-full bg-background/85 px-3 py-1.5 text-[0.75rem] font-semibold text-destructive ring-1 ring-destructive/40">
               Not on your server
             </span>
           )}
@@ -157,12 +157,12 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
           what a vote needs and the sheet carries the rest.
         */}
         <div className="flex flex-col gap-1 border-t border-[var(--color-hairline)] px-4 py-3">
-          <h2 className="truncate text-[19px] font-semibold tracking-[-0.01em]">{card.title}</h2>
-          <p className="tabular text-[13px] text-muted-fg">
+          <h2 className="truncate text-[1.1875rem] font-semibold tracking-[-0.01em]">{card.title}</h2>
+          <p className="tabular text-[0.8125rem] text-muted-fg">
             {card.year ?? 'Year unknown'}
             {card.runtime != null && ` · ${card.runtime} min`}
           </p>
-          <p className="tabular text-[13px] text-muted-fg">{ratingLine(card)}</p>
+          <p className="tabular text-[0.8125rem] text-muted-fg">{ratingLine(card)}</p>
         </div>
       </article>
     </motion.div>

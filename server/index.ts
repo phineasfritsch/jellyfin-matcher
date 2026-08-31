@@ -8,6 +8,7 @@ import { submitElimination, submitGenres, createKnockout } from '../src/lib/knoc
 import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
 import { diagnoseDeckFailure, diagnoseThinDeck } from './diagnose';
+import { viewFor } from './roomView';
 import { canSettle } from './settlement';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { RoomStore, type Room, type RoomSettings } from './store';
@@ -113,8 +114,21 @@ function authedName(socket: Socket): string | null {
 
 type Ack = (response: { ok: true; [k: string]: unknown } | { ok: false; error: string }) => void;
 
+/**
+ * Send every member their own view of the room.
+ *
+ * Not one payload to the whole channel: each socket gets a room with its own
+ * votes, its own deck position and its own ballots, and counts in place of
+ * everyone else's (R61). The screens already claimed this; only the rendering
+ * enforced it, and a promise the client merely declines to draw is not one.
+ */
 function broadcast(room: Room): void {
-  io.to(room.roomId).emit('room:state', room);
+  for (const [socketId, sock] of io.sockets.sockets) {
+    const data = sock.data as { roomId?: string; userId?: string };
+    if (data?.roomId !== room.roomId || !data.userId) continue;
+    void socketId;
+    sock.emit('room:state', viewFor(room, data.userId));
+  }
 }
 
 function fail(ack: Ack | undefined, err: unknown): void {
