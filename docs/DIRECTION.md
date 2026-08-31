@@ -1526,3 +1526,28 @@ appears only once *you* have answered — before that the screen is a ballot, no
 progress report. The correct move was to fix the test's setup rather than to make the
 app match a guess, and it is worth writing down because the opposite is always
 available and always looks like progress.
+
+### R123 — The deck, rendered.
+
+**Frozen:** the screen a person spends the whole evening on had no rendering
+coverage, and its most important sentence had never been rendered by anything.
+
+**Built:** twelve cases across the card, the disclosure, the undo and the peer count.
+
+**Why.** Everything on this screen has already cost something. The cost line is what
+tells a room that a yes can spend the host's disk, and it was wrong **twice** — R91
+promised a size the app cannot know, R107 promised an approval gate it does not
+control. The undo row exists because R48 found the deck is the one place a slip takes
+something you cannot get back. The peer count is deliberately a number and never a
+name (R46, R61).
+
+And until now the only evidence for any of it was a screenshot — of the *local-scope*
+deck, where the cost line does not render at all. The sentence that matters most was
+checked by nothing that ran (R114).
+
+**Verified by putting two of those bugs back.** Restoring R107's approval claim and
+removing R48's undo turns three of the twelve red. Both took a board round to find the
+first time; both now fail in a quarter of a second.
+
+Every screen a person meets during a night — home, join, lobby, knockout, deck,
+details, winner — is now either rendered under the gate or driven by two real browsers.
