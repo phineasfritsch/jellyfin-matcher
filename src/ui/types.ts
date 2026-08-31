@@ -28,7 +28,7 @@ export interface ClientRoom {
   winnerRanking: FallbackResult[] | null;
   winnerPlayUrl: string | null;
   /** Who asked Jellyseerr for the winner, if anyone has (R99). */
-  winnerRequest: { by: string; title: string } | null;
+  winnerRequest: { by: string; title: string; approved: boolean } | null;
   /** Cards the room locked in and then turned down. */
   rejected: string[];
   /** How many other members have finished the deck. */

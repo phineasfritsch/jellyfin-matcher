@@ -292,7 +292,20 @@ export async function requestWinner(ctx: Ctx) {
 
   // Recorded before it is announced, so a phone that reloads mid-announcement
   // still learns the room asked (R90 again, one screen along).
-  current.winnerRequest = { by: ctx.session.authedName() ?? 'Someone', title: card.title };
+  /*
+    R107: record what Jellyseerr actually did, not what we hoped.
+
+    Its MediaRequestStatus is 1 for pending approval and 2 for approved. With
+    the admin API key this app uses, a request is normally auto-approved -- so
+    the copy that promised "the host is asked to approve it before anything is
+    fetched" was describing a gate that usually is not there, on the one control
+    that spends somebody else's disk.
+  */
+  current.winnerRequest = {
+    by: ctx.session.authedName() ?? 'Someone',
+    title: card.title,
+    approved: Number(result.status) === 2,
+  };
   ctx.store.touch(current);
   ctx.fx.toRoom(current.roomId, 'winner:requested', { title: card.title });
   ctx.fx.broadcast(current);

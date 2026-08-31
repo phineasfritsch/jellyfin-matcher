@@ -97,7 +97,7 @@ defined at their first citation.
 | **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:178` +1 |
 | **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:78` +2 |
 | **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:120` +11 |
-| **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:307` +9 |
+| **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:320` +9 |
 | **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:91` +2 |
 | **R89** | `docs/DIRECTION.md:509` | `app/globals.css:37` |
 | **R90** | `docs/DIRECTION.md:536` | `server/handlers.ts:294` +9 |

@@ -23,6 +23,7 @@ import type { Room } from '../store';
 function harness() {
   const store = new RoomStore();
   const requests: number[] = [];
+  let jellyseerrStatus = 2; // approved outright, the common case with an admin key
   const broadcasts: Room[] = [];
   const emits: Array<{ roomId: string; event: string; payload: unknown }> = [];
   const swipeStarts: Room[] = [];
@@ -61,9 +62,13 @@ function harness() {
     joinLimiter: new RateLimiter(30, 60_000),
     // Never the real thing. A test of the rules around the one control that
     // spends the host's disk must not be able to spend it (R99).
+    // Jellyseerr's MediaRequestStatus is numeric: 1 pending approval, 2
+    // approved. The first version of this fake returned the string 'PENDING',
+    // which is not a shape the real API produces and quietly made every
+    // approval check read as false.
     requestMovie: async (tmdbId: number) => {
       requests.push(tmdbId);
-      return { id: 4242, status: 'PENDING' };
+      return { id: 4242, status: jellyseerrStatus };
     },
   };
 
@@ -78,6 +83,9 @@ function harness() {
     settled,
     settle: (v: boolean) => {
       settleNext = v;
+    },
+    jellyseerrReturns: (status: number) => {
+      jellyseerrStatus = status;
     },
   };
 }
@@ -252,7 +260,20 @@ describe('asking Jellyseerr for the winner', () => {
 
     expect(res.requestId).toBe(4242);
     expect(h.requests).toEqual([496243]);
-    expect(room.winnerRequest).toEqual({ by: 'ada', title: 'Parasite' });
+    // R107: and what Jellyseerr actually did with it. The fake returns status
+    // 2, which is approved outright.
+    expect(room.winnerRequest).toEqual({ by: 'ada', title: 'Parasite', approved: true });
+  });
+
+  it('says so when Jellyseerr is holding it for a human', async () => {
+    // R107: the app used to assert an approval gate it does not control. With
+    // an admin key a request is normally auto-approved, so claiming "the host
+    // approves it before anything is fetched" was the lenient direction to be
+    // wrong in on the one control that spends someone else's disk.
+    const { h, room } = finished(false);
+    h.jellyseerrReturns(1);
+    await handlers.requestWinner(h.ctx);
+    expect(room.winnerRequest?.approved).toBe(false);
   });
 
   it('refuses the second press without calling Jellyseerr again', async () => {

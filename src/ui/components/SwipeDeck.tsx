@@ -106,7 +106,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
       {notHeld && (
         <CostLine
           headline="Not on your server — voting yes can download it."
-          detail="The host is asked to approve it before anything is fetched."
+          detail="Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings."
         />
       )}
       {/*

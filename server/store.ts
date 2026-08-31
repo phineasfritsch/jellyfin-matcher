@@ -71,7 +71,15 @@ export interface Room {
    * then succeeded, with the button put straight back. And every phone in the
    * room should be able to see it was asked for, including one that reloads.
    */
-  winnerRequest: { by: string; title: string } | null;
+  winnerRequest: {
+    by: string;
+    title: string;
+    /**
+     * Whether Jellyseerr accepted it outright (status 2) or is holding it for a
+     * human (status 1). R107: the app used to assert a gate it does not control.
+     */
+     approved: boolean;
+  } | null;
   createdAt: number;
   lastActivity: number;
 }

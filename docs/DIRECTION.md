@@ -1047,3 +1047,37 @@ Docker volume in that note, because that is the cause it will almost always be.
 
 Same reasoning as the ratings quota and the last deck build cost (R67): the things a
 host is on the hook for should be answerable without reading the code.
+
+### R107 — Do not promise a gate you do not control.
+
+**Frozen:** the deck said *"The host is asked to approve it before anything is
+fetched"*, and the winner screen said a film appears *"once the host approves it"*.
+
+**Built:** the app says what Jellyseerr actually did, and stops asserting an approval
+step it cannot guarantee.
+
+**Why.** Matcher requests with an admin API key, and Jellyseerr auto-approves an
+admin request unless the host has configured otherwise. So the gate the disclosure
+promised usually is not there — and the repository said so everywhere else. `README`
+says a request *"lands in Radarr"*. `OPERATING.md` warns that a stray end-to-end run
+*"can fire a genuine Jellyseerr request that lands in Radarr"* — a real download, with
+no mention of a human in between. `app/guide/page.tsx` tells the household *"It shows
+up in Jellyfin once it finishes downloading."* Only the disclosure claimed a gate, and
+the disclosure is the one place being wrong is expensive.
+
+Wrong in the lenient direction, on the one control that spends somebody else's disk.
+That is the direction that matters: a person reads "the host approves it first" and
+presses the button believing a second pair of eyes stands between them and 60GB.
+
+**The truth is available and was already being discarded.** Jellyseerr returns
+`status`: 1 pending approval, 2 approved. That value reached the ack and went no
+further. It is now recorded on the room, so the screen reports which of the two
+actually happened — "your server accepted it" or "your Jellyseerr is holding it for
+approval" — instead of guessing. Before the press, the copy names the uncertainty
+rather than resolving it in the app's favour, the same way R91 refused to print a
+size the app does not have.
+
+**The test fake was part of the problem.** It returned `status: 'PENDING'`, a string
+the real API never produces, which made every approval check read as false and would
+have hidden the bug in the other direction. Fakes that do not match the shape of the
+thing they stand in for are how a suite agrees with itself.

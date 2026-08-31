@@ -265,7 +265,7 @@ function RequestControl({
    * download. The server refuses the repeat now; this is so nobody is invited
    * to try.
    */
-  alreadyAsked: { by: string; title: string } | null;
+  alreadyAsked: { by: string; title: string; approved: boolean } | null;
 }) {
   const [state, setState] = useState<'idle' | 'confirm' | 'busy' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
@@ -288,9 +288,18 @@ function RequestControl({
         className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-body font-medium text-accent ring-1 ring-accent/35"
       >
         <Check aria-hidden className="size-4" />{' '}
-        {alreadyAsked && state !== 'done'
-          ? `${alreadyAsked.by} asked for this. It appears in Jellyfin once the host approves it and it finishes downloading.`
-          : 'Asked. It appears in Jellyfin once the host approves it and it finishes downloading.'}
+        {/*
+          R107: say which of the two actually happened, rather than asserting a
+          gate this app does not control. Jellyseerr auto-approves a request
+          made with an admin key unless the host has configured otherwise, so
+          the old copy -- "once the host approves it" -- described an approval
+          step that usually is not there.
+        */}
+        {alreadyAsked?.approved
+          ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}, and your server accepted it. It appears in Jellyfin once it finishes downloading.`
+          : alreadyAsked
+            ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}. Your Jellyseerr is holding it for approval.`
+            : 'Asked. It appears in Jellyfin once your server has it.'}
       </p>
     );
   }
@@ -303,9 +312,9 @@ function RequestControl({
           className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
         >
           Sends {title}
-          {runtime != null && ` (${runtime} min)`} to Jellyseerr. How much disk it uses is
-          not known until your host&rsquo;s server picks a release. The host approves the
-          download; you will not see it tonight.
+          {runtime != null && ` (${runtime} min)`} to Jellyseerr. Depending on your host&rsquo;s
+          settings that may start the download straight away. How much disk it uses is not
+          known until their server picks a release, and you will not see it tonight.
         </p>
         <div className="grid grid-cols-2 gap-2">
           <BigButton onClick={send} tone="commit" disabled={state === 'busy'} ariaDescribedBy="request-cost">
