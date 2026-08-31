@@ -1257,3 +1257,48 @@ goes offline for five seconds, comes straight back, and the harness then waits o
 full server timeout before checking she is still there. The wait is the whole point —
 the eviction happens on the server's clock, not the phone's, so a test that checked
 immediately would have passed against the bug.
+
+### R113 — A confirm that replaces its own trigger has to take the focus.
+
+**Frozen:** both confirmations on the winner screen swapped themselves in where the
+button that opened them had been.
+
+**Built:** each is a labelled group that takes focus when it appears, and the busy
+button says what it is doing.
+
+**Why.** React unmounts the pressed control, so focus falls to `<body>` and a screen
+reader is told nothing: the screen changed and the next tap either throws away what
+the room agreed on or spends somebody's disk. This is the failure R52 fixed on the
+winner heading and R31 on the details sheet, in the two places where getting it wrong
+is most expensive — and it survived both because neither of those rulings was about a
+control that deletes itself.
+
+`data-app-focus` so no ring is drawn (R80): nobody navigated here.
+
+The sending state had no accessible name at all. Its only child was an `aria-hidden`
+spinner, so a screen reader user pressed "Yes, ask" and the button went silent — the
+one moment in the app where silence and success look identical and the difference is
+a download.
+
+### R114 — Photograph the branch, not the happy path.
+
+**Frozen:** every winner capture ran in local scope, where the film is always on the
+server.
+
+**Built:** the Any Movie pass drives a not-held film all the way to the winner screen
+and opens the request confirmation.
+
+**Why.** `held` is true in every local-scope room, so the entire download-disclosure
+branch — the cost line, the request control, the confirmation that states what asking
+costs — had only ever been read as source, never seen. Two separate false claims
+survived in that copy because of it: R107's promise of an approval gate, and R111,
+where the fix for R107 missed one of the four sites and shipped for hours in the one
+place a person reads immediately before pressing the button.
+
+The screenshot is now the check. `12-request-confirm.png` shows the bar, the cost
+line, and the confirmation in a single frame, so the next contradiction between them
+is visible rather than deducible.
+
+**The send is never pressed.** "Request via Jellyseerr" opens the confirmation; the
+send is "Yes, ask" inside it, and the capture stops there. A screenshot script that
+can spend the host's disk is not a screenshot script.

@@ -45,13 +45,13 @@ defined at their first citation.
 | **R28** | `docs/DIRECTION.md:120` | — |
 | **R29** | `docs/DIRECTION.md:124` | `src/ui/components/MovieDetails.tsx:178` |
 | **R30** | `docs/DIRECTION.md:125` | — |
-| **R31** | `docs/DIRECTION.md:126` | `src/ui/components/MovieDetails.tsx:75` +4 |
+| **R31** | `docs/DIRECTION.md:126` | `src/ui/components/MovieDetails.tsx:75` +5 |
 | **R32** | `docs/DIRECTION.md:130` | — |
 | **R33** | `docs/DIRECTION.md:131` | — |
 | **R34** | `docs/DIRECTION.md:135` | — |
 | **R35** | `docs/DIRECTION.md:136` | `src/ui/components/Knockout.tsx:221` |
 | **R36** | `docs/DIRECTION.md:140` | — |
-| **R37** | `docs/DIRECTION.md:141` | `src/ui/components/WinnerScreen.tsx:248` |
+| **R37** | `docs/DIRECTION.md:141` | `src/ui/components/WinnerScreen.tsx:274` |
 | **R38** | `docs/DIRECTION.md:145` | — |
 | **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:97` +2 |
 | **R40** | _at its citation_ | `src/ui/components/Listing.tsx:16` +3 |
@@ -66,8 +66,8 @@ defined at their first citation.
 | **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
 | **R50** | _at its citation_ | `src/ui/components/VoteRow.tsx:14` |
 | **R51** | _at its citation_ | `src/ui/components/VoteRow.tsx:43` +1 |
-| **R52** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:24` +1 |
-| **R53** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:70` |
+| **R52** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:31` +2 |
+| **R53** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:77` |
 | **R54** | _at its citation_ | `server/diagnose.ts:8` +3 |
 | **R55** | _at its citation_ | `src/ui/AuthGate.tsx:162` |
 | **R58** | `docs/DIRECTION.md:221` | `src/ui/components/SwipeCard.tsx:189` |
@@ -82,15 +82,15 @@ defined at their first citation.
 | **R68** | _at its citation_ | `server/index.ts:79` +1 |
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
-| **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:169` |
+| **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:176` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:146` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:142` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:526` |
 | **R77** | _at its citation_ | `server/handlers.ts:110` +3 |
 | **R78** | _at its citation_ | `server/history.ts:80` +1 |
-| **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:81` +1 |
-| **R80** | `docs/DIRECTION.md:262` | `src/ui/components/MovieDetails.tsx:46` +1 |
+| **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:88` +1 |
+| **R80** | `docs/DIRECTION.md:262` | `src/ui/components/MovieDetails.tsx:46` +2 |
 | **R81** | `docs/DIRECTION.md:281` | `src/ui/components/MovieDetails.tsx:37` +1 |
 | **R82** | `docs/DIRECTION.md:297` | `scripts/gate.ts:132` +1 |
 | **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:53` |

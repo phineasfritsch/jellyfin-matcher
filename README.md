@@ -3,8 +3,8 @@
 [![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
 [![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-498%20in%2029%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
-[![pinned claims](https://img.shields.io/badge/pinned%20claims-177-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
+[![tests](https://img.shields.io/badge/tests-501%20in%2029%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![pinned claims](https://img.shields.io/badge/pinned%20claims-180-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
 
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
 No stalemates — that's the whole point.
@@ -16,8 +16,8 @@ through the whole deck without agreeing and the points decide, so you still get 
 
 <p align="center">
   <img src="docs/screenshots/04-knockout.png" alt="The genre knockout: a list of genres with checkboxes to pick everything you would watch, a note explaining that overlap decides the deck, and a no-preference option" width="270">
-  <img src="docs/screenshots/05-deck.png" alt="The swipe deck: a full-bleed poster for Toy Story 3, its year, runtime and ratings named by source, and four vote buttons showing their point weights" width="270">
-  <img src="docs/screenshots/08-winner.png" alt="The winner screen: a full-size Toy Story 3 poster under confetti, the words Everyone said yes, and a Play in Jellyfin button beside a keep swiping escape hatch" width="270">
+  <img src="docs/screenshots/05-deck.png" alt="The swipe deck: a full-bleed film poster with its year, runtime and ratings named by source, and four vote buttons showing their point weights" width="270">
+  <img src="docs/screenshots/08-winner.png" alt="The winner screen: a full-size poster under confetti, the words Everyone said yes, and a Play in Jellyfin button beside a keep swiping escape hatch" width="270">
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@ It talks to a Jellyfin server for your local library, Jellyseerr for the "any mo
   asked for when an action actually costs something.
 - **Nothing downloads by accident.** "Any Movie" says so on the control, the card says
   which films aren't on your server, and the request itself takes a second tap.
-- **It works in the dark, one-handed.** Every control is a 60px row, every vote has a
+- **It works in the dark, one-handed.** Nothing you tap is under 44px, the list rows are 60, every vote has a
   button as well as a gesture, and the type scales with your OS text size.
 - **One small container.** Multi-stage image, non-root, healthcheck, no database.
 
@@ -234,11 +234,11 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 498 cases across 29 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 501 cases across 29 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 
-Another 177 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
+Another 180 are *pinned claims* — accessibility hooks, the copy that tells you an action will actually download something, empty states that explain themselves, promises made in this README. None of them would break a normal test if they were deleted, which is exactly why they're pinned. `npm run inventory` finds new candidates; `npm run prod:read` says whether the deployed server is up, configured, and running this commit. The reasoning is in [OPERATING.md](OPERATING.md).
 
 ## License
 

@@ -19,6 +19,13 @@ export function WinnerScreen({
   const { room, rejectWinner } = roomHook;
   const heading = useRef<HTMLHeadingElement>(null);
   const [confirmingReject, setConfirmingReject] = useState(false);
+  const rejectPanel = useRef<HTMLDivElement>(null);
+
+  // R113: the panel replaces the button that opened it, so focus has to be put
+  // somewhere deliberately or it falls to <body> with nothing announced.
+  useEffect(() => {
+    if (confirmingReject) rejectPanel.current?.focus();
+  }, [confirmingReject]);
 
   /**
    * R52: this screen replaces the deck outright. Nothing announced that, so a
@@ -172,7 +179,26 @@ export function WinnerScreen({
           and a confirm here costs nothing: nobody rejects a winner in a hurry.
         */}
         {confirmingReject ? (
-          <div className="flex flex-col gap-2">
+          /*
+            R113: the control that opened this panel no longer exists.
+
+            Both confirms replace their own trigger, so React unmounts the
+            button under the thumb that pressed it and focus falls to <body> --
+            the screen changes and a screen reader is told nothing, which is the
+            failure R52 fixed on the winner heading and R31 on the details
+            sheet, in the one place where the next tap spends somebody's disk or
+            throws away the room's decision.
+
+            data-app-focus so no ring is drawn: nobody navigated here (R80).
+          */
+          <div
+            ref={rejectPanel}
+            tabIndex={-1}
+            data-app-focus
+            role="group"
+            aria-label="Confirm turning down this film"
+            className="flex flex-col gap-2 outline-none"
+          >
             <p
               id="reject-cost"
               className="rounded-[var(--radius-control)] bg-super/12 px-3.5 py-2.5 text-body font-medium leading-relaxed text-super ring-1 ring-super/35"
@@ -269,6 +295,12 @@ function RequestControl({
 }) {
   const [state, setState] = useState<'idle' | 'confirm' | 'busy' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
+  const confirmPanel = useRef<HTMLDivElement>(null);
+
+  // R113, as above: this panel also unmounts its own trigger.
+  useEffect(() => {
+    if (state === 'confirm') confirmPanel.current?.focus();
+  }, [state]);
 
   async function send() {
     setState('busy');
@@ -306,7 +338,14 @@ function RequestControl({
 
   if (state === 'confirm' || state === 'busy') {
     return (
-      <div className="flex flex-col">
+      <div
+        ref={confirmPanel}
+        tabIndex={-1}
+        data-app-focus
+        role="group"
+        aria-label="Confirm asking for this film"
+        className="flex flex-col outline-none"
+      >
         <p
           id="request-cost"
           className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
@@ -318,7 +357,16 @@ function RequestControl({
         </p>
         <div className="grid grid-cols-2 gap-2">
           <BigButton onClick={send} tone="commit" disabled={state === 'busy'} ariaDescribedBy="request-cost">
-            {state === 'busy' ? <Loader2 aria-hidden className="mx-auto size-5 animate-spin" /> : 'Yes, ask'}
+            {state === 'busy' ? (
+              <>
+                {/* The spinner is decorative; without this the button has no
+                    accessible name at all while it is sending (R113). */}
+                <Loader2 aria-hidden className="mx-auto size-5 animate-spin" />
+                <span className="sr-only">Sending the request…</span>
+              </>
+            ) : (
+              'Yes, ask'
+            )}
           </BigButton>
           <BigButton onClick={() => setState('idle')} tone="ghost">
             Cancel

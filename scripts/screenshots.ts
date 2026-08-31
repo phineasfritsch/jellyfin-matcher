@@ -518,6 +518,12 @@ async function main() {
       */
       const wide = await hostRoom();
       sockets.push(wide.a);
+      // Keep the latest state, so the socket member can vote on the same card
+      // the browser is looking at without another round trip.
+      let wideState: { deck?: Array<{ id: string; title: string }> } = {};
+      wide.a.on('room:state', (st: typeof wideState) => {
+        wideState = st;
+      });
       await ack(wide.a, 'room:settings', { scope: 'wide' });
 
       await open(page, `${URL}/room/${wide.roomId}`, '#join-name');
@@ -599,6 +605,60 @@ ${seen.slice(0, 400)}`);
       if (found) {
         await new Promise((r) => setTimeout(r, 500));
         await shoot(page, '10-deck-not-on-server');
+
+        /*
+          The winner screen for a film the server does not have.
+
+          Never photographed: every winner capture runs in local scope, where
+          `held` is true, so the branch carrying the download disclosure — the
+          cost line, and the request control under it — had only ever been read
+          as source. Two separate wrong claims survived in that copy because of
+          it (R107 and R111), the second for hours after the first was fixed.
+
+          NOTHING HERE PRESSES SEND. "Request via Jellyseerr" only opens the
+          confirmation; the send is "Yes, ask" inside it, and this script must
+          never touch that control — it fires a real request into the host's
+          Radarr as a real download.
+        */
+        const notHeld = await page.evaluate(() => {
+          for (const b of document.querySelectorAll('button')) {
+            const m = /^Vote yes on (.+), \+2$/.exec(b.getAttribute('aria-label') ?? '');
+            if (m) return m[1];
+          }
+          return null;
+        });
+        const notHeldId = wideState.deck?.find((c) => c.title === notHeld)?.id;
+
+        if (notHeld && notHeldId) {
+          // Listen before acting: the match resolves inside the browser click,
+          // and attaching afterwards waits for a broadcast already sent.
+          const landed = withTimeout(
+            on(wide.a, 'match:declared', () => true),
+            30_000,
+            'the not-held winner to be declared',
+          );
+          await ack(wide.a, 'swipe:vote', { cardId: notHeldId, points: 2 });
+          await clickButton(page, `Vote yes on ${notHeld}, +2`);
+          await landed;
+          await page
+            .locator('h1[data-app-focus]')
+            .setTimeout(30_000)
+            .waitHandle()
+            .catch(async () => {
+              const seen = await page.evaluate(() => document.body.innerText).catch(() => '');
+              throw new Error(`the not-held winner never landed. On screen:\n${seen.slice(0, 400)}`);
+            });
+          await new Promise((r) => setTimeout(r, 1500));
+          await shoot(page, '11-winner-not-on-server');
+
+          // Opens the confirmation only. The send stays untouched.
+          await clickButton(page, 'Request via Jellyseerr');
+          await new Promise((r) => setTimeout(r, 600));
+          await shoot(page, '12-request-confirm');
+        } else {
+          console.log('  WARNING: could not identify the unowned card; 11 and 12 not captured');
+          failures += 1;
+        }
       } else {
         // Say so rather than committing a picture of the wrong thing. Every
         // capture here that quietly showed the wrong state got there by a step

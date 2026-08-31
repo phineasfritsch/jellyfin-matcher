@@ -1,7 +1,9 @@
 services:
   jellyfin-matcher:
-    # Pin a version rather than tracking :latest, so an upgrade is something
-    # you choose and can roll back. Tags: https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher
+    # :latest so a first run works with no editing. Pin a version once you are
+    # running it for real -- an upgrade should be something you choose and can
+    # roll back, and :latest is neither.
+    # Tags: https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher
     image: ghcr.io/phineasfritsch/jellyfin-matcher:latest
     # build: .   # uncomment to build from source instead of pulling
     container_name: jellyfin-matcher
