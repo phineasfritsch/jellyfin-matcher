@@ -2,12 +2,13 @@
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { CircleHelp, Heart, Star, X } from 'lucide-react';
 import { VOTE_POINTS } from '../../lib/match';
 import type { MovieCandidate } from '../../lib/types';
 import type { RoomHook } from '../useRoom';
+import { EmptyState } from './EmptyState';
 import { MovieDetails } from './MovieDetails';
 import { SwipeCard } from './SwipeCard';
+import { VoteRow, VoteRowSkeleton } from './VoteRow';
 
 /** How many upcoming posters to warm the browser cache with. */
 const PREFETCH_AHEAD = 8;
@@ -90,12 +91,9 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
       </header>
 
       {done ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <p className="text-xl font-bold">Deck finished</p>
-          <p className="text-sm text-muted-fg">
-            Waiting for {others.map((u) => u.name).join(', ')} to finish — then the points decide.
-          </p>
-        </div>
+        <EmptyState title="Deck finished">
+          Waiting for {others.map((u) => u.name).join(', ')} to finish — then the points decide.
+        </EmptyState>
       ) : (
         <>
           <div className="relative min-h-0 flex-1" style={{ minHeight: '55dvh' }}>
@@ -120,7 +118,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
             </AnimatePresence>
           </div>
 
-          <ActionBar onVote={(points) => castVote(visible[0]!.id, points)} />
+          <VoteRow onVote={(points) => castVote(visible[0]!.id, points)} />
         </>
       )}
 
@@ -163,64 +161,6 @@ function CardShell({
   );
 }
 
-function ActionBar({ onVote }: { onVote: (points: number) => void }) {
-  return (
-    <div className="flex items-center justify-center gap-3 pb-1" role="group" aria-label="Vote">
-      <ActionButton
-        label="Dislike"
-        className="border-destructive text-destructive"
-        onClick={() => onVote(VOTE_POINTS.DISLIKE)}
-      >
-        <X aria-hidden className="size-7" />
-      </ActionButton>
-      <ActionButton
-        label="Maybe"
-        className="border-maybe text-maybe"
-        onClick={() => onVote(VOTE_POINTS.MAYBE)}
-      >
-        <CircleHelp aria-hidden className="size-6" />
-      </ActionButton>
-      <ActionButton
-        label="Like"
-        className="border-accent text-accent"
-        onClick={() => onVote(VOTE_POINTS.LIKE)}
-      >
-        <Heart aria-hidden className="size-7" />
-      </ActionButton>
-      <ActionButton
-        label="Super Like"
-        className="border-super text-super"
-        onClick={() => onVote(VOTE_POINTS.SUPER)}
-      >
-        <Star aria-hidden className="size-6" />
-      </ActionButton>
-    </div>
-  );
-}
-
-function ActionButton({
-  label,
-  className,
-  onClick,
-  children,
-}: {
-  label: string;
-  className: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      className={`flex size-14 cursor-pointer items-center justify-center rounded-full border-2 bg-muted transition active:scale-90 ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
-
 function DeckSkeleton({ lockedGenres }: { lockedGenres: string[] }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -233,11 +173,7 @@ function DeckSkeleton({ lockedGenres }: { lockedGenres: string[] }) {
       <div className="relative flex-1" style={{ minHeight: '55dvh' }} aria-hidden>
         <div className="absolute inset-0 animate-pulse rounded-2xl border border-border bg-muted" />
       </div>
-      <div className="flex items-center justify-center gap-3 pb-1" aria-hidden>
-        {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="size-14 animate-pulse rounded-full bg-muted" />
-        ))}
-      </div>
+      <VoteRowSkeleton />
     </div>
   );
 }

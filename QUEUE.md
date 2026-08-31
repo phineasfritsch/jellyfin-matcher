@@ -27,11 +27,20 @@ outcome and should be written down, not worked around.
 - [ ] **Stage 03 component layer, in order of payoff.** One component per
       commit, each landing green against the unported app.
       Files: `src/ui/components/` only. See docs/REDESIGN.md Stage 03.
-      1. VoteRow (R05–R07) — lift `ActionBar` out of `SwipeDeck.tsx`
+      1. ~~VoteRow (R05–R07)~~ — done, pending verification
       2. RatingLine (R12) — deduplicate `MovieDetails` / `WinnerScreen`
       3. ScopeChoice (R09, R11) — lift out of `Lobby.tsx`
-      4. EmptyState (R13) — three hand-written sentences become one component
+      4. ~~EmptyState (R13)~~ — done, pending verification. Only the two
+         full-panel states; the inline "No ratings found for this one." in
+         `MovieDetails` is a sentence, not a panel, and was left alone
       5. LiveNotice (R15) — five `role="alert"` blocks become one
+
+- [ ] **Verify the two extractions above.** Not by whoever wrote them. The gate
+      is green (107 cases, 38 pins, builds) but green over a refactor is a
+      statement about coverage, not correctness. Needed: a human look at the
+      swipe screen and the no-winner screen on a phone. One deliberate visual
+      change to check — the two empty states had drifted 4px apart (gap-3 vs
+      gap-2) and are now both gap-2.
 
 - [ ] **Pin the server's socket contract.** Event names and payload shapes are
       the API a browser depends on and nothing asserts them by name. Same

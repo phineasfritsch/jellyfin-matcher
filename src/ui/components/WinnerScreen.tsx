@@ -6,6 +6,7 @@ import { emitAck } from '../socket';
 import type { MatchDeclaredPayload } from '../types';
 import type { RoomHook } from '../useRoom';
 import { Confetti } from './Confetti';
+import { EmptyState } from './EmptyState';
 
 export function WinnerScreen({
   roomHook,
@@ -20,10 +21,7 @@ export function WinnerScreen({
   const winner = match?.winner ?? room.deck.find((c) => c.id === room.winner) ?? null;
   if (!winner) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <p className="text-xl font-bold">Session ended</p>
-        <p className="text-sm text-muted-fg">No winner could be determined.</p>
-      </div>
+      <EmptyState title="Session ended">No winner could be determined.</EmptyState>
     );
   }
 
