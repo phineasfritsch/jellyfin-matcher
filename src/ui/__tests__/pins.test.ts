@@ -21,7 +21,7 @@
  *     property survives. Never weaken one to something a blank page passes.
  */
 import { describe, expect, it } from 'vitest';
-import { appHaystack, readDoc, stripComments, stripCssComments } from '../../../scripts/lib/source-scan';
+import { appHaystack, appSources, readDoc, stripComments, stripCssComments } from '../../../scripts/lib/source-scan';
 
 const APP = appHaystack();
 /**
@@ -57,8 +57,8 @@ type Pin = { id: string; why: string; find: string };
  * appearance drops them and looks correct to everyone who can see it.
  */
 const A11Y: Pin[] = [
-  { id: 'A01', why: 'Vote buttons exist for every gesture; the README promises this', find: 'aria-label="Vote"' },
-  { id: 'A02', why: 'Each vote button names the film and the weight, not just the verb. "Dislike" does not answer "what did I just vote on", and three cards go by before you notice (R50)', find: '${v.say} ${title}, ${signed(v.points)}' },
+  { id: 'A01', why: 'The four votes are one named group; the README promises a button for every gesture. Scoped (R129): this string is the aria-label on the wrapping role="group" div, so it says nothing about the four controls inside it -- turning all four <button> into <div> left it green. What executes that claim is controls.render.test.tsx ("names every vote for a screen reader, including its weight" and "reports the vote it was pressed for") and deck.render.test.tsx ("offers a button for every gesture"), all of which query by role and go red on a div', find: 'aria-label="Vote"' },
+  { id: 'A02', why: 'Each vote button names the film and the weight, not just the verb. "Dislike" does not answer "what did I just vote on", and three cards go by before you notice (R50). Scoped (R129): this is the label template, and an aria-label on a bare div is announced by nothing -- that the element wearing it is a button is carried by the three cases named in A01', find: '${v.say} ${title}, ${signed(v.points)}' },
   { id: 'A03', why: 'Deck position is announced, not only drawn as a bar', find: 'role="progressbar"' },
   { id: 'A04', why: 'Deck progress bar carries a name', find: 'aria-label="Deck progress"' },
   { id: 'A05', why: 'Genre picking is a labelled group. The label now rides the Group component, which renders the section and its aria-label together, so a card cannot be added without one', find: 'ariaLabel="Genres"' },
@@ -83,9 +83,45 @@ const A11Y: Pin[] = [
 
 /**
  * Errors and connection state have to reach someone who is not looking at that
- * corner of the screen. Five surfaces, five live regions.
+ * corner of the screen.
+ *
+ * R129: this was one number -- `role="alert"` counted across the whole app,
+ * asserted `>= 5` while the app carried seven. Two entire live regions could be
+ * deleted inside the slack, and the mutation that proved it removed the
+ * sign-in's and the home screen's: both went silent, nothing went red, and the
+ * failing count would have named no file if it ever had gone red.
+ *
+ * A floor with slack in it is not a floor, it is a budget. So the claim is
+ * stated per surface, which is how it was always meant: this screen, this many.
+ * Adding a live region is free; deleting one names the file it left.
  */
-const LIVE_REGION_SURFACES = 5;
+const LIVE_REGIONS: { file: string; count: number; why: string }[] = [
+  {
+    file: 'src/ui/AuthGate.tsx',
+    count: 1,
+    why: 'a refused sign-in, which is the one moment a guest cannot see what went wrong from anywhere else on the screen',
+  },
+  {
+    file: 'src/ui/HomeActions.tsx',
+    count: 1,
+    why: 'a room that could not be created or joined, on the first screen anybody meets',
+  },
+  {
+    file: 'src/ui/RoomClient.tsx',
+    count: 3,
+    why: 'the room error, the deck diagnosis rendered beside it, and the join gate’s own refusal (R101)',
+  },
+  {
+    file: 'src/ui/components/Knockout.tsx',
+    count: 1,
+    why: 'a round too thin to decide, which re-asks the question and must say why (R13)',
+  },
+  {
+    file: 'src/ui/components/WinnerScreen.tsx',
+    count: 1,
+    why: 'a Jellyseerr request that failed, on the one control that spends the host’s disk',
+  },
+];
 
 /**
  * Copy that costs something to remove: it discloses a consequence, explains an
@@ -109,7 +145,7 @@ const COPY: Pin[] = [
 const BEHAVIOUR: Pin[] = [
   { id: 'B01', why: 'Room codes exclude O/0/I/1/L; the README promises no confusing characters', find: "CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'" },
   { id: 'B02', why: 'Confetti is suppressed under reduced motion, not merely shortened (R18)', find: 'if (reducedMotion) return null;' },
-  { id: 'B03', why: 'The admin API key is read server-side only and never sent to a client', find: 'apiKey: process.env.JELLYFIN_API_KEY' },
+  { id: 'B03', why: 'The admin API key is read where the Jellyfin client is configured. Scoped (R129): this proves the key is read in ONE place and can express neither half of what B03 used to claim -- adding `jellyfinKey: process.env.JELLYFIN_API_KEY` to the /healthz body, which any guest on the LAN can curl, left it green. Both halves are executed in pinbehaviour.test.ts: no response body, header, socket emit or ack may carry a secret (a payload may say WHETHER a key is set, never what it is), and no module the client bundle can reach may read one. The README makes the same promise (D04)', find: 'apiKey: process.env.JELLYFIN_API_KEY' },
   { id: 'B04', why: 'The guide page is never statically cached with one household’s server address baked in', find: "dynamic = 'force-dynamic'" },
   { id: 'B05', why: 'A failed socket ack rejects, so a lost action surfaces instead of hanging', find: 'reject(new Error(res.error))' },
   { id: 'B06', why: 'Connecting state is always cleared, even on a failed join — otherwise the UI hangs', find: '.finally(() => setConnecting(false))' },
@@ -156,9 +192,9 @@ const LATESHOW: Pin[] = [
   { id: 'T11', why: 'A deck failure names which upstream failed; three causes used to produce one symptom and all three reached the host as "it is broken" (R54)', find: 'export function diagnoseDeckFailure' },
   { id: 'T12', why: 'A thin deck is explained as a library fact rather than a fault, so nobody goes looking for a broken key', find: 'export function diagnoseThinDeck' },
   { id: 'T13', why: 'The request is confirmed by a second tap, never a timed hold: a hold behaves differently for a tremor, a switch and a thumb (R37)', find: "'idle' | 'confirm' | 'busy'" },
-  { id: 'T14', why: 'The winner screen takes focus, since it replaces the deck outright and nothing announced that (R52)', find: 'heading.current?.focus()' },
+  { id: 'T14', why: 'The winner screen takes focus, since it replaces the deck outright and nothing announced that (R52). Scoped (R129): this is the call site, which reads exactly the same when the ref is attached to nothing -- deleting ref={heading} from the <h1> left it green, focusing null. pinbehaviour.test.ts renders the screen and reads document.activeElement, which is what goes red then', find: 'heading.current?.focus()' },
   { id: 'T15', why: 'The way out of a login is the same size and shape as the way in; a decline styled as the lesser option reads as a trial wall to a guest who will never make an account (R55)', find: 'Carry on without an account' },
-  { id: 'T16', why: 'Closing the details sheet hands focus back to the control that opened it, rather than dropping it to <body>. Adjudicated: the property is intact, the form changed. It was read inside the trap effect, which depends on an inline onClose and so re-ran on every parent render, re-reading activeElement once it was the sheet -- the sheet became its own opener and focus fell to <body> anyway (R83). Now captured once on mount', find: 'openerRef.current?.focus?.()' },
+  { id: 'T16', why: 'Closing the details sheet hands focus back to the control that opened it, rather than dropping it to <body>. Scoped (R129): this is the handback, and it reads identically wherever the capture lives -- moving both lines back into the onClose-dependent effect, which is the R83 defect, left it green. The handback itself is executed by details.render.test.tsx ("hands focus back to the control that opened it"); that it happens once, on close, rather than on every render of an open sheet is T68 and pinbehaviour.test.ts', find: 'openerRef.current?.focus?.()' },
   { id: 'T17', why: 'The trailer mounts only on tap, so the sheet opens with zero network on a LAN with no route out (R29)', find: 'playTrailer ?' },
   { id: 'T18', why: 'A vote needs real travel, not just speed; velocity alone let a tremor or a nudge answer for you (R49)', find: 'VELOCITY_FLOOR' },
   { id: 'T19', why: 'Members carry ACC or GST so the host knows who is in the room before reading the code aloud (R44)', find: "u.authed ? 'ACC' : 'GST'" },
@@ -167,7 +203,7 @@ const LATESHOW: Pin[] = [
   { id: 'T28', why: 'The poster proxy accepts item ids only, so a path cannot be walked through it', find: "/^[A-Za-z0-9-]{1,64}$/.test(itemId)" },
   { id: 'T29', why: 'Every upstream fetch carries a deadline; a hung Jellyfin must not hold a request open forever', find: 'AbortSignal.timeout(10_000)' },
   { id: 'T34', why: 'Rejecting a winner costs one tap and never returns the same film; the vote that ends the night was the only vote with no take-back (R63)', find: "socket.on('winner:reject'" },
-  { id: 'T35', why: 'A card the room turned down is out of the running for good, so no later settlement can hand it back (R63). Adjudicated: the property is intact and the filter grew a second clause -- anything every connected member said no to is out too, or the points could crown a film the whole room rejected (R97)', find: '!rejected.has(c.id) && !isUnanimousNo(room.votes, c.id, active)' },
+  { id: 'T35', why: 'A card the room turned down is out of the running for good, so no later settlement can hand it back (R63). Adjudicated: the property is intact and the filter grew a second clause -- anything every connected member said no to is out too, or the points could crown a film the whole room rejected (R97). Scoped (R129): this guards the call, so deleting either clause fails it and gutting isUnanimousNo to `return false` does not. server/__tests__/unanimousNo.test.ts executes the whole path through canSettle and four of its cases go red on that body', find: '!rejected.has(c.id) && !isUnanimousNo(room.votes, c.id, active)' },
   { id: 'T36', why: 'An empty genre submission is an abstention and does not drag the overlap to nothing for everyone else (R62)', find: '.filter((l) => l.length > 0)' },
   { id: 'T37', why: 'The screen that first demands an opinion offers a way to decline it, rather than only the screen after', find: 'No preference — go with the room' },
   { id: 'T32', why: 'Each member is sent their own view of the room. Broadcasting the whole Room put everyone’s votes, deck position and ballots on every phone, while three screens promised otherwise (R61)', find: 'export function viewFor' },
@@ -177,14 +213,14 @@ const LATESHOW: Pin[] = [
   { id: 'T65', why: 'Someone who actually navigated still gets a ring. The suppression above is narrow by construction: weaken it to a blanket outline:none and this goes red', find: 'outline: 3px solid var(--color-maybe)' },
   { id: 'T66', why: 'The details sheet renders into document.body. Written in place it sits inside the deck -- animated, overflowing, translucent panes -- and a frosted pane only blurs what its nearest backdrop root painted, so the sheet was translucent over the poster without blurring it (R81)', find: 'createPortal(' },
   { id: 'T67', why: 'The sheet is frosted glass, not a flat translucent rectangle. This shipped broken for a while: the build emitted only -webkit-backdrop-filter, which Chrome does not support, so every pane in the app rendered flat in Chrome while dev and Safari looked right (R82). Order is guarded in css.test.ts, presence here', find: 'backdrop-filter: blur(22px) saturate(165%)' },
-  { id: 'T68', why: 'The details sheet captures the control that opened it once, on mount, not inside the effect that depends on onClose. The deck passes onClose as an inline arrow, so that effect re-ran on every parent render and re-read document.activeElement -- which by then was the sheet, making it its own opener and dropping focus to <body> on Escape (R83)', find: 'openerRef.current = document.activeElement' },
+  { id: 'T68', why: 'The details sheet captures the control that opened it once, on mount, not inside the effect that depends on onClose. The deck passes onClose as an inline arrow, so that effect re-ran on every parent render and re-read document.activeElement -- which by then was the sheet, making it its own opener and dropping focus to <body> on Escape (R83). Scoped (R129): a pin cannot see which dependency array a line sits in, so this stays green when the line moves back into the wrong effect, and so does every case in details.render.test.tsx. pinbehaviour.test.ts watches the consequence instead -- the opener is focused exactly once, when the sheet goes away, never while it is still open. The browser-only end of R83 remains the behavioural check in scripts/screenshots.ts', find: 'openerRef.current = document.activeElement' },
   { id: 'T70', why: 'Reclaiming a seat needs the secret issued with it. A room id plus a user id used to be enough, and ids are a global counter behind a four-character code, so any room was enterable by anyone who could reach the socket -- with that member’s private view and their vote (R86)', find: 'reconnect(roomId: string, userId: string, secret: string)' },
   { id: 'T71', why: 'Seat secrets are held off the room graph entirely, not as a field on RoomUser. viewFor builds a member’s view by spreading the room, and R61 is the ruling that a promise the client merely declines to render is not a promise -- a secret on the room object is a secret on every phone in it', find: 'private secrets = new Map<string, string>()' },
   { id: 'T72', why: 'Taking a seat is rate limited per address. Room codes are four characters and user ids are a counter, so an unlimited join endpoint enumerates both; a success clears the count so a household on flaky wifi never meets it (R86)', find: 'const joinLimiter = new RateLimiter' },
   { id: 'T73', why: 'A phone closing during the knockout re-runs the round. settlement.ts applied the only-connected-members-decide rule to the deck and the knockout was left out, so two of three submitted with the third’s tab closed left the room reading 2 of 3 in until the two-hour TTL reaped it -- the permanent stalemate this product denies, one phase before the one that was guarded (R87)', find: 'export function knockoutMemberLeft' },
   { id: 'T74', why: 'The knockout can resolve without anybody answering. Resolution lived only inside a submission, so the one event that could end a round was a member responding -- and a member leaving is exactly the case where nobody will (R87)', find: 'export function reresolve' },
   { id: 'T75', why: 'Departed members still constrain the deck. Their picks are tallied even though they no longer gate the round: leaving forfeits your say in when a round ends, not what you already said', find: 'const lists = Object.values(submissions).filter' },
-  { id: 'T76', why: 'Signing in has a deadline. This was the last server-side upstream on bare fetch while deadline.ts stated the invariant outright, so a Jellyfin that accepts the connection and never answers held the request open forever -- and a hung attempt is never counted by the rate limiter, which only records in the catch (R88)', find: 'fetchFn: typeof fetch = withDeadline(fetch)' },
+  { id: 'T76', why: 'Signing in has a deadline. This was the last server-side upstream on bare fetch while deadline.ts stated the invariant outright, so a Jellyfin that accepts the connection and never answers held the request open forever -- and a hung attempt is never counted by the rate limiter, which only records in the catch (R88). This one does fail when the wrapper is dropped from the default -- the string is unique to this file -- but not when the wrapper itself is gutted, so pinbehaviour.test.ts drives the sign-in with a stubbed fetch and asserts the deadline actually reaches it (R129)', find: 'fetchFn: typeof fetch = withDeadline(fetch)' },
   { id: 'T77', why: 'The sign-in button cannot hang. setBusy(false) runs only in the catch, which is correct only if the request always settles; fetch has no default timeout, so a sleeping Jellyfin left the button disabled with nothing said and no way out but a reload (R88)', find: 'AbortSignal.timeout(LOGIN_TIMEOUT_MS)' },
   { id: 'T78', why: 'How the night ended lives on the room, not only in the event that announced it. A rejoin receives room:state and nothing else, so one reload on the winner screen reported a film in the library as not on the server and offered to download it (R90)', find: 'room.winnerViaFallback = outcome.viaFallback' },
   { id: 'T79', why: 'Rejecting a winner clears the account of how the night ended, or the next winner inherits this one’s ranking and a rejected film’s Play link still works', find: 'room.winnerPlayUrl = null' },
@@ -195,7 +231,7 @@ const LATESHOW: Pin[] = [
   { id: 'T84', why: 'A handler refuses a socket that holds no seat. Each of these read socket.data as { userId: string } and trusted it, so a socket that never joined carried undefined into the store', find: "throw new Error('You are not in a room')" },
   { id: 'T85', why: 'The vote points carry no opacity. opacity-70 composites the ink with the button’s own coloured tint, so the number lost a third of its contrast against the exact surface it had to beat -- measured at 2.82:1 for -5 on the screen a person reads fifty times a night in the dark (R95)', find: "tabular text-caption\">{signed(v.points)}" },
   { id: 'T86', why: 'The details control is a fixed 44px, not a rem. At the 32px root a 3rem disc became 96px inside a poster strip about 53px tall: it overflowed its own container, overflow-hidden clipped 70% of it and the whole glyph, and because overflow clips hit-testing the tappable area fell under the 44px floor (R96)', find: 'size-[44px] cursor-pointer items-center justify-center rounded-full' },
-  { id: 'T87', why: 'A film every connected member said no to cannot be declared the winner. The fallback ranked on composite plus vote sum with no sign check, and a rating is 0-100 while a unanimous no is about -5N, so the best-rated film the whole room rejected won on points and the screen captioned it “Nobody agreed outright, so the points decided” (R97)', find: 'export function isUnanimousNo' },
+  { id: 'T87', why: 'A film every connected member said no to cannot be declared the winner. The fallback ranked on composite plus vote sum with no sign check, and a rating is 0-100 while a unanimous no is about -5N, so the best-rated film the whole room rejected won on points and the screen captioned it “Nobody agreed outright, so the points decided” (R97). Scoped (R129): this proves the function is exported and nothing about what it answers -- `return false` for every input passed it. server/__tests__/unanimousNo.test.ts is the guard that executes it, and goes red on that body in four places, including "does not win on points, even rated far above everything else"', find: 'export function isUnanimousNo' },
   { id: 'T88', why: 'The failure panel carries a way out. Every row in it is a Listing Row, which is deliberately not interactive, so it explained a dead end and then was one -- while its own FIX row said to pick genres again, which the server had already made possible and no control on screen could reach (R98)', find: 'Pick genres again' },
   { id: 'T89', why: 'A diagnosis can be put away. Nothing cleared one, and on a build failure recoverable is false by construction -- beginDeckBuild empties the deck before the attempt, so the size fed to diagnoseDeckFailure is always 0 -- which left the panel up for the rest of the session, hiding the KNOCKOUT deckBuildFailed had already restored (R98)', find: 'const clearDiagnosis = useCallback' },
   { id: 'T90', why: 'Asking Jellyseerr twice is refused by the server, not by a disabled button. The client gave up on its ack before the server gave up on the upstream, so a slow success was shown as Request failed and the retry it invited landed in Radarr as a second download (R99)', find: 'already asked for this. The host has it.' },
@@ -215,14 +251,14 @@ const LATESHOW: Pin[] = [
   { id: 'T108', why: 'The winner screen’s cost line does not promise the approval gate either. R107 rewrote the deck sentence, the confirm and the ack and missed this one, which renders on every winner screen for a film the server does not have -- immediately above the request button, contradicting the confirm two taps later. T103 pinned only the deck string, so nothing caught it (R111)', find: "whether that starts the download straight away depends on your host" },
   { id: 'T109', why: 'Signing in hands the token to the socket already connected rather than reconnecting. A reconnect is a disconnect, and a LOBBY leaver is deleted with their seat secret -- so signing in to unlock Any Movie destroyed the seat that raised the login, and the whole room if the signer was alone (R111)', find: "socket.emit('auth:token', { token })" },
   { id: 'T110', why: 'The live token is keyed by socket id, not kept in socket.data, which several handlers replace wholesale. Stored there, signing in would work and then silently un-authenticate the member on their next action', find: 'const liveTokens = new Map<string, string>()' },
-  { id: 'T111', why: 'Only the socket that still holds a seat may give it up. socket.io reaps a dropped connection on its own clock, up to 45s, so a phone moving between networks rejoins long before the old socket dies -- and that stale disconnect evicted somebody sitting right there, deleting a lobby seat or marking a present swiper disconnected, which is the sole test of who can stall a room (R112)', find: 'if (!ctx.store.ownsSeat(roomId, userId, ctx.session.id)) return;' },
+  { id: 'T111', why: 'Only the socket that still holds a seat may give it up. socket.io reaps a dropped connection on its own clock, up to 45s, so a phone moving between networks rejoins long before the old socket dies -- and that stale disconnect evicted somebody sitting right there, deleting a lobby seat or marking a present swiper disconnected, which is the sole test of who can stall a room (R112). Scoped (R129): this guards the call, not the answer -- `ownsSeat` rewritten to `return true` passed it. server/__tests__/handlers.test.ts executes the branch ("ignores a disconnect from a socket that no longer holds the seat", under "a socket going away") and goes red on that body', find: 'if (!ctx.store.ownsSeat(roomId, userId, ctx.session.id)) return;' },
   { id: 'T112', why: 'Seat ownership is held off the Room, like the secrets. viewFor builds a member’s view by spreading the room, and which socket holds a seat is not the room’s business', find: 'private seatSockets = new Map<string, string>()' },
   { id: 'T113', why: 'The reject confirmation takes focus when it replaces the button that opened it. React unmounts the pressed control, so focus fell to <body> and nothing was announced -- on the control that throws away what the room agreed on (R113)', find: "aria-label=\"Confirm turning down this film\"" },
   { id: 'T114', why: 'The request confirmation does the same, on the control that spends the host’s disk', find: "aria-label=\"Confirm asking for this film\"" },
   { id: 'T115', why: 'The sending state says what it is doing. Its only child was an aria-hidden spinner, so a screen reader user pressed “Yes, ask” and the button went silent -- the one moment where silence and success look identical and the difference is a download', find: 'Sending the request' },
   { id: 'T116', why: 'The winner screen renders under the gate. Every client defect this project has found was caught by a browser harness, a board member reading source, or a screenshot -- none could have been caught by npm run gate, because nothing in the suite rendered anything (R115)', find: 'winnerRequest: { by: string; title: string; approved: boolean } | null' },
   { id: 'T117', why: 'The screen chooser hands the phone back to the join gate when it holds no seat, and gives the failure panel a way out. Both were decisions RoomClient made rather than anything a component drew, and neither is visible in a single component (R98, R101, R116)', find: 'notice={roomHook.error}' },
-  { id: 'T118', why: 'The runtime slider is a 44px target. It shipped as a bare range input styled only with a colour, so it took the user agent default -- about 15 CSS px tall, shorter than the 26px chip R39 threw out as a target a tremor cannot hit, and the only control in the app under its own floor while the README promised nothing was (R118)', find: '.slider {' },
+  { id: 'T118', why: 'The runtime slider is a 44px target. It shipped as a bare range input styled only with a colour, so it took the user agent default -- about 15 CSS px tall, shorter than the 26px chip R39 threw out as a target a tremor cannot hit, and the only control in the app under its own floor while the README promised nothing was (R118). Scoped (R129): this is the rule’s NAME. Gutting its body, or setting height back to 15px, passed both this and the lobby’s check that the element carries className="slider" -- the defect fully restored, everything green. The number lives in CSS and is asserted in css.test.ts ("is at least 44px tall, which is the floor the README promises"), which also sizes the thumb', find: '.slider {' },
   { id: 'T119', why: 'It is still a native range. It answers arrow keys and announces its value and range to a screen reader, which nothing rebuilt from divs does as well (R06)', find: "type=\"range\"" },
   { id: 'T120', why: 'The loading skeleton announces itself. Eight aria-hidden bars are right, but with nothing beside them a screen reader met silence between “I’m ready” and the genres appearing -- and this is the state that was mistaken for the real screen in every committed capture for months (R85, R122)', find: 'Loading genres' },
   { id: 'T104', why: 'The screen reports which of the two actually happened. Jellyseerr returns 1 for pending and 2 for approved; that value reached the ack and went no further, so the app guessed instead of reading it', find: 'Your Jellyseerr is holding it for approval.' },
@@ -247,8 +283,8 @@ const LATESHOW: Pin[] = [
   { id: 'T44', why: 'A deck build cannot spend an unbounded number of requests against somebody personal metered API key (R68)', find: 'requestBudget: number;' },
   { id: 'T45', why: 'The cost of the last build is readable, so a host can see what a night actually spent', find: 'export function lastRatingsCost' },
   { id: 'T46', why: 'getLimits is actually called: the one number saying whether tonight deck comes back rated existed in the client and was read by nothing', find: 'const limits = await getLimits();' },
-  { id: 'T40', why: 'Every upstream call carries a deadline. fetch has no default timeout, so a Jellyfin that accepts the connection and goes quiet held the deck build open forever (R65)', find: 'export function withDeadline' },
-  { id: 'T41', why: 'The deadline is applied at config level, so an endpoint added later cannot forget it', find: 'fetchFn: withDeadline(fetch)' },
+  { id: 'T40', why: 'Every upstream call carries a deadline. fetch has no default timeout, so a Jellyfin that accepts the connection and goes quiet held the deck build open forever (R65). Scoped (R129): this proves the wrapper is exported, not that it wraps anything -- gutted to `return inner` it stayed green. src/lib/__tests__/deadline.test.ts executes it and goes red on that body twice: a signal must reach the inner fetch, and a hang must be renamed after the host that caused it', find: 'export function withDeadline' },
+  { id: 'T41', why: 'The deadline is applied at config level, so an endpoint added later cannot forget it. Scoped (R129) twice over: the haystack is the whole app, so this one string is satisfied by any one of the three clients -- dropping the wrapper from src/lib/jellyfin.ts alone left it green, and so did gutting withDeadline itself. pinbehaviour.test.ts calls each client’s default fetchFn with a stubbed fetch and asserts a deadline was created and attached, one case per client', find: 'fetchFn: withDeadline(fetch)' },
   { id: 'T42', why: 'A failed rejoin ends the session out loud. Pushing main restarts the server and rooms live in memory, so a deploy mid-night left every phone rendering a deck the server had forgotten (R66)', find: 'This room is gone — the server restarted' },
   { id: 'T43', why: 'healthz reports whether upstreams ANSWER, not whether two env strings are non-empty; a wrong key looked identically healthy (R67)', find: 'reachable: reachability()' },
   { id: 'T38', why: 'The material is named from the subject, not from a platform: a gel is the translucent sheet a film crew clips in front of a lamp, which is what these do to the ambient (R64)', find: '.gel {' },
@@ -340,10 +376,31 @@ function check(pins: Pin[], haystack: string, scope: string) {
 describe('pinned accessibility hooks', () => check(A11Y, APP, APP_SCOPE));
 
 describe('pinned live regions', () => {
-  it('error and status surfaces still announce themselves', () => {
-    const alerts = APP.split('role="alert"').length - 1;
-    expect(alerts, 'a live region was dropped from an error or status surface')
-      .toBeGreaterThanOrEqual(LIVE_REGION_SURFACES);
+  const byPath = new Map(appSources().map((f) => [f.path, f.code]));
+
+  for (const surface of LIVE_REGIONS) {
+    it(`${surface.file} announces ${surface.why}`, () => {
+      const code = byPath.get(surface.file);
+      expect(code, `${surface.file} is not in the app haystack at all`).toBeDefined();
+      const alerts = (code ?? '').split('role="alert"').length - 1;
+      expect(
+        alerts,
+        `${surface.file} has ${alerts} live region(s) and needs ${surface.count}: ` +
+          'an error here now reaches only someone already looking at it',
+      ).toBeGreaterThanOrEqual(surface.count);
+    });
+  }
+
+  it('names every live region the app has, not just enough of them', () => {
+    /*
+      The per-surface cases above cannot see a live region that moves to a file
+      nobody listed. This one can: the total across the whole app must equal the
+      total this table claims, so a new alert has to be written down here and a
+      deleted one cannot hide behind a surface that grew.
+    */
+    const total = APP.split('role="alert"').length - 1;
+    const claimed = LIVE_REGIONS.reduce((sum, s) => sum + s.count, 0);
+    expect(total, 'the app and this table disagree about how many live regions exist').toBe(claimed);
   });
 });
 

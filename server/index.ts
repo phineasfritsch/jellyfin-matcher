@@ -45,6 +45,7 @@ import {
 } from './transitions';
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { cacheWritable, historyHealth, recordWatched } from './history';
+import { assertSafeForDeclaredExposure, describeExposure, exposureBanner } from './exposure';
 import { RoomStore, type Room, type RoomSettings } from './store';
 import * as handlers from './handlers';
 import type { Ctx } from './handlers';
@@ -516,9 +517,30 @@ setInterval(() => {
 void probeAll();
 setInterval(() => void probeAll(), 2 * 60 * 1000).unref();
 
+/*
+  R131: say what this server exposes, before it starts serving.
+
+  The README has warned since d44ea44 that a public hostname is not safe on the
+  default auth mode. That warning is in a document; what gets deployed is a
+  container, and whoever deployed it reads `docker logs`, not a README they
+  skimmed a week ago.
+
+  The refusal only fires when the operator has declared MATCHER_PUBLIC=1. With
+  that declared, a mode that leaves the library readable by anyone with the URL
+  is a misconfiguration rather than a choice, and serving anyway would be the
+  app knowing better and saying nothing. Everyone who has not told us where they
+  are gets the banner and no interference.
+
+  This does NOT make the default safe (gate U4). A safe default costs the
+  four-second guest join, which is a product decision and is queued, not taken.
+*/
+const exposure = describeExposure();
+assertSafeForDeclaredExposure(exposure);
+
 void nextApp.prepare().then(() => {
   httpServer.listen(PORT, () => {
     console.log(`jellyfin-matcher server listening on :${PORT}`);
+    for (const line of exposureBanner(exposure)) console.log(`  ${line}`);
   });
 });
 

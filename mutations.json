@@ -1,0 +1,292 @@
+{
+  "$comment": [
+    "The mutation catalogue. Run it with `npx tsx scripts/mutate.ts`; docs/MUTATION.md explains why.",
+    "Each entry reintroduces a defect this project actually had, and names the test files that",
+    "claim to catch it. `find` must match its file EXACTLY ONCE -- the harness refuses to run",
+    "otherwise, because a mutation that did not apply looks exactly like a test that caught nothing.",
+    "The defects are historical, not invented: R129's audit took them out of git history, and the",
+    "test comments in src/ui/__tests__ say verbatim which mutation each guard was checked against."
+  ],
+  "mutations": [
+    {
+      "id": "R118-slider-height",
+      "ruling": "R118",
+      "claim": "the runtime slider is a 44px target, not the user agent's ~15px default",
+      "file": "app/globals.css",
+      "find": "  height: 44px;",
+      "replace": "  height: 15px;",
+      "expect": ["src/ui/__tests__/css.test.ts"],
+      "note": "Setting the height straight back to 15px passed 192 pins and 9 lobby cases before css.test.ts existed: everything guarding R118 was guarding the rule's NAME rather than its value."
+    },
+    {
+      "id": "R118-slider-thumb",
+      "ruling": "R118",
+      "claim": "the thumb is drawn big enough to grab, not just boxed in something 44px tall",
+      "file": "app/globals.css",
+      "find": ".slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 28px;\n  height: 28px;",
+      "replace": ".slider::-webkit-slider-thumb {\n  -webkit-appearance: none;\n  width: 15px;\n  height: 15px;",
+      "expect": ["src/ui/__tests__/css.test.ts"],
+      "note": "A 44px box around a default-sized thumb is a 44px box you cannot grab."
+    },
+    {
+      "id": "R82-prefix-order",
+      "ruling": "R82",
+      "claim": "the prefixed backdrop-filter is declared before the standard one, or the build ships only the prefix",
+      "file": "app/globals.css",
+      "find": "  -webkit-backdrop-filter: blur(22px) saturate(165%);\n  backdrop-filter: blur(22px) saturate(165%);",
+      "replace": "  backdrop-filter: blur(22px) saturate(165%);\n  -webkit-backdrop-filter: blur(22px) saturate(165%);",
+      "expect": ["src/ui/__tests__/css.test.ts"],
+      "note": "Lightning CSS treats a later prefixed alias as superseding the standard property. Chrome supports only the standard one, so every frosted pane rendered flat -- in Chrome, in production, with dev and Safari fine and the @supports fallback correctly declining to fire."
+    },
+    {
+      "id": "R54-diagnosis-from-row",
+      "ruling": "R54",
+      "claim": "the failure panel names WHICH system did not answer",
+      "file": "src/ui/components/DiagnosisPanel.tsx",
+      "find": "          <Row label=\"FROM\" title={diagnosis.upstream} detail=\"The system that did not answer.\" />\n",
+      "replace": "",
+      "expect": ["src/ui/__tests__/controls.render.test.tsx"],
+      "note": "R129's 'assertion satisfied by its own neighbour': the middle third was toContain('Jellyfin'), a substring of the headline asserted one line above, so deleting this row left all nine cases green."
+    },
+    {
+      "id": "R98-diagnosis-dismiss-inert",
+      "ruling": "R98",
+      "claim": "the way out of a failure panel is wired to something, not just drawn",
+      "file": "src/ui/components/DiagnosisPanel.tsx",
+      "find": "          <BigButton onClick={onDismiss} tone=\"go\">",
+      "replace": "          <BigButton onClick={() => {}} tone=\"go\">",
+      "expect": ["src/ui/__tests__/controls.render.test.tsx"],
+      "note": "R129's 'control asserted and never pressed'. The panel explained a dead end and then was one; a button that does nothing puts it back."
+    },
+    {
+      "id": "R18-vote-words-sr-only",
+      "ruling": "R18",
+      "claim": "each vote button prints its word on the screen, not only in the DOM",
+      "file": "src/ui/components/VoteRow.tsx",
+      "find": "          <span className=\"text-label font-semibold\">{v.word}</span>",
+      "replace": "          <span className=\"sr-only\">{v.word}</span>",
+      "expect": ["src/ui/__tests__/controls.render.test.tsx"],
+      "note": "R18/R26 forbid colour or symbol alone. The old assertion read container.textContent, which includes visually hidden text, so a glyph-only row passed (R129)."
+    },
+    {
+      "id": "R95-vote-points-dimmed-inline",
+      "ruling": "R95",
+      "claim": "nothing dims the vote weights, by any route",
+      "file": "src/ui/components/VoteRow.tsx",
+      "find": "          <span className=\"tabular text-caption\">{signed(v.points)}</span>",
+      "replace": "          <span style={{ opacity: 0.7 }} className=\"tabular text-caption\">{signed(v.points)}</span>",
+      "expect": ["src/ui/__tests__/controls.render.test.tsx"],
+      "note": "R129's 'one route checked where two exist': the guard forbade an opacity-70 CLASS, and dimming the identical pixels through an inline style sailed past it. -5 measured 2.82:1 on the screen a person reads fifty times an evening."
+    },
+    {
+      "id": "R48-undo-handler",
+      "ruling": "R48",
+      "claim": "pressing undo actually takes the vote back",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "              onClick={() => void undoVote()}",
+      "replace": "              onClick={() => {}}",
+      "expect": ["src/ui/__tests__/deck.render.test.tsx"],
+      "note": "Twelve cases named this row and its copy and none ever pressed it, so disconnecting the handler -- keeping the row, the label and the sentence verbatim -- left all twelve green (R129)."
+    },
+    {
+      "id": "R107-deck-promises-approval",
+      "ruling": "R107",
+      "claim": "the deck's cost line never promises the host approves the download first",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "          detail=\"Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.\"",
+      "replace": "          detail=\"Nothing is fetched from this screen. If it wins, your host approves it before anything is fetched.\"",
+      "expect": ["src/ui/__tests__/deck.render.test.tsx"],
+      "note": "R129's 'negative pinned to one wording': the guard was the single literal /host is asked to approve/i, so the same false promise in other words shipped green. Matcher requests with an admin key and Jellyseerr auto-approves those by default, so no approval gate is a promise this app can keep."
+    },
+    {
+      "id": "R91-deck-states-a-size",
+      "ruling": "R91",
+      "claim": "the deck states no download size, because the app has none to state",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "          detail=\"Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.\"",
+      "replace": "          detail=\"Nothing is fetched from this screen. About 100 min of video, roughly 2 GB. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.\"",
+      "expect": ["src/ui/__tests__/deck.render.test.tsx"],
+      "note": "The old guard was /\\d+\\s?GB/i alone, which matches neither 'gigabytes' nor 'MB' nor R36's superseded 'About 100 min of video' -- the exact sentence R91 was written to kill, because 108 minutes is 2GB or 55GB depending on a release this app never sees."
+    },
+    {
+      "id": "R46-deck-names-peers",
+      "ruling": "R46",
+      "claim": "peer progress on the deck is a count and never an identity",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "          {room.othersFinished} of {others.length} others finished",
+      "replace": "          {others.map((u) => u.name).join(', ')} finished",
+      "expect": ["src/ui/__tests__/deck.render.test.tsx"],
+      "note": "Ade cannot bear the room watching him be the slow one; R61 makes that a server promise rather than something the client declines to draw."
+    },
+    {
+      "id": "R85-knockout-loading-silent",
+      "ruling": "R85",
+      "claim": "the genre wait announces itself, rather than being silent sr-only text",
+      "file": "src/ui/components/Knockout.tsx",
+      "find": "            <p role=\"status\" className=\"sr-only\">",
+      "replace": "            <p className=\"sr-only\">",
+      "expect": ["src/ui/__tests__/knockout.render.test.tsx"],
+      "note": "R129's 'reading the DOM where the claim is about the screen', inverted: the assertion read textContent, which cannot see an attribute, so deleting role=\"status\" left the words in place and all eight cases green -- the exact state R85 was about, a screen reader meeting silence between 'I'm ready' and a list of genres."
+    },
+    {
+      "id": "R61-knockout-ballot-names-a-member",
+      "ruling": "R61",
+      "claim": "the elimination ballot's own header is a count, not a progress report about people",
+      "file": "src/ui/components/Knockout.tsx",
+      "find": "      <Bar left=\"Vote one out\" right={`${pool.length} left · 2 survive`} />",
+      "replace": "      <Bar left=\"Waiting on Bex\" right={`${pool.length} left · 2 survive`} />",
+      "expect": ["src/ui/__tests__/knockout.render.test.tsx"],
+      "note": "Two cases asserted the vote-out buttons exist and never looked at the bar above them, so turning the ballot's header into 'waiting on Bex' was invisible (R129)."
+    },
+    {
+      "id": "R111-lobby-never-grants-scope",
+      "ruling": "R111",
+      "claim": "signing in for Any Movie actually grants the scope the login was raised for",
+      "file": "src/ui/components/Lobby.tsx",
+      "find": "          void updateSettings({ scope: 'wide' });\n",
+      "replace": "",
+      "expect": ["src/ui/__tests__/lobby.render.test.tsx"],
+      "note": "Deleting this made the neighbouring negative test STRICTER rather than red -- 'does not switch scope on a tap that needs an account' is satisfied by a lobby that never grants anything. A gate that never opens is not a gate."
+    },
+    {
+      "id": "R111-lobby-switches-without-the-gate",
+      "ruling": "R111",
+      "claim": "a tap that needs an account raises the gate instead of quietly changing the setting",
+      "file": "src/ui/components/Lobby.tsx",
+      "find": "    if (next === 'wide' && wideLocked) setLoginForWide(true);",
+      "replace": "    if (next === 'wide' && wideLocked) void updateSettings({ scope: next });",
+      "expect": ["src/ui/__tests__/lobby.render.test.tsx"],
+      "note": "The first half of R111: the login that requirement raises used to reconnect the socket, which the server reads as the member leaving, so it deleted the seat that had just asked to sign in."
+    },
+    {
+      "id": "R126-lobby-runtime-title-off-scale",
+      "ruling": "R126",
+      "claim": "the runtime row's title sits on the same step of the type scale as every other row",
+      "file": "src/ui/components/Lobby.tsx",
+      "find": "              <label htmlFor=\"runtime\" className=\"text-row font-semibold leading-snug tracking-[-0.01em]\">",
+      "replace": "              <label htmlFor=\"runtime\" className=\"text-body font-semibold leading-snug\">",
+      "expect": ["src/ui/__tests__/lobby.render.test.tsx"],
+      "note": "0.875rem where every other row title is 1rem, in a grid with the identical gutter. A scale with one exception is not a scale."
+    },
+    {
+      "id": "R118-lobby-slider-unstyled",
+      "ruling": "R118",
+      "claim": "the slider carries the app's own styling rather than a bare accent colour",
+      "file": "src/ui/components/Lobby.tsx",
+      "find": "                className=\"slider\"",
+      "replace": "                className=\"accent-maybe\"",
+      "expect": ["src/ui/__tests__/lobby.render.test.tsx"],
+      "note": "The shipped defect exactly: its only styling was a colour, so it took the user agent default and was the one control in the app that made the README's 'nothing you tap is under 44px' false."
+    },
+    {
+      "id": "R39-lobby-deck-size-not-a-radiogroup",
+      "ruling": "R39",
+      "claim": "deck size is a real radio group, not three loose buttons",
+      "file": "src/ui/components/Lobby.tsx",
+      "find": "            <div role=\"radiogroup\" aria-label=\"Deck size\" className=\"contents\">",
+      "replace": "            <div className=\"contents\">",
+      "expect": ["src/ui/__tests__/lobby.render.test.tsx"],
+      "note": "R129's 'fixture that renders one branch': this group renders only after DECK is tapped and no case ever tapped it, so stripping the role and every aria-checked passed. A cycle button makes a screen reader user tap through every option to discover what the options are."
+    },
+    {
+      "id": "R101-roomclient-spinner-before-the-door",
+      "ruling": "R101",
+      "claim": "a phone with neither seat nor room reaches the join gate, not a spinner",
+      "file": "src/ui/RoomClient.tsx",
+      "find": "  if (!userId) {",
+      "replace": "  if (!userId && room) {",
+      "expect": ["src/ui/__tests__/roomclient.render.test.tsx"],
+      "note": "R101's own fix sets BOTH to null (setUserId(null); setRoom(null)), so anything that lets the loading branch win leaves a refused rejoin on 'Loading room AB12' for ever. Swapping the two branches left all seven original cases green (R129); this is that defect in one line."
+    },
+    {
+      "id": "R98-roomclient-draws-both",
+      "ruling": "R98",
+      "claim": "a blocking failure gets THE screen, not a place on it beside the room",
+      "file": "src/ui/RoomClient.tsx",
+      "find": "      {!blocked && room.status === 'KNOCKOUT' && <Knockout roomHook={roomHook} />}",
+      "replace": "      {room.status === 'KNOCKOUT' && <Knockout roomHook={roomHook} />}",
+      "expect": ["src/ui/__tests__/roomclient.render.test.tsx"],
+      "note": "The old case asserted only that the headline appeared, so removing the !blocked guard -- drawing the failure AND the room at once, which is the state R98 is about -- left it green (R129)."
+    },
+    {
+      "id": "R116-roomclient-status-rotated",
+      "ruling": "R116",
+      "claim": "each room status draws its own screen and only its own",
+      "file": "src/ui/RoomClient.tsx",
+      "find": "      {!blocked && room.status === 'LOBBY' && <Lobby roomHook={roomHook} />}",
+      "replace": "      {!blocked && room.status === 'LOBBY' && <Knockout roomHook={roomHook} />}",
+      "expect": ["src/ui/__tests__/roomclient.render.test.tsx"],
+      "note": "Every case in the file built its room with status KNOCKOUT, so LOBBY, SWIPING and FINISHED were never rendered: the auditor rotated three of the six branches to the wrong component and all seven cases passed (R129)."
+    },
+    {
+      "id": "R98-roomclient-dismiss-inert",
+      "ruling": "R98",
+      "claim": "dismissing the failure calls the thing that clears it",
+      "file": "src/ui/RoomClient.tsx",
+      "find": "        <DiagnosisPanel diagnosis={diagnosis} onDismiss={roomHook.clearDiagnosis} />",
+      "replace": "        <DiagnosisPanel diagnosis={diagnosis} onDismiss={() => {}} />",
+      "expect": ["src/ui/__tests__/roomclient.render.test.tsx"],
+      "note": "The server puts the room back to genre picking on a build failure; nothing ever cleared a diagnosis, so the room was recovered and every phone in the house was still stuck."
+    },
+    {
+      "id": "R99-socket-deadline",
+      "ruling": "R99",
+      "claim": "the client waits longer than the server does before calling an action failed",
+      "file": "src/ui/socket.ts",
+      "find": "      .timeout(20_000)",
+      "replace": "      .timeout(10_000)",
+      "expect": ["src/ui/__tests__/socket.render.test.tsx"],
+      "note": "10s against the server's UPSTREAM_TIMEOUT_MS of 15s: a slow Jellyseerr was reported to the phone as failed while the server was still working, and the retry that invited landed in Radarr as a second download. emitAck was never once invoked by this file."
+    },
+    {
+      "id": "R111-socket-forgets-handshake-token",
+      "ruling": "R111",
+      "claim": "signing in updates socket.auth, so a later reconnect carries the token",
+      "file": "src/ui/socket.ts",
+      "find": "    socket.auth = { token };\n",
+      "replace": "",
+      "expect": ["src/ui/__tests__/socket.render.test.tsx"],
+      "note": "R129's 'mock that discards the thing under test': io() returned a fresh literal per call and ignored its options, so this line could be deleted with all eight cases green."
+    },
+    {
+      "id": "R111-socket-not-a-singleton",
+      "ruling": "R111",
+      "claim": "one socket for the life of the page",
+      "file": "src/ui/socket.ts",
+      "find": "  if (!socket) {\n    // Pass the token on every (re)connect so a refreshed session stays valid.\n    socket = io({ autoConnect: true, auth: (cb) => cb({ token: getAuthToken() ?? '' }) });\n  }\n  return socket;",
+      "replace": "  // Pass the token on every (re)connect so a refreshed session stays valid.\n  socket = io({ autoConnect: true, auth: (cb) => cb({ token: getAuthToken() ?? '' }) });\n  return socket;",
+      "expect": ["src/ui/__tests__/socket.render.test.tsx"],
+      "note": "R111's failure mode by another route: without the guard every call constructs a fresh connection, and the server reads a teardown as the member leaving -- which is exactly how signing in used to destroy the seat it was signing in for."
+    },
+    {
+      "id": "R90-winner-ranking-not-restored",
+      "ruling": "R90",
+      "claim": "the ranking that explains a points winner survives a reload",
+      "file": "src/ui/components/WinnerScreen.tsx",
+      "find": "  const ranking = match?.ranking ?? room.winnerRanking;",
+      "replace": "  const ranking = match?.ranking ?? null;",
+      "expect": ["src/ui/__tests__/winner.render.test.tsx"],
+      "note": "R90 named five symptoms of a reload and the file reached four: no fixture ever set winnerRanking, so the group that explains WHY a film won on points was never rendered and dropping the fallback was invisible (R129)."
+    },
+    {
+      "id": "R107-winner-promises-approval",
+      "ruling": "R107",
+      "claim": "the winner screen never promises a host approval step on the branch where the server already accepted",
+      "file": "src/ui/components/WinnerScreen.tsx",
+      "find": ", and your server accepted it. It appears in Jellyfin once it finishes downloading.",
+      "replace": ". It appears in Jellyfin once the host approves it.",
+      "expect": ["src/ui/__tests__/winner.render.test.tsx"],
+      "note": "The old copy verbatim. Restoring it left nine of nine green, because /ada asked/i still matched (R129). There is nothing left to approve on this branch."
+    },
+    {
+      "id": "R100-winner-confirm-promises-the-deck",
+      "ruling": "R100",
+      "claim": "the reject confirmation promises a return to the deck only when there is a deck to return to",
+      "file": "src/ui/components/WinnerScreen.tsx",
+      "find": "                {roomExhausted ? 'Yes, pick the next one' : 'Yes, keep swiping'}",
+      "replace": "                {'Yes, keep swiping'}",
+      "expect": ["src/ui/__tests__/winner.render.test.tsx"],
+      "note": "The neighbouring case asserts the two labels on the TRIGGER and never presses it, so the confirm panel -- where R100's false promise lived -- was never mounted and reverting the copy inside it left nine of nine green (R129)."
+    }
+  ]
+}

@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 622 test cases, 38 files, 190 pinned claims, all green.
+**Today's numbers:** 681 test cases, 42 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
@@ -56,7 +56,40 @@ decision.
 
 ## Next
 
-- [ ] **Twenty-six hollow claims remain (R129).** An eight-agent audit
+- [ ] **Nine WCAG 2.2 failures, six at Level A (U7).** Full audit in
+      `docs/ACCESSIBILITY.md`. Two are fixed (R133). The rest, worst first:
+      **1.4.11 Non-text Contrast** — the ring marking a text input is
+      `white/15`, best possible 1.39:1 against a ground that is never black, so
+      the field boundary is provably invisible by arithmetic; **2.5.3 Label in
+      Name** — two controls whose visible text appears nowhere in their
+      accessible name, so a voice-control user saying what they can see does
+      nothing; **3.3.7 Redundant Entry** — a guest types their name on the home
+      screen and is asked for it again on the next one; **4.1.3 Status
+      Messages** — three counts change with focus elsewhere and no live region,
+      including the lobby's "N of M ready", which is the lobby's entire job.
+      Plus no `<h1>` on three routes and no per-route title.
+      Files: `src/ui/`, `app/`.
+
+- [ ] **Six accessibility criteria nobody has ever checked (U7).** Not
+      failures — unverified, and two look bad. **1.4.10 Reflow**: every capture
+      and measurement in this repo is 402px wide; nothing has ever been rendered
+      at 320px, and the deck deliberately cannot scroll (R21) while
+      card+votes+undo is 272px against a 256px viewport at 400% zoom.
+      **2.4.11 Focus Not Obscured**: `Bar` is `sticky top-0`, `Dock` is `sticky
+      bottom-0`, and there is no `scroll-padding` anywhere in the repository.
+      One keyboard pass down the lobby settles it.
+
+- [ ] **Deck build is linear but the ratings cache is quadratic across nights
+      (U10).** Measured in `docs/PERFORMANCE.md`: nothing is superlinear within
+      a single build — field reads are flat at 6.46 per candidate across a 32x
+      range — but `saveCache` rewrites the entire cache each night while the
+      request budget admits 400 new titles, so warming a 50k library costs
+      **65 nights and 1.36 GB written**, and until then the deck is effectively
+      ordered by what happened to be cached. Also `/Items` is un-paginated: a
+      28 MB payload at 50k items.
+      Files: `src/lib/mdblist.ts`, `src/lib/jellyfin.ts`.
+
+- [ ] **Twenty hollow claims remain (R129).** An eight-agent audit
       reintroduced the historical defect behind every claim the render tests
       make: 97 audited, 44 sound, 4 weak, **49 hollow**. Twenty-three are fixed,
       each re-run against the exact mutation that had passed it. What is left:

@@ -141,7 +141,17 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
                 min={0}
                 max={RUNTIME_STOPS.length - 1}
                 step={1}
-                value={RUNTIME_STOPS.findIndex((v) => v === room.settings.maxRuntime)}
+                /*
+                  R133. The slider is bound to an INDEX, so a screen reader
+                  announced "4" -- an ordinal into an array the listener cannot
+                  see -- while the comment above claimed the current value is
+                  announced. `aria-valuetext` makes that comment true.
+
+                  findIndex also returns -1 for a value not in the list, which
+                  puts the thumb below `min`; the clamp keeps it on the track.
+                */
+                aria-valuetext={runtimeLabel}
+                value={Math.max(0, RUNTIME_STOPS.findIndex((v) => v === room.settings.maxRuntime))}
                 onChange={(e) =>
                   void updateSettings({ maxRuntime: RUNTIME_STOPS[Number(e.target.value)] })
                 }

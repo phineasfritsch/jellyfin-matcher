@@ -18,6 +18,8 @@ const floors = JSON.parse(readFileSync(join(ROOT, 'gates.json'), 'utf8')) as {
   testFiles: number;
   testCases: number;
   pinnedClaims: number;
+  /** Mutations in the catalogue that must still be killed (G9). */
+  mutations: number;
 };
 
 const args = process.argv.slice(2);
@@ -172,6 +174,47 @@ else {
   const { code, text } = run('npx', ['tsx', 'scripts/rulings.ts', '--check']);
   record('G8', 'rulings index', code === 0, code === 0 ? 'current' : 'stale -- run npm run rulings');
   if (code !== 0) console.log(text.trim());
+}
+
+// G9 -- every claim still fails when its defect is put back.
+//
+// R129: eight agents reintroduced the historical defect behind every claim the
+// render suite makes, and 49 of 97 did not go red. Those fixes were then
+// verified by hand, one mutation at a time -- and U2 says a human deciding when
+// to re-run that audit is the same failure as a generator checking itself.
+// So the audit is a catalogue (mutations.json) and this runs it.
+//
+// --fast runs only the applicability check, which takes about a second. That is
+// not laziness: a `find` string that has gone stale is a mutation that silently
+// stops testing anything, and from here that is indistinguishable from a test
+// that caught nothing. The full run writes deliberately broken code into real
+// files and restores it, so it is serial and it is not something to have
+// running while anything else touches the tree (R127).
+{
+  const mutateArgs = ['tsx', 'scripts/mutate.ts'];
+  if (fast) mutateArgs.push('--check');
+  const { code, text } = run('npx', mutateArgs);
+  if (fast) {
+    const catalogued = Number(/(\d+) catalogued/.exec(text)?.[1] ?? 0);
+    const ok = code === 0 && catalogued >= floors.mutations;
+    record('G9', 'mutation catalogue', ok,
+      `${catalogued} still apply, not run (--fast)` +
+        (catalogued < floors.mutations ? ` BELOW FLOOR (${floors.mutations})` : ''));
+  } else {
+    const killed = Number(/(\d+)\/\d+ killed/.exec(text)?.[1] ?? 0);
+    const total = Number(/\d+\/(\d+) killed/.exec(text)?.[1] ?? 0);
+    const ok = code === 0 && killed >= floors.mutations;
+    record('G9', 'mutation audit', ok,
+      `${killed}/${total} killed` +
+        (killed < floors.mutations ? ` BELOW FLOOR (${floors.mutations}) -- a claim went hollow` : ''));
+  }
+  if (code !== 0) {
+    const notable = text
+      .split(/\r?\n/)
+      .filter((l) => /SURVIVED|ERROR|BASELINE-RED/.test(l))
+      .slice(0, 20);
+    for (const line of notable) console.log(line);
+  }
 }
 
 const failures = results.filter((r) => !r.ok);

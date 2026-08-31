@@ -21,7 +21,7 @@ Numbered, counted, non-zero on failure:
 | Gate | Checks | Current |
 |---|---|---|
 | G1 | `tsc --noEmit` | clean |
-| G2 | `vitest run`, and the **counts** | 622 cases in 38 files |
+| G2 | `vitest run`, and the **counts** | 681 cases in 42 files |
 | G3 | pinned claims still pinned | 190 |
 | G4 | counts stated in prose match `gates.json` | in sync |
 | G5 | `next build` | builds |
@@ -112,6 +112,7 @@ The dividing line is shared mutable state, not task size.
 | `npm run gate`, `npm test` | nothing in-process, but CPU and the Next build cache | serial |
 | `npm run e2e` | port 3000, a live Jellyfin, real Jellyseerr requests | **serial, one at a time** |
 | `npm run e2e:two` | a running server, a live Jellyfin, a real room | **serial, one at a time** |
+| `npm run mutate` | writes deliberately broken code into real source files | **serial, one at a time** |
 | Two agents editing one file | the file | never; last write wins silently |
 | Anything committing | the git index | one at a time, explicit paths |
 | Anything pushing to `main` | production, since push *is* deploy | one, last |
@@ -139,6 +140,13 @@ as input and authority to reject.
   `main` publishes the image — so the ordering is safe by construction. Do not
   add a manual deploy path that can run ahead of the push.
 - **Never run two `npm run e2e` at once.** See above.
+- **Never run `npm run mutate` beside anything that reads the tree.** It puts a
+  real defect into a real file, runs a test, and restores it. Anything else
+  running the gate inside that window sees a failure that is not theirs and is
+  not real -- which is R127 exactly, in a form that looks like a genuine
+  regression instead of an inflated count. The harness refuses to bank a kill
+  from a suite that was already red, so it will tell you rather than lie, but it
+  cannot stop the other run being wrong.
 - **Never edit a pin to make a port pass** without reading the rendered page.
 - **Never `git checkout`/`reset` in a worktree another agent is using.**
 
@@ -164,7 +172,7 @@ Every run is a fresh clone with no memory. Include:
 
 1. **Get current**: `git fetch origin && git checkout main && git pull --ff-only`
    then `npm ci`. Include the steps that look redundant.
-2. **The gate, numbered, with today's numbers**: 622 cases, 38 files, 190 pins.
+2. **The gate, numbered, with today's numbers**: 681 cases, 42 files, 190 pins.
    Drift is only visible against a number.
 3. **The traps, as prohibitions**: the list above, not a link to it.
 4. **Ownership**: exactly which files this agent may write. Not "the lobby area".

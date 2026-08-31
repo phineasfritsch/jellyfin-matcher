@@ -41,7 +41,7 @@ const EDITS: Array<[string, RegExp, string]> = [
   // three wrong numbers at once. It is the one file a host reads to decide
   // whether to pull, and it was the last place these numbers were written by
   // hand.
-  ['CHANGELOG.md', /The gate is 8 checks: \d+ test cases in \d+ files, \d+ pinned claims\./g, `The gate is 8 checks: ${g.testCases} test cases in ${g.testFiles} files, ${g.pinnedClaims} pinned claims.`],
+  ['CHANGELOG.md', /The gate is 9 checks: \d+ test cases in \d+ files, \d+ pinned claims\./g, `The gate is 9 checks: ${g.testCases} test cases in ${g.testFiles} files, ${g.pinnedClaims} pinned claims.`],
 ];
 
 const stale: string[] = [];

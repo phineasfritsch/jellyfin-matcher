@@ -272,3 +272,34 @@ describe('who is here', () => {
     expect(container.textContent).toMatch(/hidden/i);
   });
 });
+
+describe('what the slider tells somebody who cannot see it', () => {
+  it('announces its value rather than its index', () => {
+    /*
+      R133, WCAG 2.2 A 4.1.2. The input is bound to an INDEX into RUNTIME_STOPS,
+      so a screen reader said "4" -- an ordinal into an array the listener
+      cannot see -- while the comment beside it claimed "the current and
+      available values are announced". They were not. Deleting aria-valuetext
+      puts that back.
+    */
+    const { container } = render(<Lobby roomHook={hook(room())} />);
+    const slider = container.querySelector('input[type="range"]');
+    const spoken = slider?.getAttribute('aria-valuetext');
+    expect(spoken, 'the slider announces only its numeric index').toBeTruthy();
+    // Words, not an ordinal. "4" is what it used to say.
+    expect(spoken).not.toMatch(/^\s*-?\d+\s*$/);
+    expect(spoken).toMatch(/no cap|min/i);
+    // And it says the same thing the sighted label says, rather than a second
+    // vocabulary only screen readers meet.
+    expect(container.querySelector('label[for="runtime"]')?.textContent).toContain(spoken!);
+  });
+
+  it('never sits below its own minimum', () => {
+    // findIndex returns -1 for a runtime that is not one of the stops, which
+    // puts the thumb off the track entirely.
+    const odd = room({ settings: { scope: 'local', maxRuntime: 999, deckLimit: 50 } });
+    const { container } = render(<Lobby roomHook={hook(odd)} />);
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(Number(slider.value)).toBeGreaterThanOrEqual(Number(slider.min));
+  });
+});

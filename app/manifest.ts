@@ -7,7 +7,13 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Swipe together, watch tonight',
     start_url: '/',
     display: 'standalone',
-    orientation: 'portrait',
+    /*
+      R133 / WCAG 2.2 AA 1.3.4 Orientation. This was `orientation: 'portrait'`,
+      which locks the INSTALLED app: a phone in a stand, or somebody who holds a
+      device one way because of how they sit, could not rotate it. The layout is
+      a single column and reflows either way, so the lock bought nothing and
+      cost a criterion.
+    */
     background_color: '#0B0E11',
     theme_color: '#0B0E11',
     icons: [

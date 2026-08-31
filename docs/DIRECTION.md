@@ -1779,3 +1779,86 @@ Caught only because the guard was mutation-tested the moment it was written,
 which after R129 is now the habit rather than the exception. **An allow-list
 guard is only as strong as its exclusion list, and an exclusion list is the part
 nobody reads.** Anchor it, then try to sneak something past it.
+
+### R131 — Say what you expose, at boot
+
+The README has warned since `d44ea44` that a public hostname is not safe on the
+default auth mode: creating and joining a Jellyfin-only room need no account, so
+anyone who reaches the URL reads every title in the library. That warning is in
+a document. What gets deployed is a container, and whoever deployed it reads
+`docker logs`, not a README they skimmed a week ago.
+
+So the server now states its own exposure at boot: the auth mode, an ordered
+list of what somebody with only the URL can do — worst first, because a log line
+is skimmed, and "SPEND YOUR DISK" is in capitals because on `MATCHER_AUTH=off`
+an anonymous visitor can cause a download — and either "safe to expose" or the
+two real mitigations by name.
+
+It also refuses one thing. `MATCHER_PUBLIC=1` is the operator telling us the
+host is reachable from outside the house. Once they have, a mode that leaves the
+library open is a misconfiguration rather than a choice, and serving anyway
+would be the app knowing better and saying nothing. Opt-in, so it breaks nobody
+who has not told us where they are.
+
+**This does not close gate U4 and the tests say so in their own comments.** U4
+asks for a safe *default*, and the default is still `requests`. Making it safe
+costs the four-second guest join, which is most of why the app works on a Friday
+night — a product decision, queued rather than taken. What this closes is the
+smaller gap that was nobody's decision at all: the operator was never told, by
+the running process, what their configuration permitted.
+
+### R132 — The deadline covered the headers and not the body
+
+`withDeadline` wraps every outbound call so a Jellyfin that accepts a connection
+and never answers cannot hang a deck build forever (R65), and it renames the
+bare abort into `No answer from <host> within <ms>ms`, because "The operation
+was aborted" tells a host nothing about which service went quiet.
+
+It wrapped the `fetch` call, which settles as soon as the response *head*
+arrives. Reading the body happens afterwards, at the call site —
+`jellyfin.ts` ends `jellyfinGet` with `return res.json()` — and that is outside
+the try/catch. The signal still fires and still aborts the body stream, so a
+slow body rejected with a bare `DOMException`: no host, no duration, no cause,
+none of the diagnosis this module exists to provide.
+
+Which is the wrong half to be missing. Headers come back fast from a
+healthy-but-loaded server; it is the **body** that is slow, and it is slow in
+exactly the case that matters. Found while benchmarking a 50,000-item library
+for gate U10: headers at 37ms, `res.json()` aborted at 422ms against a 400ms
+deadline, escaping unnamed. The bigger the library, the more likely the failure
+and the less useful the message.
+
+Fixed at the wrapper rather than the call site, for the same reason the deadline
+is applied at config level in the first place: an endpoint added later cannot
+forget it. The returned Response has `json`, `text`, `arrayBuffer` and `blob`
+wrapped to name an abort the same way.
+
+One detail worth keeping: the match is on `err.name` alone now, not
+`instanceof Error`. An aborted body rejects with a `DOMException`, and whether
+that is an `instanceof Error` varies by runtime and version — so the stricter
+check would have let the very case this exists for slip through unnamed on some
+hosts and not others.
+
+### R133 — Two claims the interface did not keep
+
+From the WCAG 2.2 AA audit (gate U7), which found nine failures, six at Level A.
+These two are fixed here; the rest are listed in `docs/ACCESSIBILITY.md` with
+what would verify each.
+
+**The slider announced its index.** `4`. The input is bound to
+`RUNTIME_STOPS.findIndex(...)`, so what a screen reader read out was an ordinal
+into an array the listener cannot see — while the comment three lines above it
+claimed "the current and available values are announced". `aria-valuetext` makes
+that comment true, and the test also asserts the spoken text matches the visible
+label, so a second vocabulary cannot grow that only screen-reader users meet.
+`findIndex` also returns `-1` for a runtime that is not one of the stops, which
+put the thumb below `min`; it is clamped.
+
+**The installed app refused to rotate.** `orientation: 'portrait'` in the
+manifest, which locks a phone in a stand or somebody who holds a device one way
+because of how they sit (1.3.4). The layout is a single column and reflows
+either way, so the lock bought nothing and cost a criterion.
+
+Both are the same shape, and it is the shape R125 and R129 are about: a claim
+made in a comment that the code did not keep, with nothing able to tell the
+difference.
