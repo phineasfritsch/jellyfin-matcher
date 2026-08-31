@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defaultConfig, getMoviesByTmdbIds, type MdblistConfig } from '../mdblist';
+import { defaultConfig, getMoviesByTmdbIds, lastRatingsCost, type MdblistConfig } from '../mdblist';
 import type { MdblistMedia } from '../types';
 
 function media(tmdbId: number): MdblistMedia {
@@ -109,5 +109,57 @@ describe('getMoviesByTmdbIds', () => {
 
     await expect(getMoviesByTmdbIds([1], testConfig({ fetchFn }))).rejects.toThrow('403');
     expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('the cost of a deck build', () => {
+  function stub(pages: number) {
+    let calls = 0;
+    const fetchFn = (async () => {
+      calls += 1;
+      return new Response('[]', { status: 200 });
+    }) as unknown as typeof fetch;
+    return { fetchFn, calls: () => calls, pages };
+  }
+
+  it('reports what came free from the cache and what was spent', async () => {
+    const s = stub(0);
+    const cfg = defaultConfig({
+      fetchFn: s.fetchFn,
+      cacheFile: 'no-such-cache.json',
+      requestBudget: 10,
+    });
+    await getMoviesByTmdbIds([1, 2, 3], cfg);
+    const cost = lastRatingsCost();
+    expect(cost.requests).toBe(1); // three ids fit one batch of ten
+    expect(cost.skipped).toBe(0);
+  });
+
+  it('stops at the budget rather than exhausting somebody s API key', async () => {
+    const s = stub(0);
+    const cfg = defaultConfig({
+      fetchFn: s.fetchFn,
+      cacheFile: 'no-such-cache.json',
+      requestBudget: 2,
+    });
+    // 50 ids is five batches of ten; only two are affordable.
+    const ids = Array.from({ length: 50 }, (_, i) => i + 1);
+    await getMoviesByTmdbIds(ids, cfg);
+    expect(s.calls()).toBe(2);
+    const cost = lastRatingsCost();
+    expect(cost.requests).toBe(2);
+    expect(cost.skipped).toBe(30);
+  });
+
+  it('spends nothing at all when the budget is zero', async () => {
+    const s = stub(0);
+    const cfg = defaultConfig({
+      fetchFn: s.fetchFn,
+      cacheFile: 'no-such-cache.json',
+      requestBudget: 0,
+    });
+    await getMoviesByTmdbIds([1, 2, 3], cfg);
+    expect(s.calls()).toBe(0);
+    expect(lastRatingsCost().skipped).toBe(3);
   });
 });

@@ -17,6 +17,17 @@ export interface MdblistConfig {
   fetchFn: typeof fetch;
   now: () => number;
   sleep: (ms: number) => Promise<void>;
+  /**
+   * Most requests one deck build may spend against MDBList (R68).
+   *
+   * The free tier is metered per day and this is somebody's personal key. A
+   * cold cache on a large library asks for ratings ten titles at a time, so an
+   * unbounded build could spend hundreds of requests on one room and the host
+   * would only find out when the next night silently came back unrated. The
+   * build stops at the budget and reports what it skipped rather than
+   * quietly exhausting the key.
+   */
+  requestBudget: number;
 }
 
 export function defaultConfig(overrides: Partial<MdblistConfig> = {}): MdblistConfig {
@@ -26,6 +37,7 @@ export function defaultConfig(overrides: Partial<MdblistConfig> = {}): MdblistCo
     fetchFn: withDeadline(fetch),
     now: () => Date.now(),
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+    requestBudget: Number(process.env.MDBLIST_REQUEST_BUDGET ?? 40),
     ...overrides,
   };
 }
@@ -80,6 +92,23 @@ function chunk<T>(items: T[], size: number): T[][] {
  * free-tier limit, served from the on-disk cache when fresh.
  * Returns a map keyed by TMDb id (join key: response `ids.tmdb`).
  */
+/** What one call to getMoviesByTmdbIds actually cost. */
+export interface RatingsCost {
+  /** Titles answered from the on-disk cache, costing nothing. */
+  cached: number;
+  /** Requests actually sent to MDBList. */
+  requests: number;
+  /** Titles left unrated because the budget ran out. */
+  skipped: number;
+}
+
+/** Cost of the most recent lookup, for logging and /healthz. */
+let lastCost: RatingsCost = { cached: 0, requests: 0, skipped: 0 };
+
+export function lastRatingsCost(): RatingsCost {
+  return lastCost;
+}
+
 export async function getMoviesByTmdbIds(
   tmdbIds: number[],
   cfg: MdblistConfig = defaultConfig(),
@@ -97,7 +126,11 @@ export async function getMoviesByTmdbIds(
     }
   }
 
-  for (const batch of chunk(missing, BATCH_LIMIT)) {
+  const batches = chunk(missing, BATCH_LIMIT);
+  const affordable = batches.slice(0, Math.max(0, cfg.requestBudget));
+  const skippedIds = batches.slice(affordable.length).flat();
+
+  for (const batch of affordable) {
     const res = await fetchWithBackoff(
       cfg,
       `${BASE_URL}/tmdb/movie/?apikey=${cfg.apiKey}`,
@@ -117,6 +150,19 @@ export async function getMoviesByTmdbIds(
   }
 
   if (missing.length > 0) await saveCache(cfg.cacheFile, cache);
+
+  lastCost = {
+    cached: tmdbIds.length - missing.length,
+    requests: affordable.length,
+    skipped: skippedIds.length,
+  };
+  if (lastCost.skipped > 0) {
+    console.warn(
+      `MDBList budget of ${cfg.requestBudget} requests reached: ` +
+        `${lastCost.skipped} titles left unrated. ` +
+        `Raise MDBLIST_REQUEST_BUDGET if this is a large library on a cold cache.`,
+    );
+  }
   return result;
 }
 

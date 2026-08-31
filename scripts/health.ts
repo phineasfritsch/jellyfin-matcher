@@ -31,6 +31,10 @@ type Health = {
   rooms?: number;
   upstreams?: Record<string, boolean>;
   reachable?: Record<string, { ok: boolean | null; checkedAt: string | null; detail: string | null }>;
+  ratings?: {
+    quota: { limit: number | null; remaining: number | null; checkedAt: string | null };
+    lastBuild: { cached: number; requests: number; skipped: number };
+  };
   auth?: Record<string, boolean | string>;
 };
 
@@ -81,6 +85,17 @@ async function main() {
     notes.push(`Jellyseerr not answering: ${reach.jellyseerr.detail ?? 'unknown'}`);
   }
 
+  const q = health.ratings?.quota;
+  if (q && q.remaining !== null && q.limit !== null) {
+    const left = q.remaining / Math.max(1, q.limit);
+    if (q.remaining === 0) problems.push('MDBList quota is exhausted: the deck will be unrated');
+    else if (left < 0.1) notes.push(`MDBList quota nearly gone: ${q.remaining} of ${q.limit} left`);
+  }
+  const lb = health.ratings?.lastBuild;
+  if (lb && lb.skipped > 0) {
+    notes.push(`last deck build left ${lb.skipped} titles unrated at the request budget`);
+  }
+
   const deployed = health.version ?? 'unknown';
   if (!skipParity) {
     const head = localHead();
@@ -104,6 +119,8 @@ async function main() {
         .join(' ') || '?'
     }`,
   );
+  if (q) console.log(`ratings   quota ${q.remaining ?? '?'}/${q.limit ?? '?'} left`);
+  if (lb) console.log(`last deck ${lb.requests} requests, ${lb.cached} cached, ${lb.skipped} skipped`);
   console.log(`latency   ${ms}ms`);
   for (const note of notes) console.log(`note      ${note}`);
 

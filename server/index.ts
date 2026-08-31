@@ -4,6 +4,7 @@ import next from 'next';
 import { Server, type Socket } from 'socket.io';
 import { getGenres, playbackUrl, posterOrigin } from '../src/lib/jellyfin';
 import { getMovieGenres as jellyseerrGenres, requestMovie } from '../src/lib/jellyseerr';
+import { getLimits, lastRatingsCost } from '../src/lib/mdblist';
 import { submitElimination, submitGenres, createKnockout } from '../src/lib/knockout';
 import { isValidVote, rankFallback } from '../src/lib/match';
 import { authConfig, authenticateWithJellyfin, AuthStore } from './auth';
@@ -33,20 +34,37 @@ const STARTED_AT = Date.now();
  * `null` means not configured, so "off" and "broken" stay distinguishable.
  */
 type Reach = { ok: boolean | null; checkedAt: string | null; detail: string | null };
-const reach: Record<'jellyfin' | 'jellyseerr', Reach> = {
+const reach: Record<'jellyfin' | 'jellyseerr' | 'mdblist', Reach> = {
   jellyfin: { ok: null, checkedAt: null, detail: null },
   jellyseerr: { ok: null, checkedAt: null, detail: null },
+  mdblist: { ok: null, checkedAt: null, detail: null },
+};
+
+/**
+ * MDBList's own view of the key's remaining quota (R68).
+ *
+ * `getLimits` existed in the repo and was called from nowhere, so the one
+ * number that says whether tonight's deck will come back rated was never read.
+ * It is somebody's personal key on a metered free tier and the failure mode is
+ * silent: the deck still builds, every card is just unrated.
+ */
+let quota: { limit: number | null; remaining: number | null; checkedAt: string | null } = {
+  limit: null,
+  remaining: null,
+  checkedAt: null,
 };
 
 function reachability() {
   return reach;
 }
 
-async function probe(name: 'jellyfin' | 'jellyseerr', run: () => Promise<unknown>) {
+async function probe(name: 'jellyfin' | 'jellyseerr' | 'mdblist', run: () => Promise<unknown>) {
   const configured =
     name === 'jellyfin'
       ? Boolean(process.env.JELLYFIN_URL && process.env.JELLYFIN_API_KEY)
-      : Boolean(process.env.JELLYSEERR_URL && process.env.JELLYSEERR_API_KEY);
+      : name === 'mdblist'
+        ? Boolean(process.env.MDBLIST_API_KEY)
+        : Boolean(process.env.JELLYSEERR_URL && process.env.JELLYSEERR_API_KEY);
   if (!configured) {
     reach[name] = { ok: null, checkedAt: new Date().toISOString(), detail: 'not configured' };
     return;
@@ -69,6 +87,14 @@ async function probeAll(): Promise<void> {
   await Promise.all([
     probe('jellyfin', () => getGenres()),
     probe('jellyseerr', () => jellyseerrGenres()),
+    probe('mdblist', async () => {
+      const limits = await getLimits();
+      quota = {
+        limit: limits.rateLimit,
+        remaining: limits.rateLimitRemaining,
+        checkedAt: new Date().toISOString(),
+      };
+    }),
   ]);
 }
 
@@ -98,6 +124,9 @@ app.get('/healthz', (_req, res) =>
       mdblist: Boolean(process.env.MDBLIST_API_KEY),
     },
     reachable: reachability(),
+    // What the last deck build cost, and what the key has left. Both are the
+    // host's problem and neither was visible from anywhere.
+    ratings: { quota, lastBuild: lastRatingsCost() },
     auth: authConfig(),
   }),
 );
