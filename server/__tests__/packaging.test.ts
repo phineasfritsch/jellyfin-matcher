@@ -133,3 +133,26 @@ describe('the image itself', () => {
     expect(compose).not.toMatch(/^\s+- \.\/cache:\/app\/\.cache$/m);
   });
 });
+
+/**
+ * U9 (docs/UPSTREAM.md): the manifest and the LICENSE file must agree.
+ *
+ * `LICENSE` has been MIT since the first commit; `package.json` declared no
+ * license field at all, so every tool that reads provenance from the manifest
+ * -- npm, an SBOM generator, an acquirer's dependency scanner -- saw an
+ * unlicensed package sitting next to a permissive licence file. Found while
+ * writing the upstream bar, which is what that document is for.
+ */
+describe('the licence says the same thing twice', () => {
+  it('declares a licence in the manifest', () => {
+    const pkg = JSON.parse(readDoc('package.json')) as { license?: string };
+    expect(pkg.license, 'package.json declares no license').toBeTruthy();
+  });
+
+  it('declares the same one the LICENSE file grants', () => {
+    const pkg = JSON.parse(readDoc('package.json')) as { license?: string };
+    const licence = readDoc('LICENSE');
+    expect(licence).toContain('MIT License');
+    expect(pkg.license).toBe('MIT');
+  });
+});

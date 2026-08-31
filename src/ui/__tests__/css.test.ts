@@ -58,3 +58,55 @@ describe('vendor prefixes are declared before the standard property', () => {
     expect(css).toMatch(/\n\s*backdrop-filter: blur\(/);
   });
 });
+
+/**
+ * R129: the 44px in R118 is a number, and nothing asserted the number.
+ *
+ * The slider took the user agent default — about 15 CSS px — against the app's
+ * own floor, and the README sentence it made false ("nothing you tap is under
+ * 44px") had been written an hour earlier. R118 fixed it with a 44px box and a
+ * 28px thumb on a 6px track.
+ *
+ * Everything guarding that fix was guarding its name rather than its value. The
+ * lobby's rendering test asserts the element carries `className="slider"`; pin
+ * T118 asserts a rule called `.slider` exists. Gutting the rule's body, or
+ * setting `height: 15px` straight back, passed both — 192 pins and 9 cases,
+ * all green, with the defect fully restored.
+ *
+ * The height lives in CSS, so it is checked in CSS.
+ */
+describe('the runtime slider is a real target', () => {
+  const css = readDoc('app/globals.css');
+  const rule = /\.slider\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+
+  it('has a rule with a body, not just a name', () => {
+    expect(rule.trim().length, 'the .slider rule is empty or missing').toBeGreaterThan(20);
+  });
+
+  it('is at least 44px tall, which is the floor the README promises', () => {
+    const height = /height:\s*(\d+)px/.exec(rule)?.[1];
+    expect(height, 'the .slider rule states no height').toBeDefined();
+    expect(Number(height)).toBeGreaterThanOrEqual(44);
+  });
+
+  it('gives the thumb a size a thumb can actually hit, on both engines', () => {
+    // A 44px box around a default-sized thumb is a 44px box you cannot grab.
+    /*
+      Literal patterns, not built ones. The first draft constructed these with
+      `new RegExp(\`::${'${pseudo}'}\\s*...\`)`, and a template literal turns
+      `\s` into a bare `s` — so the pattern quietly matched the LETTER s,
+      found nothing, and reported a rule that is plainly there as missing.
+      A regex assembled in a template literal is a regex nobody has read.
+    */
+    const blocks: Array<[string, RegExpExecArray | null]> = [
+      ['::-webkit-slider-thumb', /::-webkit-slider-thumb\s*\{([^}]*)\}/.exec(css)],
+      ['::-moz-range-thumb', /::-moz-range-thumb\s*\{([^}]*)\}/.exec(css)],
+    ];
+    for (const [name, match] of blocks) {
+      expect(match, `no ${name} rule at all`).not.toBeNull();
+      const size = /(?:height|width):\s*(\d+)px/.exec(match?.[1] ?? '')?.[1];
+      expect(size, `${name} states no size`).toBeDefined();
+      expect(Number(size)).toBeGreaterThanOrEqual(24);
+    }
+  });
+});

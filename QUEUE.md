@@ -8,16 +8,23 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 606 test cases, 37 files, 190 pinned claims, all green.
+**Today's numbers:** 617 test cases, 37 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
 only when all five vote finished in the same round.
 
 **Six rounds have run. Round six was 5/5: the product is finished at 1.0.**
-Rounds one and two were 0/5, three was 0/5, four 1/5, five 4/5. Every
-code-reachable item from all six is closed. What is left below is post-1.0
-housekeeping and four things only a real household can answer.
+Rounds one and two were 0/5, three was 0/5, four 1/5, five 4/5.
+
+**That question is closed, and a harder one replaced it.** See
+[docs/UPSTREAM.md](docs/UPSTREAM.md): would the Jellyfin project adopt this, and
+would an acquirer find nothing in due diligence it would have to fix first?
+Eleven objective gates, **none met**, and no mandate may vote yes while one is
+open. Within hours of the 1.0 verdict, two things the board had not looked at
+turned up — a ruling index missing 24 entries, and 49 of 97 test claims that did
+not survive their own bug. The new bar exists because a board that *reads* a
+product and a board that would have to *own* it ask different questions.
 
 This paragraph used to say two rounds had run and that there was nothing open
 that code could close. That was wrong through three further rounds which found

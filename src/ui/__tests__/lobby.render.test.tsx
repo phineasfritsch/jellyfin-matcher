@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ClientRoom } from '../types';
 import type { RoomHook } from '../useRoom';
 
@@ -18,14 +18,33 @@ import type { RoomHook } from '../useRoom';
  * configuration was fetched.
  */
 
+/*
+  R129. This used to hard-code `wideRequires: true` and `isLoggedIn: false`, so
+  exactly ONE configuration was ever rendered: hard-wiring `wideLocked` to true
+  left all nine cases green, and so did deleting the line that grants the scope
+  after signing in. The whole point of the file's own docstring is which
+  controls the screen offers under each configuration, and it offered one.
+
+  Mutable now, reset per test, so the other side of the branch is reachable.
+*/
+const auth = vi.hoisted(() => ({ wideRequires: true, loggedIn: false }));
+
 vi.mock('../AuthGate', () => ({
-  useAuthConfig: () => ({ config: { wideRequires: true }, loading: false }),
-  isLoggedIn: () => false,
-  LoginScreen: ({ reason }: { reason?: string }) => <div>login: {reason}</div>,
+  useAuthConfig: () => ({ config: { wideRequires: auth.wideRequires }, loading: false }),
+  isLoggedIn: () => auth.loggedIn,
+  LoginScreen: ({ reason, onLoggedIn }: { reason?: string; onLoggedIn?: () => void }) => (
+    <button type="button" onClick={() => onLoggedIn?.()}>
+      login: {reason}
+    </button>
+  ),
 }));
 
 const { Lobby } = await import('../components/Lobby');
 
+beforeEach(() => {
+  auth.wideRequires = true;
+  auth.loggedIn = false;
+});
 afterEach(cleanup);
 
 function room(overrides: Partial<ClientRoom> = {}): ClientRoom {
@@ -146,8 +165,81 @@ describe('the scope choice', () => {
     */
     const updateSettings = vi.fn();
     render(<Lobby roomHook={hook(room(), { updateSettings })} />);
-    screen.getByText(/any movie/i).closest('button')?.click();
+    fireEvent.click(screen.getByText(/any movie/i).closest('button')!);
     expect(updateSettings).not.toHaveBeenCalled();
+    /*
+      And raises the gate. Asserting only the absence of a call meant an inert
+      button passed: replacing the control's onClick with a no-op left nine of
+      nine green, so the README's headline feature could be dead and this test
+      would have called it correct (R129).
+    */
+    expect(screen.getByText(/sign in to search any movie/i)).toBeTruthy();
+  });
+
+  it('grants the scope once the account exists, which is what the gate was for', () => {
+    /*
+      R111's second half, and it lives in this component. Deleting the
+      `updateSettings({ scope: 'wide' })` from the login's onLoggedIn made the
+      test above *stricter* rather than red — the negative assertion was
+      satisfied by a lobby that never grants anything. A gate that never opens
+      is not a gate.
+    */
+    const updateSettings = vi.fn();
+    render(<Lobby roomHook={hook(room(), { updateSettings })} />);
+    fireEvent.click(screen.getByText(/any movie/i).closest('button')!);
+    fireEvent.click(screen.getByRole('button', { name: /login:/i }));
+    expect(updateSettings).toHaveBeenCalledWith({ scope: 'wide' });
+  });
+
+  it('switches straight away when no account is required', () => {
+    // The other side of the branch. `wideLocked` was hard-wired true by the
+    // old mock, so this configuration had never been rendered at all.
+    auth.wideRequires = false;
+    const updateSettings = vi.fn();
+    render(<Lobby roomHook={hook(room(), { updateSettings })} />);
+    fireEvent.click(screen.getByText(/any movie/i).closest('button')!);
+    expect(updateSettings).toHaveBeenCalledWith({ scope: 'wide' });
+    expect(screen.queryByText(/sign in to search any movie/i)).toBeNull();
+  });
+
+  it('switches straight away for somebody already signed in', () => {
+    auth.loggedIn = true;
+    const updateSettings = vi.fn();
+    render(<Lobby roomHook={hook(room(), { updateSettings })} />);
+    fireEvent.click(screen.getByText(/any movie/i).closest('button')!);
+    expect(updateSettings).toHaveBeenCalledWith({ scope: 'wide' });
+  });
+
+  it('always lets the local scope through, since it costs nothing', () => {
+    const updateSettings = vi.fn();
+    render(<Lobby roomHook={hook(room({ settings: { scope: 'wide', maxRuntime: null, deckLimit: 50 } }), { updateSettings })} />);
+    fireEvent.click(screen.getByText(/jellyfin only/i).closest('button')!);
+    expect(updateSettings).toHaveBeenCalledWith({ scope: 'local' });
+  });
+});
+
+describe('the deck size', () => {
+  it('is a radio group once opened, not a row of unrelated buttons', () => {
+    /*
+      R129. The group renders only after DECK is tapped and no case ever tapped
+      it, so one of the lobby's three settings controls was never rendered —
+      stripping `role="radiogroup"` and every `aria-checked` passed.
+    */
+    const { container } = render(<Lobby roomHook={hook(room())} />);
+    fireEvent.click(screen.getByRole('button', { name: /deck size, 50 cards/i }));
+    const group = screen.getByRole('radiogroup', { name: 'Deck size' });
+    expect(group).toBeTruthy();
+    const radios = container.querySelectorAll('[role="radio"]');
+    expect(radios.length).toBe(3);
+    expect([...radios].filter((r) => r.getAttribute('aria-checked') === 'true')).toHaveLength(1);
+  });
+
+  it('reports the chosen size when one is picked', () => {
+    const updateSettings = vi.fn();
+    render(<Lobby roomHook={hook(room(), { updateSettings })} />);
+    fireEvent.click(screen.getByRole('button', { name: /deck size, 50 cards/i }));
+    fireEvent.click(screen.getByText('25 cards').closest('[role="radio"]')!);
+    expect(updateSettings).toHaveBeenCalledWith({ deckLimit: 25 });
   });
 });
 
