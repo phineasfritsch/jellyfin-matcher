@@ -331,3 +331,59 @@ All three blocking reasons were closed in `6296900` and `a3aac7c`.
   watch history that had shipped hours earlier (R109).
 
 All three were verified before being acted on, and all three held.
+
+## Round 4
+
+**Verdict: NOT FINISHED.** 2 of 5 finished. Two blockers verified live at HEAD; a third was closed by a commit that landed after the votes were cast.
+
+| Mandate | Vote | Blocking reason |
+| --- | --- | --- |
+| Product | Finished | — |
+| Growth | Not finished | `README.md:137` still handed a stranger `-v ./cache:/app/.cache` in the non-compose install, with three sentences promising a cache that path cannot write. **Closed after the vote** by `a049c4d`. |
+| Engineering | Not finished | Signing in from the lobby to unlock "Any Movie" destroys the signing-in member's seat, and the whole room when they are alone in it. Live at HEAD. |
+| Design Director | Finished | — |
+| Access and Honesty | Not finished | `src/ui/components/WinnerScreen.tsx:141` still ships "Asking sends it to Jellyseerr for the host to approve" — the gate R107 established this app does not control. Live at HEAD. |
+
+### What blocks 1.0
+
+**Engineering.** On the default `MATCHER_AUTH=requests`, `wideRequires` is true (`server/auth.ts:18,42`), so the only route to "Any Movie" — the feature the README leads with — is the LoginScreen raised at `Lobby.tsx:34-45`. On success `setAuth` ends `socket.disconnect().connect()` (`src/ui/socket.ts:32-36`), because the server reads the token from the handshake and a handshake cannot be updated in place. The disconnect handler then runs on a socket still holding a LOBBY seat, and `server/store.ts:220-222` deletes the user and their seat secret, with `:227-231` deleting the room when it empties. The rejoin is refused, the phone is returned to the join gate blaming a server restart, and the buffered `updateSettings({scope:'wide'})` is refused as "You are not in a room" and swallowed. With other members ready, R108's `startKnockout` at `handlers.ts:341-348` starts the round on the host's "departure" and their second attempt is refused as already started. Deterministic, on the default configuration, on the documented path to the headline feature, and driven by no test or capture.
+
+**Access and Honesty.** `WinnerScreen.tsx:141` renders under `{!held && <CostLine/>}` — every winner screen for a film not on the server. `6296900` rewrote the deck sentence, the post-press ack and the confirm and left this one; round three named `:141` by line at `BOARD.md:312`. No pin covers it. Severity is below round three's, because the confirm two taps later now says "Depending on your host's settings that may start the download straight away" — so nobody commits the spend without accurate copy. What remains is a screen that asserts a false gate first and contradicts itself at the press, on the one control that spends someone else's disk.
+
+### What closed under the board's feet
+
+Growth's blocker was real when cast and is closed now. `a049c4d` replaced the flag with `-v matcher-cache:/app/.cache`, added the uid-10001 explanation and the chown for anyone who wants host files, and — because the *previous* attempt was a string replace with no assertion that matched nothing and printed success anyway — guarded all of it in `server/__tests__/packaging.test.ts`. The vote stands as cast; the queue carries nothing from it.
+
+### One claim struck
+
+Engineering's "no way back in after a lobby drop starts the round" was accurate on mechanism and struck as a blocker: the trigger needs three-plus members with everyone but the dropper ready, the mid-game join refusal predates R108 by design, the failure R108 removed was worse (the whole room stranded until the two-hour TTL), and a lobby holds nothing but a code. The genuine residual is a copy dead end — `useRoom.ts:117` tells her to join again and the server then refuses exactly that.
+
+### What this means
+
+Two small, precisely located defects stand between this and five yeses, and both are in the queue at ranks 1 and 2 with pins named. Neither is a matter of taste or a second-release idea; both are the app saying or doing something that is not true. The four items blocked as unreachable by code remain blocked and were explicitly weighed by every mandate that voted — none of them is a reason to withhold. Round five should be short.
+
+### What happened next
+
+Every item in round 4's queue is closed, in `818ff92` through `07e5b72`.
+
+- **R111** — signing in from the lobby tore the socket down, which the server read
+  as the member leaving: the seat and its secret were deleted, and the room with them
+  if the signer was alone. R108 then started the knockout on the "departure". The
+  token is handed to the live socket now.
+- **R112** — a seat is held by a socket. socket.io reaps a dropped connection on its
+  own clock, so a phone that changes network rejoins before the old socket dies, and
+  that stale disconnect evicted somebody sitting right there.
+- **R113** — both winner-screen confirms replace the control that opened them, so
+  focus fell to `<body>` with nothing announced, and the sending state had no
+  accessible name at all.
+- **R114** — the download-disclosure branch had never been photographed, which is why
+  two false claims survived in it. `12-request-confirm.png` now shows the bar, the
+  cost line and the confirmation in one frame.
+- **R115** — the gate can execute the client. Nothing in thirty files rendered a
+  component; every client defect this project has found was caught by a browser
+  harness, a reader, or a screenshot.
+
+Growth's blocker was closed by `a049c4d` before the round was even read: the README
+had shipped a `docker run` still recommending the bind mount that breaks a non-root
+image, because an earlier edit silently replaced nothing and the commit claimed
+otherwise.
