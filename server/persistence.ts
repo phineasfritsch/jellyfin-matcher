@@ -33,6 +33,23 @@ export interface PersistenceConfig {
   now: () => number;
 }
 
+/**
+ * R195: an env var set to nothing is not a setting.
+ *
+ * `process.env.X ?? fallback` keeps an EMPTY STRING, because `??` only rejects
+ * null and undefined. `MATCHER_SNAPSHOT_FILE=` in a compose file -- which is
+ * how a variable gets commented out in practice -- would have made the path
+ * `''`, and every save would fail on a file with no name. Rooms would stop
+ * surviving restarts, silently, because saveSnapshot fails open by design.
+ *
+ * Trimmed too: a trailing space in a compose file is invisible and would make
+ * a real path unusable in the same silent way.
+ */
+function envFile(): string | undefined {
+  const raw = process.env.MATCHER_SNAPSHOT_FILE?.trim();
+  return raw ? raw : undefined;
+}
+
 export function defaultPersistenceConfig(
   overrides: Partial<PersistenceConfig> = {},
 ): PersistenceConfig {
@@ -50,7 +67,7 @@ export function defaultPersistenceConfig(
       path that means writing over the rooms of whoever is running the app on
       that machine.
     */
-    file: process.env.MATCHER_SNAPSHOT_FILE ?? path.join('.cache', 'rooms.json'),
+    file: envFile() ?? path.join('.cache', 'rooms.json'),
     now: () => Date.now(),
     ...overrides,
   };
@@ -65,12 +82,31 @@ export function defaultPersistenceConfig(
  */
 export const SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
+let writeSeq = 0;
+/** Distinguishes two saves that overlap inside one process. */
+function nextWrite(): number {
+  writeSeq += 1;
+  return writeSeq;
+}
+
 /** Write the snapshot. Never throws: a failed save must not end a live night. */
 export async function saveSnapshot(
   snap: StoreSnapshot,
   cfg: PersistenceConfig = defaultPersistenceConfig(),
 ): Promise<boolean> {
-  const temp = `${cfg.file}.${process.pid}.tmp`;
+  /*
+    R195: unique per WRITE, not per process.
+
+    It was `${cfg.file}.${process.pid}.tmp`. The periodic save runs every thirty
+    seconds and the shutdown handler saves too, so on a slow disk two saves from
+    the SAME process can overlap -- and they would then write the same temp file
+    and rename it twice. The second rename lands a half-written snapshot, or a
+    file another write is still appending to.
+
+    A counter is enough: nothing here needs cryptographic uniqueness, only that
+    two concurrent saves in one process cannot pick the same name.
+  */
+  const temp = `${cfg.file}.${process.pid}.${nextWrite()}.tmp`;
   try {
     await mkdir(path.dirname(cfg.file), { recursive: true });
     await writeFile(temp, JSON.stringify(snap), { encoding: 'utf8', mode: 0o600 });

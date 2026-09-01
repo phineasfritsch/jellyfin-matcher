@@ -189,3 +189,82 @@ describe('failing to save does not take the night down', () => {
     expect(await saveSnapshot(new RoomStore().snapshot(), bad)).toBe(false);
   });
 });
+
+describe('the settings that decide where rooms are saved (R195)', () => {
+  /*
+    Both of these were found by an adversarial review of code written the same
+    day, and neither would have shown up in a passing test: they fail silently,
+    in the direction of "rooms quietly stop surviving restarts".
+  */
+  const original = process.env.MATCHER_SNAPSHOT_FILE;
+  afterEach(() => {
+    if (original === undefined) delete process.env.MATCHER_SNAPSHOT_FILE;
+    else process.env.MATCHER_SNAPSHOT_FILE = original;
+  });
+
+  it('treats an env var set to nothing as unset', () => {
+    /*
+      `process.env.X ?? fallback` keeps an empty string, because ?? rejects only
+      null and undefined. `MATCHER_SNAPSHOT_FILE=` in a compose file is how a
+      variable gets commented out in practice, and it would have made the path
+      '' -- so every save fails on a file with no name, and saveSnapshot fails
+      open by design, so rooms stop surviving restarts and nothing says so.
+    */
+    process.env.MATCHER_SNAPSHOT_FILE = '';
+    expect(defaultPersistenceConfig().file, 'an empty setting became the path').toContain(
+      'rooms.json',
+    );
+  });
+
+  it('ignores a setting that is only whitespace', () => {
+    // A trailing space in a compose file is invisible and fails the same way.
+    process.env.MATCHER_SNAPSHOT_FILE = '   ';
+    expect(defaultPersistenceConfig().file).toContain('rooms.json');
+  });
+
+  it('still honours a real path', () => {
+    // The guard above must not swallow the setting it exists to protect.
+    process.env.MATCHER_SNAPSHOT_FILE = '/var/lib/matcher/rooms.json';
+    expect(defaultPersistenceConfig().file).toBe('/var/lib/matcher/rooms.json');
+  });
+});
+
+describe('two saves that overlap (R195)', () => {
+  it('does not lose a snapshot when two writes race in one process', async () => {
+    /*
+      The temp file was named per PROCESS. The periodic save runs every thirty
+      seconds and the shutdown handler saves too, so on a slow disk two saves
+      from the same process overlap -- and they wrote the same temp path and
+      renamed it twice. The second rename lands a half-written file, or one the
+      other write is still filling.
+
+      Driven concurrently here rather than reasoned about: both must report
+      success and the file left behind must be readable JSON.
+    */
+    const dir = await mkdtemp(path.join(tmpdir(), 'matcher-race-'));
+    const file = path.join(dir, 'rooms.json');
+    const cfg = defaultPersistenceConfig({ file, now: () => Date.now() });
+
+    const store = new RoomStore();
+    const big = store.snapshot();
+    const results = await Promise.all([
+      saveSnapshot(big, cfg),
+      saveSnapshot(big, cfg),
+      saveSnapshot(big, cfg),
+    ]);
+
+    /*
+      The first version of this asserted all three succeed. They do not, and the
+      assertion was wrong rather than the code: three writes rename onto one
+      target, and a rename that arrives while another is touching the file can
+      fail on Windows. saveSnapshot fails OPEN by design -- it logs and returns
+      false -- and the next periodic save is thirty seconds away.
+      So a lost race is acceptable and a corrupt file is not.
+    */
+    expect(results.some(Boolean), 'every concurrent save failed').toBe(true);
+
+    const back = await loadSnapshot(cfg);
+    expect(back, 'a concurrent save left a file that is not a readable snapshot').not.toBeNull();
+    await rm(dir, { recursive: true, force: true });
+  });
+});

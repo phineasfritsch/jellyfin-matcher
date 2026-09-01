@@ -3845,3 +3845,40 @@ that found nothing, which is the sentence this session keeps rewriting.
 
 Third "cannot fail" check found today, after R192's harness that killed a
 wrapper and R193's two metrics that could not move. All three were green.
+
+### R195 — Three quiet ways to lose the thing you just built
+
+More of the adversarial review's confirmed findings, all against code written
+the same day, and all sharing a shape: they fail in the direction of "it stopped
+working and nobody was told".
+
+**An env var set to nothing became the path.** `process.env.X ?? fallback` keeps
+an EMPTY STRING, because `??` rejects only null and undefined.
+`MATCHER_SNAPSHOT_FILE=` is how a variable gets commented out in a compose file,
+and it would have made the snapshot path `''` -- so every save fails on a file
+with no name. `saveSnapshot` fails open by design, so rooms would simply stop
+surviving restarts, with a log line about a save that could not be written and
+nothing connecting it to the setting. Whitespace is trimmed for the same reason:
+a trailing space in a compose file is invisible.
+
+**The temp file was named per PROCESS, not per write.** The periodic save runs
+every thirty seconds and the shutdown handler saves too, so two saves from one
+process can overlap on a slow disk -- writing the same temp path and renaming it
+twice.
+
+Driving that concurrently taught me something my first assertion got wrong. I
+asserted all three concurrent saves succeed. They do not: three writes rename
+onto one target, and a rename arriving while another touches the file can fail
+on Windows. That is FINE -- saveSnapshot fails open and the next save is thirty
+seconds away. A lost race is acceptable; a corrupt file is not. So the test
+asserts what the design actually promises, which is that at least one save
+lands and what remains is readable. The wrong assertion was mine, not the
+code's.
+
+**The palette was read raw, so a hex in a comment was a token.** `globals.css`
+argues with itself in prose: it records rejected colours and the values R89 and
+R95 overturned. Reading it raw makes each of those a live entry, and the
+first-definition rule then lets a commented-out colour outrank the real one. A
+contrast gate reporting on a colour somebody explicitly rejected is worse than
+none, because it will be believed. Comment-stripped now; the numbers did not
+move, which means nothing was polluted today and the door is shut.

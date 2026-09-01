@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { stripCssComments } from './source-scan';
 
 /**
  * Contrast arithmetic and the palette, importable.
@@ -28,7 +29,19 @@ export function ratio(a: string, b: string): number {
  * question and not this one.
  */
 export function paletteTokens(): Map<string, string> {
-  const css = fs.readFileSync(path.join(process.cwd(), 'app/globals.css'), 'utf8');
+  /*
+    R195: comment-stripped, because a hex in a comment is not a palette entry.
+
+    globals.css argues with itself in prose -- it records rejected colours, the
+    values R89 and R95 overturned, and what a token used to be. Reading the file
+    raw makes every one of those a live token, and the FIRST-definition rule
+    below then means a commented-out value can outrank the real one. A gate that
+    measures the contrast of a colour somebody explicitly rejected is worse than
+    no gate, because it will be believed.
+  */
+  const css = stripCssComments(
+    fs.readFileSync(path.join(process.cwd(), 'app/globals.css'), 'utf8'),
+  );
   const out = new Map<string, string>();
   for (const m of css.matchAll(/^\s*(--color-[a-z-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;/gm)) {
     if (!out.has(m[1]!)) out.set(m[1]!, m[2]!);
