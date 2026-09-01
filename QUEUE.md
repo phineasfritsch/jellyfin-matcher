@@ -176,12 +176,27 @@ who are not the maintainer, for more than one night.
       itself week to week. Nobody outside the maintainer has used it for an
       evening, let alone ten.
 
-- [ ] **Whether the room wants a "fine, let's just watch that one" control.**
-      The fast swiper has no in-app way to end the wait; the room settles when
-      everyone finishes or somebody leaves. Whether that is a missing feature or
-      a healthy pause is a question only real use answers. If it is built: R63
-      rejects a host role, so the gate must be member-symmetric, and R46 keeps
-      peer progress a bare count, so the UI must show "2 of 3" and never who.
+- [x] **~~Whether the room wants a "fine, let's just watch that one" control.~~**
+      **Asked and answered: do not build (R152), 5 of 5 against.** This is F2 in
+      docs/PLAN-1.1.md, and the focus group answered it before anything was
+      built, which is what they were for.
+
+      The reason is structural rather than a preference. Any card every
+      connected member liked has ALREADY ended the room, so the only thing a
+      mid-deck proposal can offer is a card the room has not agreed on — in
+      practice the app's own top-rated pick, handed to the room as if it were
+      the room's choice.
+
+      What the question was really about was the wait, and the wait had a defect
+      in it: the deck-finished screen named the people it was waiting for,
+      including ones who had already finished and ones who had gone to bed
+      (R151). That is fixed, and R153 turned it into a rule checked on every
+      waiting screen rather than the one instance.
+
+      If the pressure comes back after a household has actually used it, the
+      shape worth revisiting is the host's card pushed to the front of everyone
+      else's deck, letting the existing unanimous path decide — no leaderboard,
+      no second settlement, and nobody voting on a film they cannot see.
 
 - [ ] **Whether the deck stays interesting at card 30 of 50.** A judgement that
       needs an evening, not a test.
