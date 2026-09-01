@@ -8,6 +8,7 @@ import type { RoomHook } from '../useRoom';
 import { Confetti } from './Confetti';
 import { EmptyState } from './EmptyState';
 import { Bar, BigButton, CostLine, Dock, Group, Row } from './Listing';
+import { t } from '../strings';
 
 export function WinnerScreen({
   roomHook,
@@ -40,7 +41,7 @@ export function WinnerScreen({
 
   const winner = match?.winner ?? room.deck.find((c) => c.id === room.winner) ?? null;
   if (!winner) {
-    return <EmptyState title="Session ended">No winner could be determined.</EmptyState>;
+    return <EmptyState title={t('winner.sessionEnded')}>{t('winner.noWinner')}</EmptyState>;
   }
 
   /*
@@ -76,8 +77,16 @@ export function WinnerScreen({
         "Play in Jellyfin". Half the time in Any Movie mode the winner is a
         film nobody owns, and that is a different screen (R53).
       */}
+      {/*
+        R145: the bar's two left labels are catalogued; its two right labels
+        are not, and that is a collision rather than a decision. "On your
+        server" is a substring of the deck's card announcement in
+        SwipeDeck.tsx, so the duplication guard in strings.test.ts cannot tell
+        the bar label from that sentence. The reason is written down in
+        strings.ts beside the entries that did move.
+      */}
       <Bar
-        left={viaFallback ? 'Points winner' : 'Locked in'}
+        left={viaFallback ? t('winner.pointsWinner') : t('winner.locked')}
         right={held ? 'On your server' : 'Not on your server'}
         tone={held ? 'go' : 'stop'}
       />
@@ -134,23 +143,33 @@ export function WinnerScreen({
               {winner.year ?? 'Year unknown'}
               {winner.runtime != null && ` · ${winner.runtime} min`}
             </p>
+            {/*
+              R90: one of these two, never both and never neither. Which one
+              is read from the room rather than from the event, so a reload
+              does not caption a points winner as the room agreeing.
+            */}
             <p className="mt-1 text-label text-muted-fg">
-              {viaFallback
-                ? 'Nobody agreed outright, so the points decided.'
-                : 'Everyone said yes.'}
+              {viaFallback ? t('winner.viaPoints') : t('winner.unanimous')}
             </p>
           </div>
         </div>
 
-        {!held && (
-          <CostLine
-            headline="This one is not on the server yet."
-            detail="Nothing has been downloaded yet. Asking sends it to Jellyseerr, and whether that starts the download straight away depends on your host's settings."
-          />
-        )}
+        {/*
+          R107/R111: the disclosure that renders above the request button. It
+          says nothing about the host approving anything, because an admin-key
+          request is auto-approved by default and R107 rewrote every other copy
+          of this sentence and missed this one. R91: it states no size.
+        */}
+        {!held && <CostLine headline={t('winner.costHeadline')} detail={t('winner.cost')} />}
 
+        {/*
+          One entry for the heading and the region's name, because they are one
+          sentence: A16 pins the binding rather than the attribute text
+          precisely so they can move together, and winner.render.test.tsx is
+          what reads the name off the rendered region.
+        */}
         {viaFallback && ranking && (
-          <Group title="Final ranking" ariaLabel="Final ranking">
+          <Group title={t('winner.ranking')} ariaLabel={t('winner.ranking')}>
             {ranking.map((r, i) => {
               const card = room.deck.find((c) => c.id === r.cardId);
               return (
@@ -159,7 +178,16 @@ export function WinnerScreen({
                   label={`${i + 1}`}
                   tone={i === 0 ? 'go' : 'plain'}
                   title={card?.title ?? r.cardId}
-                  detail={`${r.total.toFixed(1)} points — ${r.composite.toFixed(1)} from ratings, ${r.votePoints > 0 ? '+' : ''}${r.votePoints} from the room`}
+                  /*
+                    R12: the total names the two things it is made of. The sign
+                    stays here rather than in the catalogue -- it is arithmetic,
+                    not copy, and a translator has nothing to say about it.
+                  */
+                  detail={t('winner.rankingRow', {
+                    total: r.total.toFixed(1),
+                    composite: r.composite.toFixed(1),
+                    votePoints: `${r.votePoints > 0 ? '+' : ''}${r.votePoints}`,
+                  })}
                 />
               );
             })}
@@ -213,18 +241,9 @@ export function WinnerScreen({
                 and declares the next-ranked film on the spot. The copy promised
                 a return to the deck on the exact path where the deck is over.
               */}
-              {roomExhausted ? (
-                <>
-                  This throws away what the room just agreed on. Everyone has finished the
-                  deck, so the points pick the next film straight away — there is nothing
-                  left to swipe. {winner.title} will not be offered again.
-                </>
-              ) : (
-                <>
-                  This throws away what the room just agreed on and puts everyone back in the
-                  deck. {winner.title} will not be offered again.
-                </>
-              )}
+              {roomExhausted
+                ? t('winner.rejectCostExhausted', { title: winner.title })
+                : t('winner.rejectCost', { title: winner.title })}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <BigButton
@@ -235,10 +254,10 @@ export function WinnerScreen({
                 tone="ghost"
                 ariaDescribedBy="reject-cost"
               >
-                {roomExhausted ? 'Yes, pick the next one' : 'Yes, keep swiping'}
+                {roomExhausted ? t('winner.rejectYesExhausted') : t('winner.rejectYes')}
               </BigButton>
               <BigButton onClick={() => setConfirmingReject(false)} tone="ghost">
-                Keep this one
+                {t('winner.rejectKeep')}
               </BigButton>
             </div>
           </div>
@@ -248,7 +267,7 @@ export function WinnerScreen({
             onClick={() => setConfirmingReject(true)}
             className="min-h-[52px] w-full cursor-pointer rounded-[var(--radius-control)] px-4 py-3.5 text-row font-semibold text-muted-fg ring-1 ring-[var(--color-hairline)] transition active:scale-[0.985]"
           >
-            {roomExhausted ? 'Not this one — pick the next' : 'Not this one — keep swiping'}
+            {roomExhausted ? t('winner.rejectExhausted') : t('winner.reject')}
           </button>
         )}
         {held && playUrl ? (
@@ -256,7 +275,7 @@ export function WinnerScreen({
             href={playUrl}
             className="flex min-h-[52px] w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary"
           >
-            Play in Jellyfin
+            {t('winner.play')}
           </a>
         ) : (
           <RequestControl
@@ -268,6 +287,37 @@ export function WinnerScreen({
       </Dock>
     </div>
   );
+}
+
+/**
+ * Which of the five request sentences the room is owed (R107).
+ *
+ * Two facts decide it, and both are read rather than guessed: whether
+ * Jellyseerr accepted the request outright, and whether the server sent a name
+ * to attribute it to. Five catalogue entries rather than one sentence with a
+ * `{who}` fragment glued into it -- "Asked" and somebody's name are not
+ * interchangeable pieces of a sentence in every language, and handing a
+ * translator the fragment alone is how the promise in the rest of it gets lost.
+ *
+ * Naming a person is right here and nowhere else on this screen: R46 and R61
+ * keep deck progress a count because nobody should be watched being slow, but
+ * who spent the host's disk is exactly what a household is owed (R42).
+ */
+function requestResult(
+  alreadyAsked: { by: string; title: string; approved: boolean } | null,
+): string {
+  // This phone's own request, before the room:state that carries the name has
+  // come back. There is nobody to attribute it to yet, and it does not claim
+  // to know whether Jellyseerr held it.
+  if (!alreadyAsked) return t('winner.asked');
+  // The server's stand-in when it has no display name to give.
+  const anonymous = alreadyAsked.by === 'Someone';
+  if (alreadyAsked.approved) {
+    return anonymous
+      ? t('winner.askedApproved')
+      : t('winner.askedApprovedBy', { name: alreadyAsked.by });
+  }
+  return anonymous ? t('winner.askedHeld') : t('winner.askedHeldBy', { name: alreadyAsked.by });
 }
 
 /**
@@ -326,13 +376,7 @@ function RequestControl({
     exist whether or not there is a sentence for it, so the sentence has to be
     a value the region reads, not a branch that produces the region.
   */
-  const result = !settled
-    ? null
-    : alreadyAsked?.approved
-      ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}, and your server accepted it. It appears in Jellyfin once it finishes downloading.`
-      : alreadyAsked
-        ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}. Your Jellyseerr is holding it for approval.`
-        : 'Asked. It appears in Jellyfin once your server has it.';
+  const result = settled ? requestResult(alreadyAsked) : null;
 
   return (
     <>
@@ -389,10 +433,15 @@ function RequestControl({
             id="request-cost"
             className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
           >
-            Sends {title}
-            {runtime != null && ` (${runtime} min)`} to Jellyseerr. Depending on your host&rsquo;s
-            settings that may start the download straight away. How much disk it uses is not
-            known until their server picks a release, and you will not see it tonight.
+            {/*
+              R91: the runtime is here to identify the film, not to stand in
+              for a size. The two sentences are two catalogue entries rather
+              than one with a glued fragment, because a parenthesised unit is
+              not a piece a translator can place from the fragment alone.
+            */}
+            {runtime != null
+              ? t('winner.requestConfirmRuntime', { title, runtime })
+              : t('winner.requestConfirm', { title })}
           </p>
           <div className="grid grid-cols-2 gap-2">
             <BigButton onClick={send} tone="commit" disabled={state === 'busy'} ariaDescribedBy="request-cost">
@@ -401,10 +450,10 @@ function RequestControl({
                   {/* The spinner is decorative; without this the button has no
                       accessible name at all while it is sending (R113). */}
                   <Loader2 aria-hidden className="mx-auto size-5 animate-spin" />
-                  <span className="sr-only">Sending the request…</span>
+                  <span className="sr-only">{t('winner.requestSending')}</span>
                 </>
               ) : (
-                'Yes, ask'
+                t('winner.requestSend')
               )}
             </BigButton>
             <BigButton onClick={() => setState('idle')} tone="ghost">
@@ -415,7 +464,7 @@ function RequestControl({
       ) : (
         <>
           <BigButton onClick={() => setState('confirm')} tone="commit">
-            Request via Jellyseerr
+            {t('winner.request')}
           </BigButton>
           {state === 'error' && message && (
             <p role="alert" className="px-1 py-1 text-center text-body text-destructive">

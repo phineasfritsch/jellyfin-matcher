@@ -220,3 +220,61 @@ describe('a restart mid-night', () => {
     ).toThrow();
   });
 });
+
+describe('seat ownership after a restore', () => {
+  it('still refuses a stale socket the seat it no longer holds', async () => {
+    /*
+      R112 across a restart, which is not obviously safe and turned out to be.
+
+      `seatSockets` is deliberately NOT in the snapshot: every id in it names a
+      connection that died with the process. That leaves the map empty after a
+      restore, and `ownsSeat` answers TRUE for an unknown seat by design — so on
+      the face of it a restored room has no owner and any disconnect would be
+      honoured.
+
+      It holds because `disconnect` takes its identity from the socket's own
+      session data, which only a successful join populates, and both join paths
+      call `claimSeat` in the same breath. So a socket cannot be holding session
+      data for a restored room without also owning the seat.
+
+      That is a coupling, not a guarantee, and it is the kind that disappears
+      quietly. Populate session.data anywhere else and R112's protection is gone
+      for every restored room, with the symptom being somebody evicted from a
+      night they are sitting in.
+    */
+    const before = new RoomStore();
+    const ravi = phone(before, 'socket-ravi');
+    const created = handlers.createRoom(ravi.ctx, { name: 'Ravi' }) as {
+      roomId: string;
+      userId: string;
+      secret: string;
+    };
+    handlers.joinRoom(phone(before, 'socket-dee').ctx, { roomId: created.roomId, name: 'Dee' });
+
+    await saveSnapshot(before.snapshot(), cfg());
+    const after = new RoomStore();
+    after.restore((await loadSnapshot(cfg()))!);
+
+    // Ravi comes back on a new socket, which claims the seat.
+    const raviBack = phone(after, 'socket-ravi-2');
+    handlers.joinRoom(raviBack.ctx, {
+      roomId: created.roomId,
+      userId: created.userId,
+      secret: created.secret,
+    });
+
+    // A different socket claiming to be Ravi drops. This is the wifi-to-cellular
+    // case: the old connection is reaped after the new one has already rejoined.
+    const stale = phone(after, 'socket-ravi-STALE');
+    stale.session.data.roomId = created.roomId;
+    stale.session.data.userId = created.userId;
+    handlers.disconnect(stale.ctx);
+
+    const room = after.getRoom(created.roomId)!;
+    expect(
+      room.users[created.userId],
+      'a stale socket evicted somebody from a restored room',
+    ).toBeTruthy();
+    expect(room.users[created.userId]!.connected).toBe(true);
+  });
+});

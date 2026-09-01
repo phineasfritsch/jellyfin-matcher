@@ -72,7 +72,15 @@ const A11Y: Pin[] = [
   { id: 'A13', why: 'Room code entry is labelled', find: 'aria-label="Room code"' },
   { id: 'A14', why: 'Join control is named for screen readers', find: 'aria-label="Join room"' },
   { id: 'A15', why: 'The member list is named', find: 'ariaLabel="Members"' },
-  { id: 'A16', why: 'Final ranking is a named region, not a bare list', find: 'ariaLabel="Final ranking"' },
+  /*
+    A16 was the literal attribute until F3 moved the name into the catalogue.
+    The name itself is proved where it can actually be observed --
+    winner.render.test.tsx asserts getByRole('region', { name: 'Final ranking' })
+    against the rendered page -- so this pin guards the binding that carries it.
+    Drop the ariaLabel and the region goes back to being an unnamed list, which
+    is the defect; rename the region and the render test is what goes red.
+  */
+  { id: 'A16', why: 'Final ranking is a named region, not a bare list', find: "ariaLabel={t('winner.ranking')}" },
   { id: 'A17', why: 'Session settings region is named', find: 'ariaLabel="Session settings"' },
   { id: 'A18', why: 'Posters carry alt text built from the title', find: 'alt={`${card.title}' },
   { id: 'A19', why: 'Login fields are bound to their labels', find: 'htmlFor="jf-user"' },

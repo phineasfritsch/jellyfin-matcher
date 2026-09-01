@@ -123,6 +123,189 @@ describe('the promises survive translation', () => {
     expect(t('details.hybrid')).not.toMatch(/download|request|disk|server|cost/i);
   });
 
+  it('the winner screen promises no approval gate either (R107, R111)', () => {
+    /*
+      The same promise as the deck's, on the screen where the button actually
+      is. R107 rewrote the deck sentence, the confirm and the ack, and missed
+      the winner screen's cost line -- which renders directly above the request
+      button and so contradicted the confirm two taps later (R111).
+
+      The two `askedHeld` entries say "approval" on purpose and are deliberately
+      not in this list: they report a hold Jellyseerr actually applied, which is
+      the opposite of promising one. That distinction is checked below.
+    */
+    const disclosures = ['winner.cost', 'winner.requestConfirm', 'winner.requestConfirmRuntime'] as const;
+    for (const key of disclosures) {
+      expect(t(key), `${key} promises an approval step this app cannot guarantee`).not.toMatch(
+        /approv/i,
+      );
+    }
+  });
+
+  it('the winner screen states no size, and keeps saying the size is unknown (R91)', () => {
+    /*
+      R33 once said this screen "says how big the thing you are about to
+      download is" and R36 prescribed "about {runtime} min of video". Neither is
+      possible: no size datum reaches this app and the real figure is not
+      settled until the host's Radarr picks a release. What replaced them is the
+      uncertainty, stated -- so deleting that clause is as much a defect as
+      inventing a number, and both halves are checked.
+
+      The runtime in the second confirm identifies the film. The clause after it
+      is what stops it being read as the cost.
+    */
+    for (const key of ['winner.cost', 'winner.requestConfirm', 'winner.requestConfirmRuntime'] as const) {
+      expect(t(key)).not.toMatch(/\d+\s?(gb|mb|tb|gigabyte|megabyte)/i);
+      expect(t(key)).not.toMatch(/min(ute)?s? of video/i);
+    }
+    for (const key of ['winner.requestConfirm', 'winner.requestConfirmRuntime'] as const) {
+      expect(t(key), `${key} no longer says the size is unknowable tonight`).toMatch(
+        /not known until/i,
+      );
+    }
+  });
+
+  it('the outcome line says the room agreed OR that points decided, never both (R90)', () => {
+    /*
+      Two ways a night can end, and the screen owes the room the one it got. The
+      defect R90 fixed captioned a points winner "Everyone said yes" for anyone
+      who reloaded, so each half of the pair has to be wrong for the other case:
+      a sentence that covers both tells nobody anything.
+
+      What this cannot see is the component choosing the wrong half.
+      winner.render.test.tsx renders both branches and asserts each screen says
+      one and not the other; that is the guard that executes this claim.
+    */
+    expect(t('winner.unanimous')).not.toBe(t('winner.viaPoints'));
+    expect(t('winner.unanimous'), 'the agreement caption now fits a points winner too').not.toMatch(
+      /point/i,
+    );
+    expect(t('winner.viaPoints'), 'the points caption no longer says the points decided').toMatch(
+      /points? decided/i,
+    );
+    expect(t('winner.viaPoints'), 'the points caption claims the room agreed').not.toMatch(
+      /everyone/i,
+    );
+    // The bar above says the same thing in two words, and drifts the same way.
+    expect(t('winner.locked')).not.toBe(t('winner.pointsWinner'));
+  });
+
+  it('the reject confirm does not promise a deck to go back to (R100)', () => {
+    /*
+      On a points winner, rejecting leaves progress untouched: the deck is still
+      exhausted and settlement declares the next film inside the same call. The
+      copy said "puts everyone back in the deck" on both paths and its button
+      said "keep swiping" on both, so the sentence and the tap disagreed with
+      what the server was about to do.
+
+      Three pairs -- the confirm, its yes-button, and the control that opens it
+      -- because all three describe one path and the defect was one of them
+      describing the other. What this cannot see is which half is shown;
+      winner.render.test.tsx presses both.
+    */
+    expect(t('winner.rejectCostExhausted', { title: 'X' })).not.toMatch(/back in the deck/i);
+    expect(t('winner.rejectCost', { title: 'X' })).toMatch(/back in the deck/i);
+    expect(t('winner.rejectYesExhausted')).not.toMatch(/swip/i);
+    expect(t('winner.rejectYes')).toMatch(/swiping/i);
+    expect(t('winner.rejectExhausted')).not.toMatch(/swip/i);
+    expect(t('winner.reject')).toMatch(/swiping/i);
+  });
+
+  it('both reject confirms say the film does not come back (R63)', () => {
+    /*
+      Rejecting is irreversible in one direction: the film is never offered
+      again. That is the whole reason the confirm exists (R71), and it is said
+      before the tap rather than after it -- on both paths, since the two
+      branches were written separately and only one of them was ever read.
+    */
+    for (const key of ['winner.rejectCost', 'winner.rejectCostExhausted'] as const) {
+      const line = t(key, { title: 'The Odyssey' });
+      expect(line, `${key} lost the film it is about`).toContain('The Odyssey');
+      expect(line, `${key} no longer says the film is gone for good`).toMatch(
+        /not be offered again/i,
+      );
+    }
+  });
+
+  it('the request result reports which of the two Jellyseerr did (R107)', () => {
+    /*
+      Jellyseerr returns 1 for pending and 2 for approved. That value reaches
+      the room, so the screen reports it instead of guessing: the accepted
+      sentence must not talk about waiting for approval, and the held one must
+      say plainly that it is waiting. The old copy said "once the host approves
+      it" for both, which was wrong in the lenient direction on the one control
+      that spends somebody else's disk.
+    */
+    expect(t('winner.askedApproved')).not.toMatch(/approv/i);
+    expect(t('winner.askedApprovedBy', { name: 'Ada' })).not.toMatch(/approv/i);
+    expect(t('winner.askedHeld')).toMatch(/holding it for approval/i);
+    expect(
+      t('winner.asked'),
+      'the just-asked sentence claims to know what the server decided',
+    ).not.toMatch(/approv|accepted/i);
+  });
+
+  it('the named request sentences carry a name and the anonymous ones do not (R42)', () => {
+    /*
+      Who spent the host's disk is the one fact on this screen a household is
+      owed a name for -- the opposite of deck progress, which is a count because
+      nobody should be watched being slow (R46, R61). The server does not always
+      have a name to send, so there is a second sentence for that case rather
+      than a placeholder left visibly unfilled on the payoff screen.
+    */
+    for (const key of ['winner.askedApprovedBy', 'winner.askedHeldBy'] as const) {
+      expect(t(key, { name: 'Ada' }), `${key} dropped the name it exists to carry`).toContain('Ada');
+    }
+    for (const key of ['winner.asked', 'winner.askedApproved', 'winner.askedHeld'] as const) {
+      expect(t(key), `${key} has a placeholder and no caller that fills it`).not.toMatch(/\{\w+\}/);
+    }
+  });
+
+  it('the sign-in names whose account it is asking for (R10)', () => {
+    /*
+      Two fields and a bare "Sign in", on a page served from a stranger's LAN,
+      is phishing-shaped: it does not say which credentials it wants. This is
+      the fallback heading -- every caller that can say why it is asking passes
+      a reason instead, and those sentences live in the files that know the
+      reason, so they are not in this catalogue yet.
+    */
+    expect(t('auth.title')).toMatch(/jellyfin/i);
+  });
+
+  it('the sign-in makes two checkable claims rather than a reassurance', () => {
+    /*
+      The household's own Jellyfin verifies the password, and the admin key
+      stays on the server -- the same promise README makes and pin D04 holds.
+      Both are claims a reader can check. "Your details are safe" would be
+      neither, and is what this kind of line usually decays into.
+    */
+    expect(t('auth.serverChecks')).toMatch(/your jellyfin server checks/i);
+    expect(t('auth.serverChecks')).toMatch(/never reaches this page/i);
+  });
+
+  it('a sign-in that times out names the machine that went quiet (R88)', () => {
+    /*
+      `fetch` has no default timeout, so a Jellyfin that accepts the connection
+      and never answers left the button disabled with nothing said and no way
+      out but a reload. This sentence is what replaced the silence, so it has to
+      name the server and leave the reader something to do; collapsing it into
+      the generic failure line puts the silence back.
+    */
+    expect(t('auth.timeout')).toMatch(/jellyfin server/i);
+    expect(t('auth.timeout')).not.toBe(t('auth.failed'));
+  });
+
+  it('the way out of the login is a sentence, not a "Back" (R55)', () => {
+    /*
+      It was 14px grey underlined "Back" beneath a full-width green button,
+      which a guest who will never make an account reads as a trial wall. The
+      words have to say what declining GETS you. Nothing behind this gate is
+      unavailable to a guest who skips it.
+    */
+    expect(t('auth.decline')).toMatch(/without an account/i);
+    expect(t('auth.decline').split(' ').length).toBeGreaterThan(2);
+  });
+
   it('the abstain label is the one a voice user can say (R134)', () => {
     /*
       WCAG 2.2 A 2.5.3: the accessible name must contain the visible text. The
@@ -152,6 +335,42 @@ describe('a translator is told why, not just what', () => {
     'details.hybrid',
     'details.playTrailer',
     'details.watchTrailer',
+    /*
+      The winner screen, which is where the promises are densest: it holds the
+      one control that spends the host's disk, and it is the last thing anybody
+      reads before pressing it. Four of these were rulings before they were
+      strings -- the disclosure and its confirm (R107, R111, R91), which of the
+      two ways the night ended (R90), and what rejecting actually costs (R100).
+      Its plain labels -- the empty state, the bar, "Final ranking", "Keep this
+      one" -- are not here, and say so by carrying no reason.
+    */
+    'winner.unanimous',
+    'winner.viaPoints',
+    'winner.costHeadline',
+    'winner.cost',
+    'winner.rankingRow',
+    'winner.rejectCost',
+    'winner.rejectCostExhausted',
+    'winner.rejectYes',
+    'winner.rejectYesExhausted',
+    'winner.reject',
+    'winner.rejectExhausted',
+    'winner.play',
+    'winner.request',
+    'winner.requestConfirm',
+    'winner.requestConfirmRuntime',
+    'winner.asked',
+    'winner.askedApproved',
+    'winner.askedApprovedBy',
+    'winner.askedHeld',
+    'winner.askedHeldBy',
+    // The login. Four of its five entries are promises -- about who checks the
+    // password, what happens when nobody answers, and what declining gets you.
+    // The fifth is the failure line, and carries no reason.
+    'auth.title',
+    'auth.serverChecks',
+    'auth.timeout',
+    'auth.decline',
   ];
 
   for (const key of LOAD_BEARING) {

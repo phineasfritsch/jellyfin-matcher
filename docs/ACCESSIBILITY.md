@@ -34,6 +34,7 @@ learned R129 the hard way should not put them in one column:
 | **PASS (read)** | Verified by reading the source. Nothing would go red if it broke. |
 | **PARTIAL** | Holds in most of the app and fails somewhere specific, which is named. |
 | **FAIL** | Does not meet the criterion. |
+| **FAIL (stated)** | Does not meet it, will not be fixed, and the reason and the cost are written down. A closed item, not an open one. |
 | **UNVERIFIED** | Not established either way. What would settle it is stated. |
 | **N/A** | The criterion has no subject in this app. |
 
@@ -210,17 +211,199 @@ meaningless without the text anyway.
 
 **Fix:** `aria-valuetext={runtimeLabel}`. One attribute.
 
-### F7 — 1.2.2 Captions (A) and 1.2.5 Audio Description (AA). The trailer.
+### F7 — 1.2.2 Captions and 1.2.3 / 1.2.5 Audio Description (A, AA). The trailer.
+
+> **Decided: the embed stays, and this does not conform.** Stated, not fixed,
+> and not waiting on anybody. 1.2.2 is met for some films and not for others,
+> decided per film by whoever uploaded the trailer; 1.2.3 and 1.2.5 are not met
+> and will not be. What follows is the position, with the reason. The earlier
+> version of this entry ended "nobody has considered this" and offered a fix
+> that was half wrong; both are replaced below.
 
 `MovieDetails.tsx` embeds a YouTube trailer in an `<iframe>`. That is
-prerecorded synchronised media with audio, presented by this app, so this app
-owns the criteria: captions at Level A, audio description at AA. It provides
-neither and cannot, because it does not own the video.
+prerecorded synchronised media with audio, on this app's own page, so this app
+owns the criteria: captions at Level A, audio description or a media
+alternative at Level A, audio description at AA. WCAG conformance is claimed
+for a full page and admits no excluded region, so "it is in an iframe" changes
+nothing.
 
-Nobody has considered this. It is not a hard fix — the component already has a
-plain-link fallback for URLs it cannot embed, and dropping the embed hands the
-media, and the responsibility for it, to YouTube's own player where the user
-already has their caption settings. As shipped, the app presents the media.
+**What is actually on the page.** `youtubeEmbedUrl()` builds
+`https://www.youtube-nocookie.com/embed/<id>` and nothing else: no query string,
+no parameters at all. The `allow` list — accelerometer, encrypted-media,
+picture-in-picture — is a permissions policy and has nothing to say about
+captions, and `autoplay` is not on it, which is the 1.4.2 row below. Controls
+are not disabled, no chrome is stripped, and nothing sets `cc_load_policy=0`.
+**The app suppresses nothing.** It also supplies nothing: the video id comes from
+`card.trailerUrl`, which is MDBList's `trailer` field
+(`src/lib/candidates.ts:45`, `:79`). Nobody in this project picks the video, and
+the app has never seen it before it renders it.
+
+#### 1.2.2 Captions — met per film, and the app cannot see which
+
+The nocookie embed **is** YouTube's own player. When the video carries a caption
+track, the player's own control bar carries the CC button, and this app removes
+none of that. Two qualifications decide the criterion, and both cut against a
+clean pass:
+
+- **A CC button proves a track, not a conforming one.** The criterion's captions
+  are a synchronised alternative for speech *and* the non-speech audio needed to
+  understand the content. YouTube's auto-generated track is speech only — no
+  speaker identification, no `[music]`, no `[engine turns over]` — and a trailer
+  is usually music and sound design with a few lines over it. An auto-generated
+  track is labelled as such in the player's subtitles menu, so a person can tell
+  the two apart; the app cannot.
+- **The household's own caption preference is not in the frame.** The host is
+  `youtube-nocookie.com`, chosen for privacy and declared as such in
+  `docs/DEPENDENCIES.md`, and it is a different origin from `youtube.com`. Nobody
+  is signed in there and no stored "always show captions" setting reaches it.
+  Captions are therefore **off until somebody presses CC — on every trailer,
+  every time**, because each embed is a fresh player. That is a cost the privacy
+  decision imposed on exactly one group of people, and it had never been written
+  down.
+
+So: **met** for a film whose trailer carries an authored caption track;
+**not met** for one carrying none, or only an auto-generated one. Establishing
+which, per card, would need the YouTube Data API — a key, a fifth destination in
+`docs/DEPENDENCIES.md` (U9), a call per card — and the cheap field there is a
+boolean saying a track exists, not whether it is authored, which is the
+distinction the criterion turns on. It would cost a key, a new upstream and a
+call per card, and still answer the wrong question.
+
+*Evidence grade for this subsection:* a read of `MovieDetails.tsx` plus
+knowledge of YouTube's player. **Nobody has pressed Play trailer in this app and
+looked**, and this repository cannot: jsdom renders no third-party player and
+the harnesses run on a LAN. **Would settle it:** one press on a film with a
+known-captioned trailer — is the CC button in the bar, and is the track labelled
+auto-generated. It sharpens the entry either way and changes no decision below.
+
+#### 1.2.3 and 1.2.5 Audio Description — not met, and not "not yet"
+
+No audio description exists for cinema trailers, and YouTube carries no audio
+description mechanism to put one in. There is nothing to switch on, nothing to
+request, and nothing this project could author.
+
+1.2.3 offers the other route: a **media alternative** — a text document
+presenting equivalent information for everything the video shows and says — in
+place of description. The sheet is full of text sitting directly above the
+trailer: the synopsis, the year, the runtime, the genres, every rating MDBList
+returned and the composite. **None of it is a media alternative for the
+trailer**, and calling it one would be the exact move R129 exists to stop — a
+claim satisfied by content that was already there for another reason. The
+synopsis describes the film; the trailer is a two-minute edit *of* the film,
+and the two carry different information. The escape route 1.2.3 offers is
+closed for a stated reason rather than overlooked.
+
+#### Why the embed stays
+
+The alternative was to delete `youtubeEmbedUrl` and let every trailer fall
+through to the plain `<a>` the component already renders for URLs it cannot
+embed. That is a deletion, not a build, and it works: media presented on
+somebody else's page is not this page's content, so all three criteria would be
+graded N/A beside 1.2.1 and 1.2.4, and the app's Level A/AA sheet would come out
+clean. It was rejected for four reasons:
+
+1. **It produces no captions and no descriptions.** Not one film gains either.
+   The deaf household member gets the same track from the same player; the blind
+   one gets the same undescribed trailer.
+2. **It costs the room something real.** `Watch trailer` is `target="_blank"`:
+   on a phone that is the YouTube app or a new tab, with the room backgrounded
+   mid-deck — and the deck is the one place a slip costs a film you cannot get
+   back (R48). The person pushed out of the room most often would be the person
+   who has to go and press CC, which is the person the change was for.
+3. **The only thing gained is the audit line.** Three FAILs become three N/As
+   and the project could then claim AA. Buying a conformance claim by deleting
+   the feature the criteria are about is grade-shopping, and this document exists
+   because a stated failure is worth more here than a clean sheet nobody should
+   believe (R125, R129).
+4. **It is inconsistent with the rest of the sheet.** The poster is TMDb's, the
+   ratings are MDBList's, the synopsis is MDBList's or Jellyfin's. Third-party
+   content is what this app is made of. The trailer differs only in that video
+   carries criteria the others do not — a fact about media type, not about
+   ownership.
+
+Switching the embed to `youtube.com` to pick up the household's stored caption
+preference is the other thing that looks like a fix and is not: it would hand
+every card anyone opens to a signed-in Google account, which is a worse trade
+than the one press it saves.
+
+#### What a household actually loses
+
+- **A deaf or hard-of-hearing member.** On a film whose trailer has an authored
+  track: one press of CC, repeated for every trailer, because nothing persists
+  in that frame. On a film whose trailer has none, or only auto-captions: music
+  and lip movement. Nothing else in the evening is affected — every screen this
+  app is operated from is text and buttons, and no vote depends on the trailer.
+- **A blind or low-vision member.** The trailer's audio, and no account of what
+  is on screen. Everything a vote actually needs — title, year, runtime, genres,
+  synopsis, every rating and the deck score — is text in the same sheet, above
+  the trailer, and is read out. What is lost is the trailer's own content, and
+  it is not available anywhere: YouTube does not have a described version either.
+- **Everyone else.** Nothing. The trailer is optional, mounts on a press, and no
+  path through the app requires it.
+
+The one cost above that is cheap to remove is the repeated CC press.
+`cc_load_policy=1` on the embed URL turns captions on by default, and in a frame
+carrying none of the household's YouTube state it overrides no preference anyone
+set — there is none in there to override. It creates no captions and moves no
+grade in this document; it is worth having for the household, not for the audit.
+The trade is that captions become the default for a household that may not want
+them, reversible with one press — the same press, moved to the other side of the
+decision, onto the people for whom it is a preference rather than a requirement.
+It is one line in `src/ui/components/MovieDetails.tsx`, which this session does
+not own, so it is **reported, not made**. It costs no test: applied in an
+isolated copy of the tree it leaves `details.render.test.tsx` and
+`server/__tests__/provenance.test.ts` green, because a query string adds no
+destination. Whoever makes it should still watch a real trailer on a real
+device rather than trust the parameter name (R89) — the parameter is documented
+to show captions by default, and a documented parameter is not a photographed
+surface.
+
+#### The conformance consequence
+
+While the embed is there, this app **cannot claim WCAG 2.2 Level AA**, whatever
+else is fixed. The honest form is the one the standard provides for third-party
+content, a statement of partial conformance:
+
+> This page does not conform to WCAG 2.2 Level AA, but would conform if the
+> embedded YouTube trailer in the details sheet were removed.
+
+The standard attaches two conditions to naming content that way: it is not under
+the author's control, and it is described so a user can identify it. The second
+is trivially true — one embed, one sheet, behind one named button. The first is
+arguable and is worth arguing rather than assuming: the app controls *that* a
+trailer is offered and could stop; it does not control which video (MDBList
+chooses), what is in it, or whether it is captioned, and cannot know any of that
+before it renders. An auditor may reasonably answer that anything you can delete
+is under your control. The sentence above is written so that it is true either
+way — it claims no conformance, it names what fails, and it says what removing
+it would buy, which by *Why the embed stays* is a grade and nothing else.
+
+#### What holds this decision in place
+
+**Not this document.** Nothing in the suite reads it: gutting this entry to a
+one-line TODO, and separately flipping all three grades in the table below to
+PASS, each left `docs.test.ts`, `a11y.test.tsx` and `routes.test.ts` green. Both
+mutations were applied and reverted rather than assumed, because a claim about
+what a test covers is worth nothing without having watched it (R129).
+
+**The embed is held, by exactly two cases.** `details.render.test.tsx`'s
+"reaches no network until somebody asks for it" and "embeds only once it is
+pressed, and on the no-cookie host" both go red when the embed is disabled so
+every trailer falls through to the plain link — the option refused above. Run in
+an isolated copy of the tree, since this session does not own
+`MovieDetails.tsx`.
+
+**Pin T17 is not one of the two.** It matches `playTrailer ?` in
+comment-stripped source, and that ternary is still written when its branch is
+unreachable, so it stayed green through the same mutation. T17 holds the shape
+of the deferral R29 asked for, not the existence of the thing deferred. That is
+the ordinary "Scoped (R129)" caveat the pins file writes for other entries and
+does not write for this one.
+
+**What would reopen this:** a household that leaves the room for YouTube's page
+to get captions. The cost of the link is the only thing holding the embed in
+place, and a report of that cost being paid anyway is the evidence that would
+flip it. Not a preference, and not another reading of the criteria.
 
 ### F8 — 1.3.1 Info and Relationships (A), partial. Three screens have no `h1`.
 
@@ -348,6 +531,12 @@ handler and the Tab wrap never runs. Browsers do let a user tab out of an iframe
 through its own controls, so this is not a hard trap — but the app's own way out
 is gone while focus is inside it, and nothing in the app says so.
 
+**F7 keeps the embed, so this stays**, and it is now a consequence somebody
+chose rather than one nobody noticed. The trailer is the only cross-origin frame
+in the app and it exists only after a press, so the exposure is one control deep
+and reachable only on purpose. Still unverified: nobody has tabbed into a playing
+trailer and tried to get back out.
+
 ### R6 — 1.4.3 Contrast, Minimum (AA). Measured, but not standing.
 
 This is the one contrast claim the project has real evidence for.
@@ -374,10 +563,10 @@ Level A and AA, WCAG 2.2. `a11y` below is
 |---|---|---|---|
 | 1.1.1 Non-text Content | A | **PASS (tested)** | Posters carry the film's name; icons are not exposed as nameless graphics — `a11y`, "SC 1.1.1". Note in that file: `lucide-react` supplies `aria-hidden` itself, so the test catches an icon *explicitly* exposed, not a dropped prop. |
 | 1.2.1 Audio-only / Video-only | A | N/A | No audio-only or video-only content. |
-| 1.2.2 Captions (Prerecorded) | A | **FAIL** | **F7** — the embedded trailer. |
-| 1.2.3 Audio Desc. or Media Alt. | A | **FAIL** | **F7**, same media. |
+| 1.2.2 Captions (Prerecorded) | A | **FAIL (stated)** | **F7 decided** — per film: met where the trailer carries an authored caption track, not met where it carries none or only an auto-generated one. The app neither supplies captions nor suppresses them, does not choose the video, and cannot see which it got. |
+| 1.2.3 Audio Desc. or Media Alt. | A | **FAIL (stated)** | **F7 decided** — no audio description exists for a cinema trailer, and the sheet's synopsis is not a media alternative for one. |
 | 1.2.4 Captions (Live) | AA | N/A | No live media. |
-| 1.2.5 Audio Description | AA | **FAIL** | **F7**, same media. |
+| 1.2.5 Audio Description | AA | **FAIL (stated)** | **F7 decided** — same media, and this one has no media-alternative escape. |
 | 1.3.1 Info and Relationships | A | **PARTIAL** | Roles, groups and labels are right throughout (`role="group"` on the vote row, `radiogroup` on deck size, `Group` renders a real `<section>` with its heading). **F8**: three screens have no `h1`. |
 | 1.3.2 Meaningful Sequence | A | PASS (read) | DOM order is reading order. The one reversal — the deck renders its three cards back-to-front for z-order — is invisible to the tree because the two behind are `aria-hidden`, which `a11y` checks holds no focusable element. |
 | 1.3.3 Sensory Characteristics | A | PASS (read) | No copy refers to shape, position, size or sound. Every instruction names its control. |
@@ -466,6 +655,7 @@ should pretend otherwise:
 | 2.4.11 Focus Not Obscured | Requires two boxes and their overlap. |
 | 2.5.8 Target Size | Requires a measured box. `measure-rows.ts` is the tool. |
 | 1.3.4 Orientation | Requires an installed PWA. |
+| 1.2.2 Captions | The caption track and the CC button belong to YouTube's player. jsdom renders no third-party player, and the browser harnesses run on a LAN with no route to YouTube. What can be checked here — that the app mounts the standard embed on a press and strips nothing from it — is checked in `details.render.test.tsx`. Whether the video has captions is F7's, and one press on a real device settles it. |
 | 2.2.2's five-second bound | framer-motion transitions on elements jsdom never animates. |
 
 Asserting a Tailwind class as a proxy for any of these would be asserting the
@@ -486,12 +676,17 @@ that describe an intention as a behaviour.
 
 Six of the nine are small: an attribute, a key deleted from a manifest, two
 strings, `role="status"` three times. Three are not: the ring contrast is a
-palette decision, the trailer's captions are a decision about whether to embed
-third-party media at all, and Reflow is entangled with R21, which is the whole
-layout.
+palette decision, Reflow is entangled with R21, which is the whole layout, and
+the trailer was a decision about whether to embed third-party media at all —
+F7 now makes that decision instead of listing it.
 
 **U7 asked for a named target, an audit against it, and the failures listed.**
-That is what this is. It does not claim conformance, and this project should not
-claim conformance until at least F1 through F6 are closed and R1 and R2 are
-settled in a real browser. The next honest step is not more prose: it is one
-`npm run shots` at 320 CSS px and one keyboard pass down the lobby.
+That is what this is, and it claims no conformance. It cannot claim AA at all
+while the trailer is embedded, which F7 decides it will be: three criteria stay
+unmet there, one of them per film and two of them permanently, for reasons that
+are about video rather than about this app's diligence. What this project can
+honestly publish is the statement of partial conformance in F7 — the page does
+not conform, it names the single thing that would have to go, and it says what
+removing it would and would not buy, which is a grade and nothing else. Closing
+what remains open above is worth doing for the households it affects; none of it
+turns that sentence into a conformance claim.

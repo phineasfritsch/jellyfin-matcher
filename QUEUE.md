@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 821 test cases, 48 files, 190 pinned claims, all green.
+**Today's numbers:** 895 test cases, 49 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
@@ -36,151 +36,66 @@ reading this after another round, edit it.
 
 ---
 
-## Now — post-1.0 housekeeping
+## Now — release 1.1
 
-None of this reopens the verdict. Round six's chair filed it while verifying,
-and every mandate agreed none of it names a defect a household would meet.
+The active plan is [docs/PLAN-1.1.md](docs/PLAN-1.1.md), which has an end
+written into it: six conditions, a tag, a published image. This section is what
+is left of it.
 
-- [ ] **Re-shoot 10, 11 and 12.** The request branch is three capture runs
-      behind its own fix. `WinnerScreen.tsx` has had `gap-2` since `4aaadd7`,
-      but `12-request-confirm.png` was last written in `13cbc7d` and still shows
-      zero device pixels between the cost panel's ring and the "Yes, ask" fill.
-      The harness jumps the whole wide-scope branch when `MATCHER_AUTH` makes
-      Any Movie need an account, so two later runs skipped it too. Nothing false
-      ships — the README embeds only 04, 05 and 08 — so this waits for an
-      environment. Run with `MATCHER_AUTH=off`, per the note already in the
-      harness. Files: via `scripts/screenshots.ts`.
+- [ ] **Finish the string catalogue (F3).** `src/ui/strings.ts` holds the
+      sentences from the knockout, the deck, the lobby's scope choice, the
+      details sheet and the winner screen. What remains is `RoomClient`,
+      `HomeActions`, `SwipeCard`, `VoteRow`, `DiagnosisPanel` and
+      `app/guide/page.tsx` — the guide is the biggest single file of prose in
+      the project. Mechanical: the pin question is answered (the catalogue is in
+      scanned source, so moving text costs no pin churn) and the duplication
+      guard makes it safe one file at a time. Copy each string character for
+      character; three have been paraphrased so far and the tests caught all
+      three.
 
-This is the only item left here. It is the one that needs a machine, not a
-decision.
+- [ ] **Settle the trailer captions (B3).** 1.2.2, 1.2.3 and 1.2.5 are the last
+      Level A/AA failures and they are one YouTube embed. The outcome may be a
+      documented limitation rather than a fix — the media is not ours — but it
+      has to be decided and written, not left open. Whatever it is, R29 stands:
+      the sheet opens with zero network and the trailer mounts only on a press.
 
-## Next
+- [ ] **Prove F1 in a browser.** `server/__tests__/restart.test.ts` drives the
+      real handlers through a snapshot, a fresh store and a rejoin, which is the
+      whole server-side path. The plan's condition says "both phones carry on",
+      and only `npm run e2e:two` can show that. Needs a machine with a live
+      Jellyfin; it is the one condition a session cannot close on its own.
 
-- [ ] **Nine WCAG 2.2 failures, six at Level A (U7).** Full audit in
-      `docs/ACCESSIBILITY.md`. Two are fixed (R133). The rest, worst first:
-      **1.4.11 Non-text Contrast** — the ring marking a text input is
-      `white/15`, best possible 1.39:1 against a ground that is never black, so
-      the field boundary is provably invisible by arithmetic; **2.5.3 Label in
-      Name** — two controls whose visible text appears nowhere in their
-      accessible name, so a voice-control user saying what they can see does
-      nothing; **3.3.7 Redundant Entry** — a guest types their name on the home
-      screen and is asked for it again on the next one; **4.1.3 Status
-      Messages** — three counts change with focus elsewhere and no live region,
-      including the lobby's "N of M ready", which is the lobby's entire job.
-      Plus no `<h1>` on three routes and no per-route title.
-      Files: `src/ui/`, `app/`.
+- [ ] **Re-shoot 10, 11 and 12.** Unchanged and still needs an environment: the
+      harness jumps the whole wide-scope branch when `MATCHER_AUTH` makes Any
+      Movie need an account. Run with `MATCHER_AUTH=off`. Nothing false ships —
+      the README embeds only 04, 05 and 08.
 
-- [ ] **Six accessibility criteria nobody has ever checked (U7).** Not
-      failures — unverified, and two look bad. **1.4.10 Reflow**: every capture
-      and measurement in this repo is 402px wide; nothing has ever been rendered
-      at 320px, and the deck deliberately cannot scroll (R21) while
-      card+votes+undo is 272px against a 256px viewport at 400% zoom.
-      **2.4.11 Focus Not Obscured**: `Bar` is `sticky top-0`, `Dock` is `sticky
-      bottom-0`, and there is no `scroll-padding` anywhere in the repository.
-      One keyboard pass down the lobby settles it.
+- [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
+      now far behind. A compose file can only name `:latest`, which is not a
+      version and cannot be rolled back to.
 
-- [ ] **Deck build is linear but the ratings cache is quadratic across nights
-      (U10).** Measured in `docs/PERFORMANCE.md`: nothing is superlinear within
-      a single build — field reads are flat at 6.46 per candidate across a 32x
-      range — but `saveCache` rewrites the entire cache each night while the
-      request budget admits 400 new titles, so warming a 50k library costs
-      **65 nights and 1.36 GB written**, and until then the deck is effectively
-      ordered by what happened to be cached. Also `/Items` is un-paginated: a
-      28 MB payload at 50k items.
-      Files: `src/lib/mdblist.ts`, `src/lib/jellyfin.ts`.
+## Recently closed
 
-- [ ] **Twenty hollow claims remain (R129).** An eight-agent audit
-      reintroduced the historical defect behind every claim the render tests
-      make: 97 audited, 44 sound, 4 weak, **49 hollow**. Twenty-three are fixed,
-      each re-run against the exact mutation that had passed it. What is left:
-      six in `lobby.render.test.tsx`, twelve sampled in `pins.test.ts`, and the
-      handful the audit itself filed as out of a rendering test's reach and
-      guarded elsewhere — R97 in `unanimousNo.test.ts`, R99's mechanism in
-      `handlers.test.ts`, R86 in the typecheck, R85's capture half in
-      `scripts/screenshots.ts`. Those last ones need a corrected comment, not a
-      test. Every finding carries its mutation, so each is checkable rather than
-      arguable. Full run: task `wvqwv6z96`.
-      Files: `src/ui/__tests__/*.test.ts*`.
+Kept short deliberately; the argument for each is in `docs/RULINGS.md`.
 
-- [ ] **Nothing. Every component now renders under the gate** — R115 to R125
-      closed the last of them with the details sheet. What R125 found on the way
-      out is the thing to remember: restoring the exact pre-R83 effect leaves all
-      seventeen of its tests green, because jsdom self-corrects the focus order
-      that a real browser does not. A rendering test and a browser test are not
-      substitutes. `scripts/screenshots.ts` is still the only thing guarding
-      R83, and the only thing that ever found it.
-
-- [ ] **The stacked row layout at 200% text.** R102 made the label gutter scale
-      rather than clip, and deliberately left the crowding it exposed as an open
-      question with a picture attached
-      (`docs/screenshots/03c-lobby-200-percent-settings.png`, which R120 shot
-      for exactly these rows): at a 32px root the gutter
-      is 116px of a 402px line, for a three-letter label. Stacking — label above
-      content, both full width, the way the vote row reflows under R51 and R104
-      — is probably right, and it changes every row in the app, so it wants its
-      own evidence rather than being folded into a clipping fix.
-      Files: `src/ui/components/Listing.tsx`, `Lobby.tsx`, plus a recapture.
-
-- [ ] **Point `prod:read` at the real box once.** Nothing has ever verified that
-      what is deployed matches this repository.
-      Blocked on: the deployment address, which is not in this repo and which
-      the obvious hostnames do not answer on.
-
-- [ ] **Decide what to do about client-side TMDB poster requests (R130).**
-      In Any Movie mode every phone fetches posters straight from
-      `image.tmdb.org`, and the deck preloads ahead, so the request goes out for
-      films nobody has looked at yet. TMDB and anything between the phone and it
-      can see what the household is browsing. Not a credential leak, not unusual
-      for a media app, and disclosed nowhere a user reads. Three options in
-      `docs/DEPENDENCIES.md`: proxy through the server (the only one a privacy
-      mandate accepts), disclose it in the README beside the Docker and auth
-      warnings (the minimum honest thing), or make it a setting defaulting to
-      proxied. This is a judgement about what a household should be signed up to
-      without being asked, so it wants an owner rather than a default.
-      Files: `src/lib/candidates.ts`, `server/`, `README.md`.
-
-- [ ] **Internationalise the interface (U8).** Every string in the app is
-      English and hardcoded; the only locale API anywhere in the source is a
-      single `localeCompare` in a tally sort. Jellyfin ships in dozens of
-      languages, so this is not optional for adoption.
-
-      Measured rather than guessed, and the measurement is rough: about **200
-      user-facing strings across 19 files**, concentrated in `app/guide/page.tsx`
-      (~34), `WinnerScreen.tsx` (~32), `Lobby.tsx` (~25), `Knockout.tsx` and
-      `MovieDetails.tsx` (~20 each). Treat that as an order of magnitude — the
-      scan still counts some Tailwind class strings as prose, so the true figure
-      is somewhat lower.
-
-      Two things make this harder here than the count suggests. Roughly 190
-      **pinned claims assert English sentences** the UI shows, so extraction has
-      to move the pins to the catalogue in the same commit or the gate goes red
-      for the right reason. And a lot of the copy is deliberately load-bearing —
-      the download disclosure (R107), the honesty about what is not known
-      (R91), the peer counts that never name anybody (R46) — so a translator
-      needs the *reasoning*, not just the string. Whatever catalogue format is
-      chosen must carry a note per entry.
-
-- [ ] **Confirm whether the deck ignores parental controls, then fix the trust
-      model (U3).** Analysis in [docs/TRUST.md](docs/TRUST.md). The library is
-      read as `/Items?Recursive=true` with an admin key and **no user scope**
-      (`src/lib/jellyfin.ts:66,104`), while the login path already obtains a
-      Jellyfin user identity and discards the `AccessToken` that would let the
-      app read as that user (`server/auth.ts`).
-
-      **Step one is a measurement, not a change.** On a real Jellyfin: create an
-      account with a maximum parental rating, join a room as that account, build
-      a deck, and see whether a restricted title appears on a card. I could not
-      run this — no server with parental controls configured — so it is written
-      down as a hypothesis with a clear mechanism, not a finding. If it holds, a
-      child joining on their own phone is shown titles their parent already
-      chose to hide, on a screen built to make them look appealing.
-
-      Step two is the design decision, which is a household's rather than an
-      implementer's: whose view is the deck built from when a room mixes
-      signed-in members with guests who typed a four-letter code? Three options
-      and the guest question are in TRUST.md; only the intersection option
-      survives a safeguarding argument.
-      Files: `server/auth.ts`, `src/lib/jellyfin.ts`, the deck builder, `Lobby.tsx`.
+- **F1, rooms survive a restart (R149, R150).** Snapshot to `.cache`, seat
+  secrets included and written 0600, everybody back disconnected until they say
+  otherwise, nothing restored past the idle TTL. Writing the first `useRoom`
+  test found R101's fix had been applied to the reconnect path and never to the
+  mount path.
+- **F2 declined, 5 of 5 (R152).** A focus group answered a question that had
+  been open for weeks. Any card everyone liked already ends the room, so a
+  mid-deck "leader" is the app's own top pick wearing the room's clothes.
+- **The deck named the people it was waiting for (R151), and now no waiting
+  state on any screen does (R153).** Found by a persona asked what he stares at
+  while the evening stalls, not by the audit that was looking for it.
+- **Auto-deploy (R147, R148).** Polls, refuses while a room is live, and does
+  not hold the Docker socket. An adversarial review found the first version
+  never deployed at all. Publish rights moved off the gate job.
+- **Six WCAG criteria (R133–R137, R139).** Orientation, the slider's announced
+  value, label-in-name, the invisible input ring, status messages, reflow at
+  320px — where the vote buttons were 116px below a screen that could not
+  scroll — and a guest being asked their name twice.
 
 ## Blocked — needs a real household, not an agent
 

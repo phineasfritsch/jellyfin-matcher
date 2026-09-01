@@ -10,9 +10,17 @@ third-party container.
 
 ## The part that is not obvious
 
-**A restart ends every room in progress.** Room state is a `Map` in memory
-(`server/store.ts`); there is no reconnect that survives a container
-replacement. Five phones mid-deck just lose the night.
+**A restart interrupts every room in progress.** It used to end them: room
+state was a `Map` that died with the process, so five phones mid-deck lost the
+night. Since R149 rooms are snapshotted to `.cache` and come back, so a
+replacement costs a reconnect — the phones show "hold on, your room will come
+back", and it does.
+
+That turned this script from a rescue into a courtesy, and it is kept as one. A
+routine update does not need to interrupt five people mid-swipe when it can wait
+twenty minutes. It just no longer needs to wait a day: the ceiling is six
+hours, because a room's idle TTL is two and anything longer is stuck rather
+than busy.
 
 `docker compose pull && up -d` on a timer would eventually do that, and it would
 do it on a Friday, because that is when rooms exist. So `autodeploy.sh` asks

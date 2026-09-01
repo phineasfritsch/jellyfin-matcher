@@ -6,11 +6,17 @@
 # reach the host, because the host is behind a tunnel with no inbound route,
 # which is the normal shape for a thing people run at home. So the host polls.
 #
-# The part that matters is the refusal. Room state is a `Map` in memory
-# (server/store.ts): a container replacement ends every room in progress, and
-# there is no reconnect that survives it -- five phones mid-deck simply lose the
-# night. `docker compose pull && up -d` on a timer would do that eventually, and
-# it would do it on a Friday, because that is when rooms exist.
+# The part that matters is the refusal, though R149 changed what it is worth.
+#
+# Room state used to be a Map that died with the process: a replacement ended
+# every room in progress and five phones mid-deck simply lost the night. Rooms
+# are snapshotted now, so a restart costs an INTERRUPTION rather than an
+# evening -- the phones show "hold on", reconnect, and rejoin where they were.
+#
+# So this is a courtesy, not a rescue, and it is worth keeping as one: a routine
+# update does not need to interrupt five people mid-swipe when it can wait
+# twenty minutes. What it no longer needs to be is stubborn, which is why the
+# ceiling below is hours rather than a day.
 #
 # Deliberately NOT used here:
 #   - Watchtower, or anything wanting the Docker socket. A container with the
@@ -27,10 +33,14 @@ COMPOSE_DIR="${MATCHER_COMPOSE_DIR:-/opt/jellyfin-matcher}"
 HEALTH_URL="${MATCHER_HEALTH_URL:-http://127.0.0.1:3000/healthz}"
 SERVICE="${MATCHER_SERVICE:-jellyfin-matcher}"
 # How long a busy host may defer before it gives up waiting and deploys anyway.
-# A real ceiling, not a warning: a room can be held open by anyone who can reach
-# the app, and an update that waits for ever is a security patch that never
-# lands.
-MAX_DEFER_HOURS="${MATCHER_MAX_DEFER_HOURS:-24}"
+#
+# A real ceiling, not a warning: a room can be held open by anybody who can
+# reach the app, and an update that waits for ever is a security patch that
+# never lands. Six hours because a room's idle TTL is two -- a genuinely live
+# night cannot last this long, so reaching the ceiling means something is stuck
+# rather than that somebody is still watching. It was 24 when a deploy cost the
+# evening; since R149 it costs a reconnect.
+MAX_DEFER_HOURS="${MATCHER_MAX_DEFER_HOURS:-6}"
 STATE_DIR="${MATCHER_STATE_DIR:-/var/lib/jellyfin-matcher}"
 LOCK="${STATE_DIR}/autodeploy.lock"
 FIRST_DEFERRED="${STATE_DIR}/first-deferred"
@@ -137,7 +147,7 @@ else
 
   if [ -z "$rooms" ]; then
     log "REFUSING: the app is running but /healthz gave no usable room count."
-    log "REFUSING: deploying now could end a night in progress. Check the app, or deploy by hand."
+    log "REFUSING: deploying now could interrupt a night in progress. Check the app, or deploy by hand."
     exit 0
   fi
 
@@ -159,7 +169,7 @@ else
       log "WARNING: $rooms room(s) live, but an update has waited ${waited_h}h. Deploying anyway."
       log "WARNING: a room has an idle TTL, so this usually means one is stuck or somebody is holding it open."
     else
-      log "$rooms room(s) in progress -- deferring (${waited_h}h so far). A restart ends every live room."
+      log "$rooms room(s) in progress -- deferring (${waited_h}h so far). A restart interrupts every live room."
       exit 0
     fi
   fi

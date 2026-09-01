@@ -144,6 +144,165 @@ export const en = {
     text: 'Deck score {score} (35% Letterboxd, 35% IMDb, 30% RT)',
     why: 'R12: a statistic never appears without naming what it covers. The three sources and the three numbers ARE the composite formula in src/lib/score.ts -- if WEIGHTS changes, this sentence changes in the same commit. Reordering and re-punctuating are fine; altering a number, dropping a source, or losing {score} is not, and leaves a bare figure with no stated authority.',
   },
+
+  /*
+    The winner screen, in part.
+
+    The highest-stakes copy in the app. It is the screen that holds the one
+    control which spends the host's disk, and several of these sentences are
+    rulings rather than labels: what the room is told the request will do
+    (R107, R111), what it is told about the size (R91), which of the two ways
+    the night ended (R90), and what rejecting actually costs (R100). Those
+    carry a `why`. The rest are labels and say so by carrying none.
+
+    Nine strings stay hardcoded in WinnerScreen.tsx, for the same reasons the
+    details sheet leaves five behind. Written down rather than left to be
+    rediscovered by whoever tries next:
+
+      - The two `aria-label` attributes on the confirm panels are pins T113 and
+        T114, which search the haystack for that exact attribute text.
+        Catalogued, the haystack would hold the bare sentence instead and both
+        pins would go red for a property that never left the app. Same as A12
+        above: the pin has to change first, and it is not this change's file.
+        `Final ranking` is the counterpart that shows what "first" buys: A16
+        was rewritten to search for the binding before this migration ran, so
+        the region name could move with the rest.
+      - `On your server` and `Not on your server` are substrings of the deck's
+        card announcement in SwipeDeck.tsx, and the second is inside
+        `deck.notOnServer` above as well. The duplication guard below matches
+        text, not tokens, so it would report a bar label and a screen-reader
+        sentence as one duplicated message.
+      - `Cancel` is a substring of the `onCancel` prop in three UI files, and
+        `Request failed` is also socket.ts's fallback. Same collision class as
+        `Close` against `onClose`.
+      - `Year unknown` and the ` · {n} min` fragment are hardcoded in
+        SwipeCard.tsx and MovieDetails.tsx too, and the poster's alt text is
+        built the same way in both. Cataloguing one copy of three is the R146
+        defect exactly -- and the alt text is the worst of the three to move,
+        because its `{title}` placeholder means the guard cannot see the
+        duplication at all.
+  */
+  'winner.sessionEnded': 'Session ended',
+  'winner.noWinner': 'No winner could be determined.',
+  'winner.locked': 'Locked in',
+  'winner.pointsWinner': 'Points winner',
+  'winner.unanimous': {
+    text: 'Everyone said yes.',
+    why: 'One of the two ways a night can end, and the room must be told which one it got (R90). This sentence claims agreement, so it must never be reachable for a film the points picked -- it was, for anyone who reloaded, until the outcome moved onto the room. A translation must not hedge it into something that covers both cases: "the room has its film" would be true on every path and would tell nobody anything.',
+  },
+  'winner.viaPoints': {
+    text: 'Nobody agreed outright, so the points decided.',
+    why: 'The other way (R90). It says plainly that this is NOT the room agreeing, which is the fact the ranking below it then explains. It must not be softened into agreement -- a film every connected member said no to cannot win on points at all (R97), and this sentence is what tells the room the difference between the two outcomes it can see.',
+  },
+  'winner.costHeadline': {
+    text: 'This one is not on the server yet.',
+    why: 'R53: half the time in Any Movie mode the winner is a film nobody owns, and that is a different screen. This is the headline of the cost line, so it wears the one voice reserved for spending the host disk (R42) -- and it is a statement of fact about the library, not a warning about what will happen. The sentence under it is the warning.',
+  },
+  'winner.cost': {
+    text: "Nothing has been downloaded yet. Asking sends it to Jellyseerr, and whether that starts the download straight away depends on your host's settings.",
+    why: 'The same promise as `deck.cost`, on the screen where the button actually is. It must NOT promise the host approves first: Matcher requests with an admin key and Jellyseerr auto-approves those by default (R107). R107 rewrote the deck sentence, the confirm and the ack and missed this copy, which renders directly above the request button -- so it contradicted the confirm two taps later (R111). It must NOT state a size either: no size datum reaches this app (R91).',
+  },
+  'winner.ranking': 'Final ranking',
+  'winner.rankingRow': {
+    text: '{total} points — {composite} from ratings, {votePoints} from the room',
+    why: 'R12: a statistic never appears without naming what it covers. The total is shown broken into the two things that made it, so a room that lost on points can see whether it lost to the ratings or to itself. Reordering and re-punctuating are fine; dropping either half leaves a bare number with no stated authority.',
+  },
+  'winner.rejectCostExhausted': {
+    text: 'This throws away what the room just agreed on. Everyone has finished the deck, so the points pick the next film straight away — there is nothing left to swipe. {title} will not be offered again.',
+    why: 'R100: say what will happen, not what usually happens. On this path rejecting leaves progress untouched, the deck is still exhausted, and settlement declares the next-ranked film inside the same call -- nobody swipes anything. It must not borrow the other branch’s promise of a return to the deck. The last clause is R63: the vote that ends the night is irreversible in one direction, and the room is told so before it commits.',
+  },
+  'winner.rejectCost': {
+    text: 'This throws away what the room just agreed on and puts everyone back in the deck. {title} will not be offered again.',
+    why: 'The other branch of R100, and the only one where "back in the deck" is true. Collapsing the pair into one sentence is the defect R100 fixed. The last clause is R63, as above: the film does not come back, and the confirm says so before the tap that spends it.',
+  },
+  'winner.rejectYesExhausted': {
+    text: 'Yes, pick the next one',
+    why: 'The button half of the R100 pair. It always said "keep swiping", including on the path where the deck is over and the points pick the next film on the spot. It must name what this tap does here, and must not promise swiping.',
+  },
+  'winner.rejectYes': {
+    text: 'Yes, keep swiping',
+    why: 'The other button half (R100). This one is the honest reading only when the deck is unfinished; it is the sentence that used to be shown on both paths, which is why the pair exists.',
+  },
+  'winner.rejectKeep': 'Keep this one',
+  'winner.rejectExhausted': {
+    text: 'Not this one — pick the next',
+    why: 'R100 again, on the control that opens the confirm. Whatever this says, the confirm and its yes-button have to agree with it: three sentences describe one path, and the defect was one of them describing a different one.',
+  },
+  'winner.reject': {
+    text: 'Not this one — keep swiping',
+    why: 'The unfinished-deck half of that pair (R100). R63 is why the control exists at all: the vote that ends the night was the only one with no take-back, and the person who mis-tapped is often not the person holding the host’s phone.',
+  },
+  'winner.play': {
+    text: 'Play in Jellyfin',
+    why: 'R12: the action names where it plays rather than being a bare triangle. This is the free half of the winner screen -- the film is already on the server -- and it is read against the request button, which is the half that spends the disk. The two must never read alike.',
+  },
+  'winner.request': {
+    text: 'Request via Jellyseerr',
+    why: 'R09/R33: the control names the system it will hit before it is pressed, not after. A bare "Request" or "Get it" hides which machine this reaches and whose disk it fills; the host reading this screen has to recognise their own software in it.',
+  },
+  'winner.requestConfirm': {
+    text: 'Sends {title} to Jellyseerr. Depending on your host’s settings that may start the download straight away. How much disk it uses is not known until their server picks a release, and you will not see it tonight.',
+    why: 'The confirm on the one control that spends somebody else’s disk, and every clause is a ruling. It must NOT promise an approval gate: an admin-key request is auto-approved by default, so a gate is not a promise this app can keep (R107, R111). It must NOT state a size, and must keep saying that the size is not known yet: no size datum reaches this app and the real figure is not settled until the host’s Radarr picks a release (R91). A translation that adds either is worse than no translation.',
+  },
+  'winner.requestConfirmRuntime': {
+    text: 'Sends {title} ({runtime} min) to Jellyseerr. Depending on your host’s settings that may start the download straight away. How much disk it uses is not known until their server picks a release, and you will not see it tonight.',
+    why: 'The same sentence for a film whose runtime is known. It is a second entry rather than a glued `{runtime}` fragment because a runtime in parentheses is a unit abbreviation a translator cannot correctly place from the fragment alone -- the same reason the details sheet leaves its " · {n} min" behind. The runtime is there to identify the film, NOT as a cost: R91 rejected "about {runtime} min of video" as a size claim, and the clause about the size not being known is what replaced it.',
+  },
+  'winner.requestSend': 'Yes, ask',
+  'winner.requestSending': 'Sending the request…',
+  'winner.asked': {
+    text: 'Asked. It appears in Jellyfin once your server has it.',
+    why: 'What this phone is told the moment its own request is accepted, before the room has said anything back. It says what is known -- the ask went out -- and nothing about approval, because this app cannot see whether there was a gate (R107).',
+  },
+  'winner.askedApproved': {
+    text: 'Asked, and your server accepted it. It appears in Jellyfin once it finishes downloading.',
+    why: 'R107: say which of the two actually happened rather than asserting a gate. Jellyseerr returns 1 for pending and 2 for approved, and this is the approved one -- so it must NOT talk about waiting for approval, which is the sentence below. The old copy said "once the host approves it" on both.',
+  },
+  'winner.askedApprovedBy': {
+    text: '{name} asked, and your server accepted it. It appears in Jellyfin once it finishes downloading.',
+    why: 'The same fact with a name on it (R107). A name is right here and nowhere else on this screen: R46 and R61 keep deck progress anonymous because nobody should be watched being slow, but who spent the host’s disk is exactly the thing a household is owed (R42). {name} is the display name the server sent; it is never a count.',
+  },
+  'winner.askedHeld': {
+    text: 'Asked. Your Jellyseerr is holding it for approval.',
+    why: 'The pending half (R107). This one names approval on purpose -- it is a report of what Jellyseerr did, not a promise about what it will do, and it is the only place on this screen where the word is honest.',
+  },
+  'winner.askedHeldBy': {
+    text: '{name} asked. Your Jellyseerr is holding it for approval.',
+    why: 'The pending half with a name on it, for the same reason as the approved one (R42, R107): the room is told who spent the disk. It reports the hold Jellyseerr applied; it does not promise the host was consulted.',
+  },
+
+  /*
+    The login, in part.
+
+    Four strings stay hardcoded in AuthGate.tsx, all of them the same substring
+    collision the details sheet and the winner screen hit:
+
+      - `Username` and `Password` are inside `setUsername` and `setPassword`
+        in that same file. The duplication guard matches text, not tokens.
+      - `Sign in` is inside `Sign in to use` above, `Sign in to search any
+        movie` in Lobby.tsx, `Sign in to create a room` in HomeActions.tsx and
+        `Sign in to join room` in RoomClient.tsx. Four of the five are somebody
+        else's file, and the label cannot move until they do.
+      - `Jellyfin Matcher` is in five files under app/, none of them this
+        change's.
+  */
+  'auth.title': {
+    text: 'Sign in with your Jellyfin account',
+    why: 'R10: the login says what it is for before it is answered. It names WHOSE account it wants, which is what stops a password box on a stranger’s LAN from being phishing-shaped -- a bare "Sign in" over two fields asks a household to guess which credentials it is being asked for. It is also the fallback: every caller that can name a reason passes one instead.',
+  },
+  'auth.serverChecks': {
+    text: 'Your Jellyfin server checks this. The server key never reaches this page.',
+    why: 'Two separate promises, and both are kept elsewhere in the code. The password is verified by the household’s own Jellyfin, not by this app; and the admin API key stays on the server, which is the claim the README makes as well. Neither may be softened into reassurance ("your details are safe") -- the point is that the reader can check both.',
+  },
+  'auth.timeout': {
+    text: 'Your Jellyfin server did not answer. Check it is awake and try again.',
+    why: 'R88: a sign-in that never settles used to leave the button disabled with nothing said and no way out but a reload. This is the message that replaced the silence, so it must name which machine went quiet and leave the reader something to do. A generic failure line puts the silence back.',
+  },
+  'auth.failed': 'Login failed',
+  'auth.decline': {
+    text: 'Carry on without an account',
+    why: 'R55: the way out is the same size and shape as the way in. It was 14px grey underlined "Back" under a full-width green button, which a guest who will never make an account reads as a trial wall. The words have to say what declining GETS you, not merely that you can retreat -- nothing here is gated that a guest cannot simply skip.',
+  },
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

@@ -327,25 +327,25 @@
       "id": "R107-winner-promises-approval",
       "ruling": "R107",
       "claim": "the winner screen never promises a host approval step on the branch where the server already accepted",
-      "file": "src/ui/components/WinnerScreen.tsx",
-      "find": ", and your server accepted it. It appears in Jellyfin once it finishes downloading.",
-      "replace": ". It appears in Jellyfin once the host approves it.",
+      "file": "src/ui/strings.ts",
+      "find": "    text: 'Asked, and your server accepted it. It appears in Jellyfin once it finishes downloading.',",
+      "replace": "    text: 'Asked. It appears in Jellyfin once the host approves it.',",
       "expect": [
         "src/ui/__tests__/winner.render.test.tsx"
       ],
-      "note": "The old copy verbatim. Restoring it left nine of nine green, because /ada asked/i still matched (R129). There is nothing left to approve on this branch."
+      "note": "The old copy verbatim. Restoring it left nine of nine green, because /ada asked/i still matched (R129). There is nothing left to approve on this branch. Re-pointed at the catalogue when F3 moved the sentence out of WinnerScreen.tsx -- the claim is about what the room is told, and the catalogue is now where that is decided."
     },
     {
       "id": "R100-winner-confirm-promises-the-deck",
       "ruling": "R100",
       "claim": "the reject confirmation promises a return to the deck only when there is a deck to return to",
       "file": "src/ui/components/WinnerScreen.tsx",
-      "find": "                {roomExhausted ? 'Yes, pick the next one' : 'Yes, keep swiping'}",
-      "replace": "                {'Yes, keep swiping'}",
+      "find": "                {roomExhausted ? t('winner.rejectYesExhausted') : t('winner.rejectYes')}",
+      "replace": "                {t('winner.rejectYes')}",
       "expect": [
         "src/ui/__tests__/winner.render.test.tsx"
       ],
-      "note": "The neighbouring case asserts the two labels on the TRIGGER and never presses it, so the confirm panel -- where R100's false promise lived -- was never mounted and reverting the copy inside it left nine of nine green (R129)."
+      "note": "The neighbouring case asserts the two labels on the TRIGGER and never presses it, so the confirm panel -- where R100's false promise lived -- was never mounted and reverting the copy inside it left nine of nine green. Re-pointed through F3's t() call; the ternary is the guarantee, not the literal."
     },
     {
       "id": "R134-abstain-not-speakable",
@@ -575,6 +575,30 @@
         "src/ui/__tests__/deck.render.test.tsx"
       ],
       "note": "R46/R61. Shipped for months because the naming test rendered the NOT-done state and the done-state test asserted two phrases that could not see a name -- R129 shape, a fixture that renders one branch. Found by a focus-group persona reading the screen he stares at while the evening stalls, not by the audit."
+    },
+    {
+      "id": "R153-knockout-wait-names-people",
+      "ruling": "R153",
+      "claim": "no waiting state on any screen names a peer",
+      "file": "src/ui/components/Knockout.tsx",
+      "find": "        detail={t('knockout.hidden')}",
+      "replace": "        detail=\"Waiting on Bex and Ade.\"",
+      "expect": [
+        "src/ui/__tests__/privacy.render.test.tsx"
+      ],
+      "note": "R46/R61 as a RULE rather than the one instance R151 fixed. The deck broke it for months because its own R46 test rendered the not-done state; this renders every waiting state on every screen that has one. The lobby is the single deliberate exception (R44: the host must know who is in the room before reading the code aloud)."
+    },
+    {
+      "id": "R112-restored-seat-has-no-owner",
+      "ruling": "R112",
+      "claim": "a stale socket cannot evict somebody from a room that came back from disk",
+      "file": "server/handlers.ts",
+      "find": "  if (!ctx.store.ownsSeat(roomId, userId, ctx.session.id)) return;",
+      "replace": "  if (false) return;",
+      "expect": [
+        "server/__tests__/restart.test.ts"
+      ],
+      "note": "R149 made this worth pinning. `seatSockets` is deliberately not snapshotted -- every id in it names a connection that died with the process -- so a restore leaves it empty, and `ownsSeat` answers TRUE for an unknown seat by design. R112 survives only because `disconnect` reads its identity from the socket's own session data, which only a successful join sets, and both join paths claimSeat in the same breath. That coupling is what this mutation defends: break it and every restored room loses the protection silently."
     }
   ]
 }

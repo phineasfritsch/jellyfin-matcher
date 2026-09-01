@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Clapperboard, Loader2, Lock } from 'lucide-react';
 import { getAuthToken, setAuth } from './socket';
+import { t } from './strings';
 
 /** Longer than the server's own 15s upstream deadline, so its message wins when it has one (R88). */
 const LOGIN_TIMEOUT_MS = 20_000;
@@ -89,17 +90,17 @@ export function LoginScreen({
         signal: AbortSignal.timeout(LOGIN_TIMEOUT_MS),
       });
       const data = (await res.json()) as { token?: string; name?: string; error?: string };
-      if (!res.ok || !data.token) throw new Error(data.error ?? 'Login failed');
+      if (!res.ok || !data.token) throw new Error(data.error ?? t('auth.failed'));
       setAuth(data.token, data.name ?? username.trim());
       onLoggedIn();
     } catch (err) {
       const timedOut = err instanceof DOMException && err.name === 'TimeoutError';
       setError(
         timedOut
-          ? 'Your Jellyfin server did not answer. Check it is awake and try again.'
+          ? t('auth.timeout')
           : err instanceof Error
             ? err.message
-            : 'Login failed',
+            : t('auth.failed'),
       );
       setBusy(false);
     }
@@ -109,16 +110,31 @@ export function LoginScreen({
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
       <header className="flex w-full flex-col gap-2 px-1 pb-1">
         <p className="text-label font-semibold text-super">Jellyfin Matcher</p>
+        {/*
+          R10: the fallback names whose account is being asked for. Every
+          caller that can say why it is asking passes a `reason` instead, and
+          those live in the file that knows the reason -- Lobby.tsx,
+          HomeActions.tsx, RoomClient.tsx. They are not catalogued here because
+          they are not this file's to move.
+        */}
         <h1 className="text-display font-semibold leading-tight tracking-[-0.02em]">
-          {reason ?? 'Sign in with your Jellyfin account'}
+          {reason ?? t('auth.title')}
         </h1>
         <p className="flex items-start gap-1.5 text-label leading-relaxed text-muted-fg">
-          <Lock aria-hidden className="size-3.5" /> Your Jellyfin server checks this. The
-          server key never reaches this page.
+          <Lock aria-hidden className="size-3.5" /> {t('auth.serverChecks')}
         </p>
       </header>
 
       <form onSubmit={submit} className="gel flex w-full flex-col gap-4 rounded-[var(--radius-card)] p-4">
+        {/*
+          R145: the two field labels and the submit button below are the three
+          strings this file could not move. "Username" and "Password" are
+          substrings of setUsername and setPassword right here, and "Sign in"
+          is a substring of four longer sentences elsewhere, so the duplication
+          guard in strings.test.ts -- which matches text, not tokens -- would
+          report each of them as a message held in two places. The reasoning is
+          written out in strings.ts beside the entries that did move.
+        */}
         <div className="flex flex-col gap-2">
           <label htmlFor="jf-user" className="text-label font-medium text-muted-fg">
             Username
@@ -174,7 +190,7 @@ export function LoginScreen({
             onClick={onCancel}
             className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-white/[0.07] px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-foreground ring-1 ring-white/15 transition active:scale-[0.985]"
           >
-            Carry on without an account
+            {t('auth.decline')}
           </button>
         )}
       </form>

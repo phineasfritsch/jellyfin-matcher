@@ -2596,3 +2596,38 @@ The plan is better for having asked. A feature that had been open for weeks is
 closed for reasons anybody can check, and the hour that would have started it
 went into R151 instead — which is on the same screen, and which the host said
 "removes most of the pressure that made F2 look necessary."
+
+### R153 — The rule, not the instance
+
+R151 fixed the deck naming the people it was waiting for. The obvious next
+question is whether it was the only one, and the obvious mistake is to assume it
+was because it is the one somebody happened to mention.
+
+So it was swept. Every `.name` rendered in `src/ui`, and every place a member
+name could reach a server-side message. Two hits and both are correct: the
+lobby's member list, which names everybody **on purpose** because R44 says the
+host has to know who is in the room before reading the code out loud, and
+`winnerRequest.by`, which names who asked for a download and falls back to
+"Someone" for a guest. That one is accountability for spending the host's disk,
+which is the opposite of watching somebody swipe.
+
+**R151 really was the only violation.** That is worth writing down, because a
+sweep that finds nothing is evidence and an assumption is not (R138).
+
+The guard is the rule rather than the instance, the way R134 did it for
+accessible names. `privacy.render.test.tsx` renders every waiting state on every
+screen that has one — the deck mid-swipe and finished, the genre picker, the
+picks-locked-in wait, the elimination ballot — and asserts no peer name and no
+raw user id appears in any of them. The peers come from the fixture, so a member
+added to a room is covered without anybody remembering to add them here.
+
+The lobby is the single exception and it is named as one, with its reason. An
+exception that is written down is a decision; an exception that is silently
+excluded from a check is how the next R151 happens.
+
+**Why this matters more than the bug it generalises.** The deck's own R46 test
+had the right name — "counts who has finished without naming them" — and rendered
+the wrong branch. Anybody reading the test list would have concluded R46 was
+covered on that screen. It was covered on one state of it, and the violation sat
+in the other for months, through an audit that was specifically looking for this
+class of thing.
