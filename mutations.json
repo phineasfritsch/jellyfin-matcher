@@ -815,6 +815,18 @@
         "src/ui/__tests__/docs.test.ts"
       ],
       "note": "The original pattern, which cannot match R150: a word boundary has nowhere to sit between the 15 and the 0. About seventy rulings then read as explained in DIRECTION.md and cited nowhere. G8 stays GREEN through this, because it regenerates the index and compares -- it asks the generator what the answer should be, so a blind spot in the generator is invisible to it. The guard therefore calls citations() directly rather than reading docs/RULINGS.md: the first version read the file, and this mutation survived it, because reverting a regex does not rewrite a file already on disk."
+    },
+    {
+      "id": "R174-error-carries-the-deployment",
+      "ruling": "R174",
+      "claim": "an error message cannot hand the host's configuration to a room",
+      "file": "src/lib/jellyfin.ts",
+      "find": "`Jellyfin request failed: ${res.status} ${res.statusText}`",
+      "replace": "`Jellyfin request failed at ${cfg.baseUrl}: ${res.status}`",
+      "expect": [
+        "server/__tests__/validate.test.ts"
+      ],
+      "note": "The ordinary thing somebody writes while debugging, and it is a publication: fail() sends err.message verbatim to the phone, and a room code is an invitation rather than a credential (R86), so anybody who can reach the app and guess four characters reads it. Nothing today leaks -- every interpolation is a status code, an id or a count. This is about the next one."
     }
   ]
 }

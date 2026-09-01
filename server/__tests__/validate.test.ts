@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from '../../scripts/lib/source-scan';
 import {
@@ -296,4 +296,45 @@ describe('the two validators nothing had ever called (R168)', () => {
       expect(() => asBoolean(bad), `${JSON.stringify(bad)} was coerced into a boolean`).toThrow();
     }
   });
+});
+
+describe('nothing an error says can carry the deployment with it (R174)', () => {
+  /*
+    `fail()` sends `err.message` verbatim to the phone: every error thrown
+    anywhere inside a handler becomes text in a room's banner. That is
+    deliberate and R54 argues for it -- the person who can act on a failed
+    Jellyfin is usually in the room, so "Jellyfin request failed: 502" belongs
+    on screen rather than in a log they will never read.
+
+    It also means a message is a PUBLICATION. A room code is an invitation and
+    not a credential (R86), so anybody who can reach the app and guess four
+    characters reads whatever an error decides to say.
+
+    Today every interpolation is a status code, an id or a count -- checked, and
+    nothing leaks. This is about the next one. `new Error(`... ${JELLYFIN_URL}`)`
+    is an ordinary thing to write while debugging and it would hand out the
+    host's internal address to a stranger, quietly, through a channel nobody
+    thinks of as output.
+  */
+  const SOURCES = [
+    ...globSync('server/*.ts'),
+    ...globSync('src/lib/*.ts'),
+  ].filter((p) => !p.includes('__tests__'));
+
+  /** Names that mean "this is the deployment", not "this is what happened". */
+  const SECRET = /\b(process\.env|API_KEY|apiKey|_URL\b|baseUrl|token|secret|password)\b/i;
+
+  for (const path of SOURCES) {
+    const code = readFileSync(join(ROOT, path), 'utf8');
+    // Only interpolated messages can carry a value; a literal cannot.
+    const built = [...code.matchAll(/new Error\(`([^`]*)`\)/g)].map((m) => m[1]!);
+    const leaky = built.filter((msg) => SECRET.test(msg));
+
+    it(`${path} builds no error message out of its configuration`, () => {
+      expect(
+        leaky,
+        `${path} interpolates deployment detail into an error, and errors are shown to the room`,
+      ).toEqual([]);
+    });
+  }
 });

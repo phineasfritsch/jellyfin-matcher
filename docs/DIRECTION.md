@@ -3293,3 +3293,32 @@ mechanical follow-on.
 Found while auditing pins for needles too broad to fail: 190 pins, three
 matching more than three places, and one of those three was a sentence that
 turned out to exist four more times in a file the catalogue does not cover.
+
+### R174 — An error message is a publication
+
+`fail()` sends `err.message` verbatim to the phone. Every error thrown anywhere
+inside a handler becomes text in a room's banner, and that is deliberate: R54
+argues for it, because the person who can act on a failed Jellyfin is usually
+sitting in the room, and a diagnostic in a log they will never read helps
+nobody.
+
+The consequence is easy to miss. It makes an error message an OUTPUT CHANNEL,
+and a room code is an invitation rather than a credential (R86) — so whoever
+can reach the app and guess four characters reads whatever an error decides to
+say.
+
+**Nothing leaks today, and that was checked rather than assumed.** Every
+interpolated message builds from a status code, an id or a count:
+`Jellyfin request failed: 502 Bad Gateway`, `Unknown card: tmdb-348`. No URL, no
+key, no header.
+
+This is about the next one. ``new Error(`... ${cfg.baseUrl}`)`` is an ordinary
+thing to write while debugging something at 1am, it survives review because it
+reads as a better error, and it hands out the host's internal address through a
+channel nobody thinks of as output. The guard reads the source for messages
+BUILT from anything named like configuration — `process.env`, `_URL`, `apiKey`,
+`token`, `secret` — and only interpolated ones, because a literal cannot carry a
+value.
+
+R173 is what made this worth writing now: those 22 server sentences stopped
+being log copy the moment R163 put every refusal in front of a household.
