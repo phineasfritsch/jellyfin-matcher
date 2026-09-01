@@ -324,17 +324,51 @@ describe('nothing an error says can carry the deployment with it (R174)', () => 
   /** Names that mean "this is the deployment", not "this is what happened". */
   const SECRET = /\b(process\.env|API_KEY|apiKey|_URL\b|baseUrl|token|secret|password)\b/i;
 
+  /*
+    R194: the guard has to follow the messages.
+
+    R174 inspected `new Error(\`...\`)` -- interpolated messages, because a
+    literal cannot carry a value. Then R176 moved every one of the room's
+    refusals into the catalogue, so `server/handlers.ts` now contains ZERO
+    template-literal errors and this guard inspected nothing in the file it was
+    written for, while passing.
+
+    The leak did not go away; it moved. A catalogue message carries
+    `{placeholders}` and the VALUES arrive at the call site, so the modern way
+    to hand a room the host's address is `t('...', { url: cfg.baseUrl })`.
+
+    So both shapes are checked, and the count is asserted, because a guard that
+    scans nothing is the failure this one just had.
+  */
+  const scanned: string[] = [];
   for (const path of SOURCES) {
     const code = readFileSync(join(ROOT, path), 'utf8');
-    // Only interpolated messages can carry a value; a literal cannot.
-    const built = [...code.matchAll(/new Error\(`([^`]*)`\)/g)].map((m) => m[1]!);
-    const leaky = built.filter((msg) => SECRET.test(msg));
 
-    it(`${path} builds no error message out of its configuration`, () => {
+    // Still relevant: src/lib/ throws interpolated errors directly.
+    const built = [...code.matchAll(/new Error\(`([^`]*)`\)/g)].map((m) => m[1]!);
+    // The shape R176 created: values handed to a catalogued message.
+    const filled = [...code.matchAll(/[^\w.]t\(\s*'[^']+'\s*,\s*\{([^}]*)\}/g)].map((m) => m[1]!);
+    scanned.push(...built, ...filled);
+
+    const leaky = [...built, ...filled].filter((msg) => SECRET.test(msg));
+
+    it(`${path} builds no message out of its configuration`, () => {
       expect(
         leaky,
-        `${path} interpolates deployment detail into an error, and errors are shown to the room`,
+        `${path} puts deployment detail into a message, and messages are shown to the room`,
       ).toEqual([]);
     });
   }
+
+  it('actually inspected some messages, or the check above says nothing', () => {
+    /*
+      The vacuity assertion this guard needed and did not have. R174 kept
+      passing after R176 emptied its subject, and nothing said so -- exactly the
+      shape R178 found in the duplication guard a few hours earlier.
+    */
+    expect(
+      scanned.length,
+      'no built or filled messages found in server/ or src/lib/; the guard has lost its subject',
+    ).toBeGreaterThan(3);
+  });
 });

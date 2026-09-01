@@ -887,6 +887,18 @@
         "src/ui/__tests__/css.test.ts"
       ],
       "note": "The plausible change: somebody wants the secondary lines quieter and darkens the token a little. It looks better on the designer's monitor and drops muted-fg from 7.75:1 to roughly 3.7:1, under the 4.5 it owes -- taking the peer count, the year, the runtime and the diagnosis fix row with it. Nothing renders differently enough to notice in a screenshot review, which is why this is arithmetic and not an opinion."
+    },
+    {
+      "id": "R194-catalogue-message-carries-config",
+      "ruling": "R194",
+      "claim": "deployment detail cannot reach a room through a catalogued message",
+      "file": "server/handlers.ts",
+      "find": "    throw new Error(t('server.tooManyAttempts', { wait: Math.max(1, wait) }));",
+      "replace": "    throw new Error(t('server.tooManyAttempts', { wait: Math.max(1, wait), url: process.env.JELLYFIN_URL }));",
+      "expect": [
+        "server/__tests__/validate.test.ts"
+      ],
+      "note": "The modern shape of the leak R174 was written for. R174 inspected `new Error(`...`)` only, and R176 moved every one of the room's refusals into the catalogue -- leaving handlers.ts with zero template-literal errors, so the guard scanned nothing there and passed. The value now arrives at the t() call site, which is where a debugging session at 1am would put the host's address. R174's version of the guard does not go red on this."
     }
   ]
 }

@@ -3808,3 +3808,40 @@ nothing", which was only ever the sound a saturated counter makes.
 Second time today, after R192, that a green measurement of mine turned out to be
 incapable of going red — and both were found by somebody else reading the code
 rather than by me re-running it.
+
+### R194 — The guard did not follow the messages, and then a backspace ate it
+
+Two failures stacked, and the second is the more interesting.
+
+**First: R174 stopped inspecting anything.** It scanned `new Error(\`...\`)` --
+interpolated messages, since a literal cannot carry a value. R176 then moved
+every one of the room's refusals into the catalogue, so `server/handlers.ts`
+holds ZERO template-literal errors. The guard written for that file scanned an
+empty set and passed, for hours. The leak did not go away; it moved. A
+catalogued message carries `{placeholders}` and the values arrive at the call
+site, so the modern way to hand a room the host's address is
+`t('...', { url: cfg.baseUrl })`.
+
+That is R178's pattern exactly -- a guard's scope failing to move when its
+subject did -- and it happened again the same day, to a guard written to catch
+the previous instance.
+
+**Second: the replacement could not fail either.** The new regex was written
+through a shell heredoc, and `` became a literal BACKSPACE character. The
+pattern read as "a backspace, then `t(`", which occurs nowhere, so `filled` was
+always empty and `expect([]).toEqual([])` passed.
+
+It took an hour to find because every ingredient tested correct in isolation:
+the glob returned 24 files including handlers, the read path worked under
+vitest, `SECRET` matched `process.env`, and the same logic in a scratch script
+found the leak immediately. The broken piece was one character that `grep` does
+not show, that the editor does not show, and that only appeared when the line
+was dumped with `repr()`.
+
+**Both now carry the assertion they were missing.** The guard checks the two
+shapes a message can take, and a separate case asserts it inspected more than
+three of them -- because a check that scans nothing looks exactly like a check
+that found nothing, which is the sentence this session keeps rewriting.
+
+Third "cannot fail" check found today, after R192's harness that killed a
+wrapper and R193's two metrics that could not move. All three were green.
