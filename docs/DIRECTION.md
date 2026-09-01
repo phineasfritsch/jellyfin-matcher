@@ -2749,3 +2749,34 @@ constant as metadata, and the room route's `generateMetadata` leads with the
 code. Reading the route before writing about it is the only reason that was
 caught. An audit overstating a FAILURE is wrong in the same way as one
 overstating a pass, and it is the more comfortable mistake to leave alone.
+
+### R157 — Nothing was checking the audit against the repository
+
+Three findings in one session had already been fixed while `docs/ACCESSIBILITY.md`
+still described them as failing: F9's page titles, F5's fourth live region, and
+the stated reason `ERR` could not be catalogued, which was not merely stale but
+untrue. Nothing went red for any of them.
+
+That asymmetry is worth naming. Every gate in this project is pointed at code
+overstating a PASS. A doc overstating a FAILURE has no gate at all, and it is
+the more comfortable mistake, because it reads as caution. What it actually does
+is hide finished work and send the next person to fix something twice — which is
+exactly what nearly happened with B2, where the fix and its test were already in
+place and I was about to write both again.
+
+Most of this cannot be mechanised. No test can decide whether a criterion is
+genuinely met; that is why the audit is prose. But one half is checkable and it
+is the half most likely to rot: a row graded **PASS (tested)** is a claim that
+something executable guards it, so it must name a test, and that test must
+exist. A grade can outlive a renamed file silently, and then the strongest
+status in the table is the least trustworthy.
+
+It found one on the first run: 3.3.7 Redundant Entry claimed PASS (tested) and
+named nothing at all. The tests were real -- `home.render` and `socket.render`
+-- and the row simply never said so, which meant nobody could check the claim
+without going to look for them.
+
+The check is deliberately narrow. It does not read the finding sections, where
+the stale prose actually lived, because matching a paragraph against source is
+the kind of guess that produces a guard nobody trusts. It closes the one gap it
+can close honestly and leaves the rest to a person reading before writing.

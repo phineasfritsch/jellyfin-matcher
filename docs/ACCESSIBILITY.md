@@ -659,7 +659,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 3.3.2 Labels or Instructions | A | PASS (read) | Every input has a `<label htmlFor>` or an `aria-label`; the room code field has both an `aria-label` and a placeholder. |
 | 3.3.3 Error Suggestion | AA | PASS (read) | Errors say what to do — "Enter your name first", "Enter a room code", "Your Jellyfin server did not answer. Check it is awake and try again." R88 exists for that last one. |
 | 3.3.4 Error Prevention (Legal, Financial, Data) | AA | PASS (read) | The two irreversible actions — turning down the winner, and asking Jellyseerr for a film — both take a second, deliberate press, and both state the cost before it is committed (R37, R71, R100, R113). Whether this criterion strictly applies is arguable; the app meets it either way. |
-| 3.3.7 Redundant Entry | A | **PASS (tested)** | **F4 fixed (R139)** — the typed name is carried to the join gate; both halves mutation-tested. |
+| 3.3.7 Redundant Entry | A | **PASS (tested)** | **F4 fixed (R139)** — the typed name is carried to the join gate; both halves mutation-tested in `home.render` and `socket.render`. |
 | 3.3.8 Accessible Authentication (Min) | AA | PASS (read) | Username and password, with `autoComplete="username"` and `current-password`, nothing blocking paste, and no cognitive function test — no puzzle, no transcription, no "type the third letter". A password manager fills it. |
 
 ### Robust

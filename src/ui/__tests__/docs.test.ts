@@ -1,3 +1,4 @@
+import { globSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { appSources, readDoc } from '../../../scripts/lib/source-scan';
 
@@ -358,4 +359,58 @@ describe('every ruling that exists is in the index', () => {
       .reduce((a, b) => Math.max(a, b), 0);
     expect(index).toContain(`**R${highest}**`);
   });
+});
+
+describe('the accessibility audit cannot claim a test it does not have', () => {
+  /*
+    R157. Three findings this session had already been fixed while the audit
+    still described them as failing: F9's page titles, F5's fourth live region,
+    and the stated reason `ERR` could not be catalogued. Nothing went red for
+    any of them, because no check reads the audit against the repository.
+
+    A doc that overstates a FAILURE is wrong in the same way as one that
+    overstates a pass, and it is the more comfortable mistake -- it reads as
+    caution. What it actually does is hide finished work and send the next
+    person to fix something twice.
+
+    The whole of that is not mechanically checkable: no test can tell whether a
+    criterion is genuinely met. This checks the one half that is. A row graded
+    `PASS (tested)` claims something executable guards it, so it has to name a
+    test, and that test has to exist. That is the grade most likely to rot,
+    because a file can be renamed long after the row is written.
+  */
+  const audit = readDoc('docs/ACCESSIBILITY.md');
+  const TESTS = [
+    ...globSync('src/ui/__tests__/*.test.ts'),
+    ...globSync('src/ui/__tests__/*.test.tsx'),
+    ...globSync('server/__tests__/*.test.ts'),
+    ...globSync('src/lib/__tests__/*.test.ts'),
+  ].map((p) => p.split(/[\\/]/).pop()!);
+
+  /** The audit cites `a11y`, `focus.test.ts` and `winner.render` alike. */
+  const stem = (name: string) => name.replace(/\.test\.tsx?$/, '');
+  const isTestName = (token: string) => TESTS.some((base) => stem(base) === stem(token));
+
+  const rows = audit
+    .split('\n')
+    .filter((l) => l.startsWith('|') && l.includes('PASS (tested)'))
+    // The status legend defines the grade; it does not claim it.
+    .filter((l) => !(l.split('|')[1] ?? '').includes('PASS (tested)'));
+
+  it('grades something as tested, or this guard is vacuous', () => {
+    expect(rows.length, 'no PASS (tested) rows -- has the audit changed shape?').toBeGreaterThan(0);
+  });
+
+  for (const row of rows) {
+    const criterion = row.split('|')[1]?.trim() ?? row;
+    it(`${criterion} names a test that exists`, () => {
+      const cited = [...row.matchAll(/`([A-Za-z0-9._-]+)`/g)]
+        .map((m) => m[1]!)
+        .filter(isTestName);
+      expect(
+        cited.length,
+        `"${criterion}" is graded PASS (tested) but names no test file that exists`,
+      ).toBeGreaterThan(0);
+    });
+  }
 });
