@@ -118,6 +118,16 @@ is left of it.
       twelve hours — so the cheapest option was never actually in tension with
       the property everyone was protecting.
 
+- [ ] **One evening in a household that is not yours, written up (U6).**
+      Template and what counts in [docs/FIELD-LOG.md](docs/FIELD-LOG.md). Ten is
+      the gate; one is the thing that makes ten possible, and there have been
+      none.
+
+      The three prompts that matter are the ones that feel too small to record:
+      somebody hesitated, somebody asked a question the screen should have
+      answered, somebody did it the slow way. A log holding only real bugs has
+      already discarded the finding (R185).
+
 - [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
       now far behind. A compose file can only name `:latest`, which is not a
       version and cannot be rolled back to.

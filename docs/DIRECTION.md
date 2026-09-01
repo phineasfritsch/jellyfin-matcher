@@ -3590,3 +3590,50 @@ credential U3 needs is already in a response this app already receives, one
 field away — which TRUST.md knew and is worth having the probe report, because
 a design step that turns out to be already half done changes what "not
 enormous" means.
+
+### R183–R185 — Three gates that were waiting on nothing
+
+R182 produced a rule: when an item has been open a long time, check that the
+next step EXISTS, not merely that it is described. Applied to the rest of the
+bar, it went three for three.
+
+**U5 (R183) was a command nobody had run.** The row said "blocked on an
+address" while a server ran behind a tunnel with auto-deploy pointed at it, and
+`npm run prod:read` has always done exactly what the gate asks: read `/healthz`,
+compare the deployed version against this checkout, say whether they agree. The
+missing thing was one environment variable. Queued with the note that matters
+more than the command — run it right after a push, when the two SHOULD agree,
+because a parity check only ever run at moments it is expected to pass proves
+very little.
+
+**U4 (R184) was waiting behind a cost that was not real.** The recorded reason
+was that a safe default costs the four-second guest join. True of
+`MATCHER_AUTH=all`; not true of `create`, which already exists, gates only room
+CREATION, and leaves a visitor scanning a QR and swiping in four seconds while
+the host logs in once per twelve hours. Not true of a longer room code either:
+the QR encodes the share URL, so a bigger keyspace costs a scanning guest
+nothing and costs only somebody reading a code aloud. The two cheapest options
+were never in tension with the property being protected.
+[EXPOSURE.md](EXPOSURE.md) lays out four options and decides none of them.
+
+**U6 (R185) had nowhere to write the thing it asks for.** The gate is ten
+evenings "with what broke written down" — so the write-up IS the deliverable,
+and there was no file, no template, and no statement of what counts.
+[FIELD-LOG.md](FIELD-LOG.md) is that, and it is empty, which is the honest
+state. Its prompts are deliberately aimed at the three findings that feel too
+small to record: somebody hesitated, somebody asked a question the screen should
+have answered, somebody did it the slow way. A log holding only real bugs has
+already thrown away the finding, and "it was fine" is what ten unrecorded
+evenings produce.
+
+**What this says about the bar.** Of five long-open items examined today, four
+were partly waiting on something nobody had done — a harness never written, a
+confirmation never filed, a command never run, a cost never checked — and one
+was genuinely environmental. A gate that has been red for months invites nobody
+to re-read it, because its status is the least surprising thing on the page.
+That is the failure mode of a bar this good: it is trusted, so it stops being
+examined.
+
+None of this moves a gate. Four of them are still exactly as red as they were
+this morning, and U6 is redder for being honest. What changed is that the next
+step for each one now exists.
