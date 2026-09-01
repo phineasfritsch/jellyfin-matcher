@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Clapperboard, Laptop, Search, Smartphone, Tv } from 'lucide-react';
 import { t } from '../../src/ui/strings';
+import { Sentence } from '../../src/ui/components/Sentence';
 
 // Embedded in Jellyfin via the Custom Tabs plugin (an iframe pointing here),
 // so it renders standalone with no login gate.
@@ -59,9 +60,7 @@ export default function GuidePage() {
 
       <Section id="tv" icon={<Tv aria-hidden className="size-6" />} title={t('guide.tvTitle')}>
         <p className="mb-5 text-muted-fg">
-          Almost every TV platform has a Jellyfin app. Install it, point it at{' '}
-          <Code>{jellyfinUrl || t('guide.serverAddressFallback')}</Code>, and sign in with the account you were
-          given.
+          <Sentence k="guide.tvIntro" slots={{ address: <Code>{jellyfinUrl || t('guide.serverAddressFallback')}</Code> }} />
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <ClientCard
@@ -107,8 +106,7 @@ export default function GuidePage() {
           />
         </div>
         <p className="mt-5 text-muted-fg">
-          Each one asks for the server address (<Code>{jellyfinUrl || t('guide.serverAddressFallback')}</Code>)
-          and your login, then your library and resume points sync everywhere.
+          <Sentence k="guide.phoneOutro" slots={{ address: <Code>{jellyfinUrl || t('guide.serverAddressFallback')}</Code> }} />
         </p>
       </Section>
 
@@ -135,9 +133,10 @@ export default function GuidePage() {
         title={t('guide.requestTitle')}
       >
         <p className="mb-4 text-muted-fg">
-          We use <strong className="text-foreground">Jellyseerr</strong> for requests. If a movie or
-          show isn&apos;t in the library, ask for it there and it gets downloaded and added
-          automatically.
+          <Sentence
+            k="guide.requestIntro"
+            slots={{ name: <strong className="text-foreground">Jellyseerr</strong> }}
+          />
         </p>
         <Steps
           steps={[
@@ -158,8 +157,10 @@ export default function GuidePage() {
         title={t('guide.matcherTitle')}
       >
         <p className="mb-4 text-muted-fg">
-          <strong className="text-foreground">Jellyfin Matcher</strong> is a swipe game for picking
-          something together. Everyone joins on their phone and it guarantees a pick.
+          <Sentence
+            k="guide.matcherIntro"
+            slots={{ name: <strong className="text-foreground">Jellyfin Matcher</strong> }}
+          />
         </p>
         <Steps
           steps={[

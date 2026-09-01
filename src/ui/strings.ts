@@ -550,6 +550,23 @@ export const en = {
   'knockout.headingPicking': 'Choosing genres',
   'knockout.headingElimination': 'Narrowing the genres',
   'deck.heading': 'Swiping for a film',
+
+  /*
+    R158: the guide's prose, whole at last.
+
+    R155 recorded these as the sentences a catalogue could not hold, because
+    each wraps an element -- the server address in a <Code>, two product names
+    in <strong> -- and t() returns a string. They are one entry each now, with
+    the element as a NAMED slot, so a translator can move {address} or {name}
+    wherever their grammar puts it and the markup travels with it.
+  */
+  'guide.tvIntro': {
+    text: 'Almost every TV platform has a Jellyfin app. Install it, point it at {address}, and sign in with the account you were given.',
+    why: 'The slot is the server address as the household must type it. It has to stay a single unit inside the sentence -- an address broken across a clause is one somebody will copy wrongly.',
+  },
+  'guide.phoneOutro': 'Each one asks for the server address ({address}) and your login, then your library and resume points sync everywhere.',
+  'guide.requestIntro': "We use {name} for requests. If a movie or show isn't in the library, ask for it there and it gets downloaded and added automatically.",
+  'guide.matcherIntro': '{name} is a swipe game for picking something together. Everyone joins on their phone and it guarantees a pick.',
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;
@@ -577,4 +594,41 @@ export function t(key: MessageKey, vars?: Record<string, string | number>): stri
 export function why(key: MessageKey): string {
   const entry: Message = en[key];
   return typeof entry === 'string' ? '' : entry.why;
+}
+
+/** One piece of a message: literal text, or a named hole for something else. */
+export type Segment = { text: string } | { slot: string };
+
+/**
+ * R158: a message split at its placeholders, so a sentence can contain an
+ * element without being chopped into entries.
+ *
+ * R155 recorded why the guide's prose could not be catalogued. Its paragraphs
+ * wrap the server address in a `<Code>` and two product names in `<strong>`,
+ * and `t()` returns a string, so the only shape available was one entry per
+ * fragment: 'Each one asks for the server address (' and ') and your login...'.
+ * Word order across those fragments is frozen by English grammar -- no entry can
+ * move a clause past the link -- so a language that puts the verb last simply
+ * could not be expressed. Splitting them would have raised the coverage number
+ * and made the catalogue worse at its only job.
+ *
+ * With the sentence whole and the element a NAMED hole, a translator can move
+ * `{address}` anywhere in their sentence and the markup follows it.
+ *
+ * Deliberately framework-free and returning data rather than nodes: this file
+ * is the catalogue and has no business importing React. `Sentence` in
+ * components/Sentence.tsx does the rendering.
+ */
+export function segments(key: MessageKey, vars?: Record<string, string | number>): Segment[] {
+  const text = t(key, vars);
+  const out: Segment[] = [];
+  let at = 0;
+  for (const m of text.matchAll(/\{(\w+)\}/g)) {
+    const start = m.index;
+    if (start > at) out.push({ text: text.slice(at, start) });
+    out.push({ slot: m[1]! });
+    at = start + m[0].length;
+  }
+  if (at < text.length) out.push({ text: text.slice(at) });
+  return out;
 }

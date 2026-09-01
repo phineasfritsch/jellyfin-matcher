@@ -2780,3 +2780,37 @@ The check is deliberately narrow. It does not read the finding sections, where
 the stale prose actually lived, because matching a paragraph against source is
 the kind of guess that produces a guard nobody trusts. It closes the one gap it
 can close honestly and leaves the rest to a person reading before writing.
+
+### R158 — The sentence R155 said could not be held
+
+R155 closed F3 with four paragraphs left hardcoded and the reason written down:
+the guide's prose wraps an element mid-sentence -- the server address in a
+`<Code>`, two product names in `<strong>` -- and `t()` returns a string. The
+only shape available was one entry per fragment, and word order across fragments
+is frozen by English grammar, so a language putting the verb last could not be
+expressed at all.
+
+R155 said what it would take: a message that can carry an ELEMENT. This is it,
+and it is small.
+
+`segments(key)` splits a message at its `{placeholders}` and returns data --
+`{ text }` and `{ slot }` pieces. It lives in the catalogue and stays
+framework-free, because a file holding every sentence in the app has no business
+importing React. `Sentence` renders those pieces, substituting a node per named
+slot.
+
+The sentence is now ONE entry with a named hole, so a translator can move
+`{address}` anywhere their grammar wants and the markup travels with it. That is
+the property the fragment approach could not have at any coverage number, and
+it is why R155 refused to split them rather than banking the count.
+
+An unfilled slot renders `{address}` verbatim, matching what `t()` already does
+with an unknown placeholder: a stray brace on screen is a bug report, an empty
+gap is a mystery.
+
+**What the tests assert is the property, not the render.** That the whole
+sentence survives; that the slot is real markup and not its text; that a message
+opening with its slot still opens with it. `R158-sentence-drops-its-slot` is the
+case that shows why: dropping the slot leaves every word of the sentence intact
+and only the name missing -- "We use  for requests." A guard checking the
+surrounding copy would pass.

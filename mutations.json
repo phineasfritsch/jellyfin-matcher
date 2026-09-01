@@ -623,6 +623,18 @@
         "src/ui/__tests__/a11y.test.tsx"
       ],
       "note": "F8 in docs/ACCESSIBILITY.md: the deck rendered SwipeCard's film title as an <h2> with no <h1> above it anywhere on the page, so heading navigation landed on a film claiming to be a second-level heading under nothing. The heading is sr-only, which is exactly why a person cannot notice it going missing -- nothing on screen changes. Only a test that mounts the screen and counts can."
+    },
+    {
+      "id": "R158-sentence-drops-its-slot",
+      "ruling": "R158",
+      "claim": "a catalogued sentence renders its element where the placeholder is",
+      "file": "src/ui/components/Sentence.tsx",
+      "find": "          {'text' in seg ? seg.text : (slots?.[seg.slot] ?? `{${seg.slot}}`)}",
+      "replace": "          {'text' in seg ? seg.text : null}",
+      "expect": [
+        "src/ui/__tests__/sentence.render.test.tsx"
+      ],
+      "note": "Dropping the slot leaves the sentence's own words intact and only the product name or the server address missing -- 'We use  for requests.' A guard asserting the surrounding copy would not notice, which is why the tests assert the element IS markup and that an unfilled slot stays visible."
     }
   ]
 }
