@@ -128,6 +128,16 @@ is left of it.
       answered, somebody did it the slow way. A log holding only real bugs has
       already discarded the finding (R185).
 
+- [ ] **Tab into a playing trailer and count your way out (R189).**
+      Four steps in [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) under R5,
+      about thirty seconds, and it settles the last unverified Level A item.
+
+      It cannot be automated: the behaviour under test belongs to a real
+      cross-origin frame, and a same-origin stand-in would let the parent's
+      Escape handler fire and pass while the app fails. Record the number of Tab
+      presses it takes to get out — leaving at all is a pass, never leaving is a
+      Level A failure, and a large number passes while still being worth knowing.
+
 - [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
       now far behind. A compose file can only name `:latest`, which is not a
       version and cannot be rolled back to.

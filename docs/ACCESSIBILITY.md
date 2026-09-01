@@ -629,6 +629,33 @@ in the app and it exists only after a press, so the exposure is one control deep
 and reachable only on purpose. Still unverified: nobody has tabbed into a playing
 trailer and tried to get back out.
 
+> **The check, so it is thirty seconds rather than a project (R189).**
+>
+> It cannot be automated here and that is not a scheduling problem: the
+> behaviour under test is a REAL cross-origin frame's, and a same-origin stand-in
+> would answer the wrong question — the parent's listener would receive the key
+> and the test would pass while the app failed. A recorded manual check beats an
+> automated one that measures the wrong thing.
+>
+> On a machine with the app running and a card that has a trailer:
+>
+> 1. Open the details sheet with the keyboard alone, and press the trailer's
+>    play control. The frame is now live.
+> 2. Press **Tab** until focus is inside the video. YouTube's own controls take
+>    focus, so you will see its focus ring rather than the app's.
+> 3. Press **Escape**. *Expected: nothing happens.* The app's handler is on the
+>    parent `window` and the key never reaches it. If the sheet closes, this
+>    entry is wrong and the finding is better than expected.
+> 4. Keep pressing **Tab**. *The question:* does focus leave the frame and come
+>    back to the app, and how many presses does it take?
+>
+> **Record the number**, because that is the whole finding. Leaving through the
+> frame's own controls is a pass under 2.1.2 — the criterion asks whether focus
+> CAN leave by keyboard, not whether it is pleasant. Never leaving is a hard
+> trap and a Level A failure. Anything above about ten presses is worth writing
+> down even though it passes, because it is the difference between a criterion
+> met and a thing somebody can actually do.
+
 ### R6 — 1.4.3 Contrast, Minimum (AA). ~~Measured, but not standing.~~ Partly standing (R187).
 
 > **The definitional pairs are gated now.** `--color-foreground` on
