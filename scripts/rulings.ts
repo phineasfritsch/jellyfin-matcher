@@ -19,7 +19,20 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { appSources, readDoc, ROOT } from './lib/source-scan';
 
-const CITE = /\bR(\d{2})\b/g;
+/*
+  R172: two digits or three.
+
+  This was `\bR(\d{2})\b`, which cannot match R150 at all — the word boundary
+  has nowhere to sit between the `15` and the `0`. Every ruling from R100 onward
+  therefore appeared in the index as explained in DIRECTION.md and cited
+  NOWHERE. That is about seventy of them, including every ruling this project
+  has made recently, and the index's whole job is saying where a ruling lives.
+
+  G8 did not notice, and could not: it compares the file on disk against what
+  this generator produces. A blind spot in the generator is invisible to a gate
+  that asks the generator what the answer should be.
+*/
+const CITE = /\bR(\d{2,3})\b/g;
 
 type Cite = { ruling: number; path: string; line: number; text: string };
 
@@ -42,7 +55,7 @@ function definedInDocs(): Map<number, string> {
  * the line a reader lands on; the quoted text is trimmed of comment syntax so
  * the index reads as prose rather than as punctuation.
  */
-function citations(): Cite[] {
+export function citations(): Cite[] {
   const out: Cite[] = [];
   const files = [...appSources().map((f) => f.path), 'scripts/screenshots.ts', 'scripts/gate.ts'];
   const seen = new Set<string>();

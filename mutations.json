@@ -803,6 +803,18 @@
         "src/ui/__tests__/swipecard.render.test.tsx"
       ],
       "note": "A18 pins the alt as SOURCE, so the pin sees an attribute somewhere in the file and cannot see what it says once rendered. A deck is a stack of posters: 'Movie poster' on every card tells a screen-reader user which card they are on exactly as well as silence would, and every source-level check still passes."
+    },
+    {
+      "id": "R172-index-cannot-see-three-digits",
+      "ruling": "R172",
+      "claim": "the rulings index records where a three-digit ruling is cited",
+      "file": "scripts/rulings.ts",
+      "find": "const CITE = /\\bR(\\d{2,3})\\b/g;",
+      "replace": "const CITE = /\\bR(\\d{2})\\b/g;",
+      "expect": [
+        "src/ui/__tests__/docs.test.ts"
+      ],
+      "note": "The original pattern, which cannot match R150: a word boundary has nowhere to sit between the 15 and the 0. About seventy rulings then read as explained in DIRECTION.md and cited nowhere. G8 stays GREEN through this, because it regenerates the index and compares -- it asks the generator what the answer should be, so a blind spot in the generator is invisible to it. The guard therefore calls citations() directly rather than reading docs/RULINGS.md: the first version read the file, and this mutation survived it, because reverting a regex does not rewrite a file already on disk."
     }
   ]
 }

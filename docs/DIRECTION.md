@@ -3216,3 +3216,46 @@ runtime, and the title assertion failed because the title appears both as text
 and inside the poster's alt. Both were my assertions being naive about the DOM
 rather than the component being wrong — which is exactly the failure a test
 written from the source rather than the screen produces.
+
+### R172 — The index could not see its own recent history
+
+`docs/RULINGS.md` exists to say where every ruling lives, and CLAUDE.md sends
+readers to it first. Its generator matched citations with `R(\d{2})`.
+
+That cannot match R150. The word boundary has nowhere to sit between the `15`
+and the `0`, so the pattern sees two digits or nothing. Every ruling from R100
+onward — about seventy, including every ruling made in this session — appeared
+in the index as explained in DIRECTION.md and **cited nowhere**. R145 is
+referenced in six files and R149 in nine; both read as dead letters.
+
+**G8 could not have caught this, and that is the part worth keeping.** The gate
+regenerates the index and compares it to the file on disk. It asks the generator
+what the answer should be, so the two always agree and the check is green by
+construction whenever the generator is wrong. A gate built that way tests
+determinism, not correctness — which is a real property and simply not the one
+its name implies.
+
+Found by asking, one more time, a question about the checks rather than the
+code: does every ruling cited in the source resolve to somewhere it is
+explained? Six did not, and chasing those six led here.
+
+The guard asserts the PROPERTY — three-digit rulings must show code citations —
+rather than regenerating anything, because a guard that regenerates would
+inherit exactly the blind spot it is meant to detect.
+
+**R172, continued: the first guard for it was hollow, and predictably so.**
+
+The guard read `docs/RULINGS.md` and asserted three-digit rulings showed
+citations. The mutation that narrows the pattern SURVIVED it — reverting a
+regex does not rewrite a file that is already on disk, so the check could only
+have gone red after somebody happened to regenerate.
+
+The catalogue note for that mutation SAID SO, in the sentence beginning "the
+index must be regenerated for this mutation to bite", and the test was written
+against the file anyway. That is R129 arriving at the person who had just
+finished writing R172 about exactly this: a check standing beside the artifact
+instead of the thing that produces it.
+
+`citations()` is exported now and the guard calls it, so the assertion is about
+what the generator can SEE rather than about what it wrote earlier. Narrow the
+pattern and it goes red immediately, with no regeneration involved.

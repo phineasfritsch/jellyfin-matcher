@@ -1,6 +1,7 @@
 import { globSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { appSources, readDoc } from '../../../scripts/lib/source-scan';
+import { citations } from '../../../scripts/rulings';
 
 /**
  * The counts stated in prose must match the counts the gate enforces.
@@ -413,4 +414,54 @@ describe('the accessibility audit cannot claim a test it does not have', () => {
       ).toBeGreaterThan(0);
     });
   }
+});
+
+describe('the rulings index can see every ruling number', () => {
+  /*
+    R172. The generator's citation pattern was `\bR(\d{2})\b` -- exactly two
+    digits -- so it could not match R150 at all: the word boundary has nowhere
+    to sit between the `15` and the `0`. Every ruling from R100 onward appeared
+    in the index as explained in DIRECTION.md and cited NOWHERE. About seventy
+    of them, including every ruling this project has made recently, and saying
+    where a ruling lives is the index's entire job.
+
+    G8 could not catch it. It regenerates the index and compares, so it asks the
+    generator what the answer should be -- and a blind spot in the generator is
+    invisible to a gate built that way. This asserts the PROPERTY instead: the
+    index must show code citations for three-digit rulings, because they exist
+    and are cited heavily.
+  */
+  const index = readDoc('docs/RULINGS.md');
+
+  it('finds three-digit rulings in the source, not merely in the file it wrote', () => {
+    /*
+      Asserted against the GENERATOR rather than against docs/RULINGS.md.
+
+      The first version of this read the index, and the mutation that narrows
+      the pattern SURVIVED it: reverting the regex does not rewrite a file
+      already on disk, so the guard could only go red after somebody
+      regenerated. It guarded nothing. The catalogue note said exactly that
+      while the test was written anyway, which is R129 happening to the person
+      who had just written R172 about it.
+    */
+    const found = citations().filter((c) => c.ruling >= 100);
+    expect(
+      found.length,
+      'the citation pattern cannot see three-digit rulings; ~70 of them read as cited nowhere',
+    ).toBeGreaterThan(5);
+  });
+
+  it('still shows them in the index it produced', () => {
+    const rows = index.split('\n').filter((l) => /^\| \*\*R\d{3}\*\*/.test(l));
+    expect(rows.length, 'no three-digit rulings in the index at all').toBeGreaterThan(10);
+    expect(rows.filter((l) => /`(src|server|app|scripts)\//.test(l)).length).toBeGreaterThan(0);
+  });
+
+  it('still shows them for two-digit rulings, which used to be all it could see', () => {
+    const rows = index.split('\n').filter((l) => /^\| \*\*R\d{2}\*\*/.test(l));
+    const withCode = rows.filter((l) => /`(src|server|app|scripts)\//.test(l));
+    expect(withCode.length, 'widening the pattern lost the citations it already had').toBeGreaterThan(
+      0,
+    );
+  });
 });
