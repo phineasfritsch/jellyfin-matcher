@@ -399,3 +399,50 @@ describe('CI grants publish rights narrowly', () => {
     expect(docker).toMatch(/permissions:[\s\S]*?packages:\s*write/);
   });
 });
+
+describe('the deploy script and the container can be different ages (R179)', () => {
+  /*
+    R161 gave /healthz an `activeRooms` count, because `rooms` counts Map
+    entries: after a restart R149 restores every room with every member
+    disconnected, so the state this script meets AFTER EVERY DEPLOY IT PERFORMS
+    reads as busy and contains nobody.
+
+    The load-bearing part is not the new field. It is that the script still
+    falls back to the old one -- and nothing asserted that.
+
+    This script is copied to the host BY HAND and the container updates ITSELF,
+    so the two are routinely different ages. A version that required
+    `activeRooms` would read nothing from an older container, and reading
+    nothing is what makes it REFUSE. The refusal is what stops the container
+    being replaced. So the deploy that would fix the mismatch is the one the
+    mismatch prevents: a wedge with no way out except somebody noticing and
+    editing a file on the host.
+  */
+  const server = readDoc('server/index.ts');
+  const script = readDoc('scripts/deploy/autodeploy.sh');
+
+  it('reports both counts, so either age of script can read one', () => {
+    expect(server, '/healthz stopped reporting activeRooms').toMatch(
+      /activeRooms:\s*store\.activeRoomCount\(\)/,
+    );
+    expect(server, '/healthz stopped reporting rooms; older scripts read that').toMatch(
+      /rooms:\s*store\.roomCount\(\)/,
+    );
+  });
+
+  it('prefers the accurate count but still accepts the old one', () => {
+    expect(script, 'the script no longer prefers activeRooms').toContain('"activeRooms"');
+    expect(
+      script,
+      'the fallback to "rooms" is gone; a new script against an older container reads nothing, ' +
+        'refuses, and so prevents the very deploy that would fix it',
+    ).toContain('"rooms"');
+  });
+
+  it('refuses rather than deploys when it can read no count at all', () => {
+    // The direction of the failure is the whole safety property. Unreadable
+    // must mean "do not touch a room that might be live", never "nothing is
+    // running".
+    expect(script).toMatch(/if \[ -z "\$rooms" \]; then[\s\S]{0,400}REFUSING/);
+  });
+});

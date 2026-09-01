@@ -3449,3 +3449,32 @@ duplication guard's scope outliving its reason, R177 found B03's scope holding
 firm for a reason that still applied, and this is a scope that failed to move
 when the thing it was scoped around did. **A guard's scope is a claim with an
 expiry date, and nothing checks it.**
+
+### R179 — The compatibility half was the load-bearing half
+
+R161 gave `/healthz` an `activeRooms` count and taught the deploy script to
+prefer it. The guard in `packaging.test.ts` already asserted the script reads a
+room count, and it still passed, so the change looked covered.
+
+It was not. What R161 actually turned on was the FALLBACK, and nothing asserted
+that at all.
+
+`autodeploy.sh` is copied to the host by hand; the container updates itself. The
+two are therefore routinely different ages, and that asymmetry is the whole
+design constraint. A script that required `activeRooms` would read nothing from
+an older container — and reading nothing is exactly what makes it refuse, by
+design, because an unreadable health check might be hiding a live room. The
+refusal is what stops the container being replaced. **So the deploy that would
+fix the mismatch is the one the mismatch prevents**, and the only way out is a
+person noticing and editing a file on a machine behind a tunnel.
+
+That is a deadlock built out of two individually correct decisions: prefer the
+better number, and refuse when you cannot read one.
+
+Both fields are asserted on the server side too, because the wedge can be
+created from either end — delete `rooms` from `/healthz` and every older copy of
+the script on every host stops deploying, silently, with the same recovery.
+
+Written after noticing that my own change from earlier today had introduced
+something load-bearing and left it unguarded, which is R178 one file over: the
+guard did not follow the decision.

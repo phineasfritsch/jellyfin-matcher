@@ -863,6 +863,18 @@
         "src/ui/__tests__/strings.test.ts"
       ],
       "note": "The duplicate as it actually was. R176 let the server import the catalogue and the duplication guard did not follow -- it scanned src/ui and app, so handlers.ts and index.ts could hardcode sentences the catalogue already held, which is the exact fault the guard exists to prevent in the files just given access to it. Two copies drift: the tests assert the rendered screen, so the component's copy ships and the catalogue's is the one a translator edits."
+    },
+    {
+      "id": "R179-deploy-drops-its-fallback",
+      "ruling": "R179",
+      "claim": "a newer deploy script can still read an older container's health",
+      "file": "scripts/deploy/autodeploy.sh",
+      "find": "      if [ -z \"$rooms\" ]; then\n        rooms=\"$(printf '%s' \"$body\" | sed -n 's/.*\"rooms\"[[:space:]]*:[[:space:]]*\\([0-9]\\{1,\\}\\).*/\\1/p')\"\n      fi\n",
+      "replace": "",
+      "expect": [
+        "server/__tests__/packaging.test.ts"
+      ],
+      "note": "The tidy-up that wedges the host. This script is copied over by hand while the container updates itself, so the two are routinely different ages; without the fallback a newer script reads nothing from an older container, and reading nothing is what makes it REFUSE. The refusal is what stops the container being replaced, so the deploy that would fix the mismatch is the one the mismatch prevents. Recovery is somebody noticing and editing a file on the host."
     }
   ]
 }
