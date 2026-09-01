@@ -212,7 +212,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
           )
         )}
 
-        <h3 className="mb-2 text-sm font-semibold text-muted-fg">Ratings</h3>
+        <h3 className="mb-2 text-sm font-semibold text-muted-fg">{t('details.ratings')}</h3>
         {card.allRatings.length === 0 ? (
           <p className="text-sm text-muted-fg">{t('card.noRatings')}</p>
         ) : (

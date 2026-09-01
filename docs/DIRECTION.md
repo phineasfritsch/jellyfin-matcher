@@ -2848,3 +2848,23 @@ of them would be the hollow kind this project keeps finding.
 It found three more the moment it ran: the guide's opening paragraph, its first
 request step, and the home screen's tagline -- the one sentence that explains
 the whole game to a guest who has just scanned a QR.
+
+**R159, continued: the blind spot closed.** The rule above shipped admitting it
+could not see a sentence written inline with its tag, and `Reconnecting…` was
+exactly that -- found by hand, not by the guard. Stating a limit is better than
+hiding one, but it is not better than removing it.
+
+Requiring a CLOSING TAG immediately after the text does remove it, and safely:
+`useState<string>(x)` has no `</` after it, which is the collision that made the
+first attempt at scanning `>...<` unusable. `R159-inline-sentence-returns` puts
+one back and the guard goes red.
+
+Two names are exempt and LISTED rather than silently skipped: "Jellyfin Matcher"
+and "Jellyseerr" are the products' own names, a translator does not render them
+differently, and putting a proper noun in the catalogue invites somebody to. A
+quiet exclusion is how R151 sat in the deck for months; an exemption with a
+reason beside it is a decision.
+
+It found one more on the way in: `Ratings`, the details sheet's heading, still
+recorded as unmovable because the word is inside `card.allRatings`. R154 tells
+an identifier from a written word, so it moved with the rest.

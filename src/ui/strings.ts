@@ -600,6 +600,12 @@ export const en = {
     text: 'Everyone swipes the same deck. First film you all like wins.',
     why: 'R55: the first thing a guest reads after scanning a QR, and it has to explain the whole game in one line without asking them to sign up for anything. Both halves earn their place -- what everyone does, and how it ends.',
   },
+  /*
+    Recorded as unmovable because `Ratings` is inside `card.allRatings` and the
+    details button's own label. R154 tells an identifier from a written word, so
+    it moves like the rest.
+  */
+  'details.ratings': 'Ratings',
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

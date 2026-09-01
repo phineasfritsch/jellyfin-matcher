@@ -635,6 +635,18 @@
         "src/ui/__tests__/sentence.render.test.tsx"
       ],
       "note": "Dropping the slot leaves the sentence's own words intact and only the product name or the server address missing -- 'We use  for requests.' A guard asserting the surrounding copy would not notice, which is why the tests assert the element IS markup and that an unfilled slot stays visible."
+    },
+    {
+      "id": "R159-inline-sentence-returns",
+      "ruling": "R159",
+      "claim": "a sentence written inline with its tag is caught, not just one on its own line",
+      "file": "src/ui/components/MovieDetails.tsx",
+      "find": "<h3 className=\"mb-2 text-sm font-semibold text-muted-fg\">{t('details.ratings')}</h3>",
+      "replace": "<h3 className=\"mb-2 text-sm font-semibold text-muted-fg\">Ratings</h3>",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "R159 shipped with a stated blind spot: its whole-line rule could not see a sentence inline with its tag, and Reconnecting... had to be found by hand. Requiring a closing tag right after the text closes it without reintroducing the collision that made the first attempt unusable -- useState<string>(x) has no </ after it. This mutation is the proof the second rule bites where the first could not."
     }
   ]
 }

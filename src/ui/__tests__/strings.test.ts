@@ -512,6 +512,14 @@ describe('no screen keeps a sentence of its own', () => {
     than papered over: this closes the common case, not every case.
   */
   const PROSE = /^[A-Za-z][A-Za-z0-9 ,.'’—…!?:()/-]{11,}$/;
+  /*
+    The two names that stay in the markup, exempt on purpose and listed rather
+    than silently skipped -- a quiet exclusion is how R151 sat in the deck for
+    months. These are the products' own names. A translator does not render
+    "Jellyfin Matcher" differently, and putting a proper noun in the catalogue
+    invites somebody to.
+  */
+  const PROPER_NOUNS = new Set(['Jellyfin Matcher', 'Jellyseerr']);
   const scanned = appSources().filter(
     (f) => f.path.startsWith('src/ui/') || f.path.startsWith('app/'),
   );
@@ -533,9 +541,21 @@ describe('no screen keeps a sentence of its own', () => {
           ),
       );
 
+    /*
+      The blind spot R159 admitted to, closed. A sentence written inline with
+      its tag -- `<p>Reconnecting...</p>` -- never sits on a line of its own, so
+      the whole-line rule above cannot see it. Requiring a CLOSING tag right
+      after the text is what makes this safe: `useState<string>(x)` has no
+      `</` after it, which is the collision that made the first attempt at this
+      unusable.
+    */
+    const inline = [...file.code.matchAll(/>([A-Za-z][^<>{}]{2,})</g)]
+      .map((m) => m[1]!.trim())
+      .filter((v) => /[A-Za-z]{3}/.test(v) && !PROPER_NOUNS.has(v));
+
     it(`${file.path} has no bare sentence in its markup`, () => {
       expect(
-        offenders,
+        [...offenders, ...inline],
         `${file.path} writes prose directly into the page; it belongs in strings.ts`,
       ).toEqual([]);
     });
