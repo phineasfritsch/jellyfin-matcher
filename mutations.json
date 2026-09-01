@@ -743,6 +743,18 @@
         "src/lib/__tests__/candidates.test.ts"
       ],
       "note": "Makes every wide-mode film claim to be in the library. The chip reads 'On your server', the cost disclosure disappears, and the Play link points at an item id that does not exist -- so the room picks a film it cannot watch and was never told it would have to ask for. candidates.ts had no tests at all before this."
+    },
+    {
+      "id": "R167-server-only-reaches-the-internet",
+      "ruling": "R167",
+      "claim": "a room that chose server-only talks to Jellyfin and nothing else",
+      "file": "server/deckService.ts",
+      "find": "    room.settings.scope === 'local' ? await localCandidates(room) : await wideCandidates(room);",
+      "replace": "    await wideCandidates(room);",
+      "expect": [
+        "server/__tests__/deckService.test.ts"
+      ],
+      "note": "Sends every room down the wide path. Nothing on screen looks wrong -- the deck is simply bigger and better -- while a household that asked for their own library only is shown films they do not have, offered the chance to spend the host's disk on them, and has had their genre choices sent to a service they did not agree to involve. The scope switch had no test at all."
     }
   ]
 }

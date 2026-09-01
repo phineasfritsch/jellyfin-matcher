@@ -3089,3 +3089,26 @@ parse is right about something the app then ignores.
 
 The behaviour is unchanged and now pinned, including the case where the two
 disagree, so the next person meets a decision instead of a surprise.
+
+### R167 — The scope a room chose is a promise, and nothing checked it
+
+`buildDeckForRoom` stands between a room's two locked genres and the cards it
+swipes, and the first thing it does is choose which upstreams to call. That
+choice is not an implementation detail. **Server only** means the app talks to
+your Jellyfin and nothing else — it is why the mode exists, and R111 makes wide
+scope require an account precisely because the two are different promises.
+
+The switch had no test. Sending a server-only room down the wide path would show
+the household films they do not have, offer to spend the host's disk on them,
+and hand their genre choices to a service the room never agreed to involve —
+and **nothing on screen would look wrong**. The deck would simply be bigger and
+better than their library, which is the failure mode nobody reports.
+
+That is what `R167-server-only-reaches-the-internet` does, and now it goes red.
+
+Also pinned: the picker offers the genres of the scope being chosen for, so a
+room cannot pick a genre its own scope cannot fill; the builder refuses anything
+but exactly two locked genres, because a deck built from one or three is not the
+game the room played and silently building something is worse than refusing; and
+the watch history is consulted, so a second night with the same two genres is
+not the first night again (R105).
