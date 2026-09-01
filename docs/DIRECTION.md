@@ -4014,3 +4014,24 @@ The pattern is the one R89 and R95 already named and this repository keeps
 relearning: arithmetic tells you what was declared, a photograph tells you what
 somebody sees, and the gap between them is where a confident wrong number
 lives.
+
+### R200 — Proving the file was the mechanism
+
+R192 made the restart harness capable of failing: the port must go silent after
+the kill, and a different `startedAt` must answer afterwards. Together those
+rule out the old server having survived, which was the actual bug.
+
+They do not prove what F1 claims. The claim is that room state reached DISK and
+was read back from there — and "a different process is serving the same room"
+is consistent with any number of other routes, none of which exist here, but a
+proof that relies on none of them existing is not a proof.
+
+So the harness now opens the snapshot itself, at the one moment when nothing is
+running: after the kill, before the reboot. The file must exist, parse, and name
+the room. `the snapshot on disk names room SDXC, with no server alive to have
+written it since` is the sentence that closes the chain — state in memory, state
+on disk, no process, different process, state back.
+
+Small, and worth the four lines. The distance between "the room came back" and
+"the room came back FROM THE FILE" is the distance between R181 as it was first
+written and R181 as it is now true.

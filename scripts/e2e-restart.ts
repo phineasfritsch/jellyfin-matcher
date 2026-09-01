@@ -31,7 +31,7 @@
  * tens of seconds, and G9 runs the suite once per mutation — seventy-odd times.
  */
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { io, type Socket } from 'socket.io-client';
@@ -220,6 +220,23 @@ async function main() {
     await ended(server);
     await waitForGone();
     check(true, 'nothing answers on the port -- the server itself is gone, not just its wrapper');
+
+    /*
+      R200: prove the FILE is the mechanism, not just that a room reappeared.
+
+      A different process answering afterwards (checked below) rules out the
+      old server having survived. It does not rule out the room coming back by
+      some other route -- and the claim F1 makes is specifically that state
+      reached disk and was read from there. So look: the snapshot must exist,
+      be readable, and name this room, at a moment when no server is running.
+    */
+    const onDisk = JSON.parse(await readFile(snapshot, 'utf8')) as {
+      rooms?: Record<string, unknown>;
+    };
+    check(
+      Boolean(onDisk.rooms?.[room.roomId]),
+      `the snapshot on disk names room ${room.roomId}, with no server alive to have written it since`,
+    );
 
     say('start a different process against the same snapshot');
     server = boot(snapshot);
