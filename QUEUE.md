@@ -95,6 +95,19 @@ is left of it.
       the hypothesis; equal counts refute it on that server and the trust
       argument then rests on over-privilege alone.
 
+- [ ] **Close U5 by running the parity check once.**
+      `MATCHER_URL=https://your-tunnel npm run prod:read`
+
+      The tool has existed all along: it reads `/healthz`, compares the deployed
+      `version` against this checkout, and says whether they agree. The gate was
+      recorded as "blocked on an address" while a server has been running behind
+      a tunnel with auto-deploy pointed at it (R183).
+
+      Worth doing right after a push, when the two SHOULD agree — a parity check
+      that has only ever been run when it passes proves less than one run at a
+      moment it might not. If it disagrees, that is auto-deploy deferring or
+      failing, and the answer is in `docker compose logs` on the host.
+
 - [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
       now far behind. A compose file can only name `:latest`, which is not a
       version and cannot be rolled back to.
