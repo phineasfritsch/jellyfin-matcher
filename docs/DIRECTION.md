@@ -4035,3 +4035,29 @@ on disk, no process, different process, state back.
 Small, and worth the four lines. The distance between "the room came back" and
 "the room came back FROM THE FILE" is the distance between R181 as it was first
 written and R181 as it is now true.
+
+### R201 — The reasoning most recently written was the reasoning least checked
+
+`LOAD_BEARING` is a hand-written list of catalogue keys whose `why` must be
+substantial. It held 34 keys. Sixty-two entries carry a `why`.
+
+The 28 nobody was checking were, almost exactly, the ones added most recently --
+every server message from R176 and R196 among them. That is the shape of any
+hand-maintained list: it covers what somebody remembered, and the newest work is
+what nobody has remembered yet.
+
+**Writing a `why` is the author declaring the message load-bearing.** So the
+quality checks derive from the data: every entry that carries a reason must have
+one longer than a gesture and different from the string it explains. The hand
+list keeps the one job it can still do -- naming messages that MUST keep a
+reason, which the derived set cannot catch, because deleting a reason removes
+the key from the derived set as well.
+
+`R201-unlisted-reason-goes-hollow` reduces `server.wrongPassword`'s reason to
+"R86: be careful here." It still cites a ruling and still reads like care. That
+reason is the only thing standing between the message and somebody improving it
+into "Wrong password" -- which confirms to a stranger that the username exists.
+It is not in the hand list, so before this it was unwatched.
+
+A vacuity case sits beside it: if the derived set ever stops being larger than
+the floor, the derivation is testing nothing the old loop did not.

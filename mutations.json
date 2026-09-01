@@ -935,6 +935,18 @@
         "src/ui/__tests__/strings.test.ts"
       ],
       "note": "The same dependency R176 guards against, written without a space after `import` -- which a formatter or a hurried edit produces. The old check matched /^\\s*import\\s/ and counted zero, so the guard reported a framework-free file while React sat at the top of it. server/handlers.ts and server/auth.ts both import this file."
+    },
+    {
+      "id": "R201-unlisted-reason-goes-hollow",
+      "ruling": "R201",
+      "claim": "a message's reasoning is checked because it HAS a reason, not because somebody listed it",
+      "file": "src/ui/strings.ts",
+      "find": "    why: 'R86: it must not say WHICH was wrong. Naming the username confirms an account exists to somebody guessing.',",
+      "replace": "    why: 'R86: be careful here.',",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "server.wrongPassword is not in the hand-written LOAD_BEARING list -- nothing added by R176 or R196 is -- so the old loop never looked at it. Its reason is the one that stops somebody 'improving' the message into 'Wrong password', which confirms to a stranger that the username exists. A reason reduced to a gesture still cites a ruling and still reads like care, which is why the check is on substance rather than on presence."
     }
   ]
 }

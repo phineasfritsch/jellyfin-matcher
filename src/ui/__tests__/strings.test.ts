@@ -405,10 +405,46 @@ describe('a translator is told why, not just what', () => {
     });
   }
 
-  it('cites the rulings, so the reason can be followed to its argument', () => {
+  /*
+    R201: the list above is a FLOOR, and the quality checks are derived.
+
+    LOAD_BEARING is hand-maintained, so it only ever covers what somebody
+    remembered to add. It held 34 keys while 62 entries carried a `why` -- every
+    server message added by R176 and R196 among the missing, which is to say the
+    reasoning most recently written was the reasoning least checked.
+
+    Writing a `why` IS the author declaring a message load-bearing. So the
+    quality of every reason is checked from the data, and the hand list keeps
+    the one job it can do: naming messages that MUST keep theirs, so deleting a
+    reason from one of them is caught even though deletion removes it from the
+    derived set too.
+  */
+  const REASONED = (Object.keys(en) as MessageKey[]).filter((k) => why(k) !== '');
+
+  it('has more reasoned messages than the hand-written floor, or the floor is the whole list', () => {
+    // Vacuity: if these ever match exactly, the derivation below is testing
+    // nothing the loop above did not already cover.
+    expect(REASONED.length).toBeGreaterThanOrEqual(LOAD_BEARING.length);
+  });
+
+  for (const key of REASONED) {
+    it(`${key}'s reason is an argument, not a restatement`, () => {
+      const reason = why(key);
+      expect(
+        reason.length,
+        `${key} carries a reason too short to be one: "${reason}"`,
+      ).toBeGreaterThan(60);
+      expect(
+        reason,
+        `${key}'s reason repeats the string instead of explaining it`,
+      ).not.toBe(t(key));
+    });
+  }
+
+  it('cites the rulings, so a reason can be followed to its argument', () => {
     // A reason that cannot be traced is an assertion. These point at
     // docs/RULINGS.md, which indexes every one of them.
-    const cited = LOAD_BEARING.map(why).join(' ');
+    const cited = REASONED.map(why).join(' ');
     expect(cited).toMatch(/R\d{2,3}/);
   });
 });
