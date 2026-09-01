@@ -421,10 +421,53 @@ describe('no message is hardcoded as well as catalogued', () => {
     (f) => f.path.startsWith('src/ui/') || f.path.startsWith('app/'),
   );
 
+  /*
+    R154: how a holder is recognised, which is not the same question for a
+    sentence and for a word.
+
+    `code.includes(text)` is right for a sentence -- it finds the copy wherever
+    it sits, including inside a template literal, and a sentence long enough to
+    be a message is not a substring of anything by accident.
+
+    It is meaningless for a word. "ERR" is inside the guide that documents the
+    label; "No" is inside "Nothing", "Not your fault" and "Nobody". Under a bare
+    substring test those read as duplicated messages, so the catalogue could
+    hold no short word at all -- and No, Yes, Maybe and Strong are exactly the
+    words a translator has to change. The scope narrowing above deferred this by
+    excluding `server/`; it is the same collision one directory in.
+
+    So a short string has to be found the way it would actually be WRITTEN: as a
+    quoted literal, or as JSX text between tags. `word: 'No'` still matches, and
+    `Nothing` does not. Nothing about the long-string case changes.
+  */
+  const SENTENCE = 12;
+  /** What a written string sits between: a quote, or the tags of a JSX child. */
+  const OPENS = ["'", '"', '`', '>'];
+  const CLOSES = ["'", '"', '`', '<'];
+
+  /*
+    Deliberately an index scan rather than a built regex. The pattern needs a
+    backtick, a backslash-escaped needle and `\s`, and a `\s` inside a template
+    literal is not a whitespace class -- it is the letter s. That is a silent
+    wrong answer, in a guard, which is the one place a silent wrong answer is
+    worst.
+  */
+  function holdsCopy(code: string, text: string): boolean {
+    if (text.length >= SENTENCE) return code.includes(text);
+    for (let i = code.indexOf(text); i !== -1; i = code.indexOf(text, i + 1)) {
+      let before = i - 1;
+      while (before >= 0 && /\s/.test(code[before]!)) before--;
+      let after = i + text.length;
+      while (after < code.length && /\s/.test(code[after]!)) after++;
+      if (OPENS.includes(code[before] ?? '') && CLOSES.includes(code[after] ?? '')) return true;
+    }
+    return false;
+  }
+
   for (const key of keys) {
     const text = t(key);
     it(`${key} appears once, in the catalogue`, () => {
-      const holders = sources.filter((f) => f.code.includes(text)).map((f) => f.path);
+      const holders = sources.filter((f) => holdsCopy(f.code, text)).map((f) => f.path);
       expect(
         holders,
         `"${text.slice(0, 45)}..." is in ${holders.length} UI files; a component still has its own copy`,

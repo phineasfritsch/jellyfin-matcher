@@ -1,5 +1,6 @@
 'use client';
 
+import { t } from '../strings';
 import type { Diagnosis } from '../types';
 import { Bar, BigButton, Dock, Group, Row } from './Listing';
 
@@ -33,17 +34,26 @@ export function DiagnosisPanel({
     <div className="flex min-h-0 flex-1 flex-col">
       <Bar
         left={diagnosis.headline}
-        right={diagnosis.recoverable ? 'Can still play' : 'Not your fault'}
+        right={diagnosis.recoverable ? t('diagnosis.canPlay') : t('diagnosis.notYourFault')}
         tone="stop"
       />
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
         <Group>
-          <Row label="ERR" tone="stop" title={diagnosis.headline} detail={diagnosis.technical} />
-          <Row label="FROM" title={diagnosis.upstream} detail="The system that did not answer." />
           <Row
-            label="FIX"
+            label="ERR"
+            tone="stop"
+            title={diagnosis.headline}
+            detail={diagnosis.technical}
+          />
+          <Row
+            label={t('diagnosis.labelFrom')}
+            title={diagnosis.upstream}
+            detail={t('diagnosis.fromDetail')}
+          />
+          <Row
+            label={t('diagnosis.labelFix')}
             tone={diagnosis.recoverable ? 'go' : 'room'}
-            title="What now"
+            title={t('diagnosis.whatNow')}
             detail={diagnosis.fix}
           />
         </Group>
@@ -52,7 +62,7 @@ export function DiagnosisPanel({
       {onDismiss && (
         <Dock>
           <BigButton onClick={onDismiss} tone="go">
-            Pick genres again
+            {t('diagnosis.pickAgain')}
           </BigButton>
         </Dock>
       )}

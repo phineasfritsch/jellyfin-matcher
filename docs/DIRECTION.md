@@ -2631,3 +2631,42 @@ the wrong branch. Anybody reading the test list would have concluded R46 was
 covered on that screen. It was covered on one state of it, and the violation sat
 in the other for months, through an audit that was specifically looking for this
 class of thing.
+
+### R154 — A guard that cannot tell a word from a sentence
+
+The catalogue's duplication guard was `code.includes(text)`: a catalogued
+message may appear in `src/ui/strings.ts` and nowhere else. That is exactly
+right for a sentence. A sentence long enough to be a message is not a substring
+of anything by accident, and the check finds a stray copy wherever it sits,
+including inside a template literal.
+
+It is meaningless for a word. `ERR` is inside the guide that documents the
+label. `No` is inside `Nothing`, `Nobody` and `Not your fault`. Under a bare
+substring test all of those read as duplicated messages.
+
+The consequence was not that the guard was noisy. It was that **the catalogue
+could not hold a short word at all** — and `No`, `Yes`, `Maybe` and `Strong` are
+the four words on the vote controls, which is as translatable as this app gets.
+U8 is a translation gate, and the guard protecting it had quietly made the most
+translatable strings in the project the ones that could never move.
+
+The guard's own comment had already met this once and solved it by narrowing
+scope: a first version failed on `lobby.scopeLocal` because `server/diagnose.ts`
+names the mode in a different sentence, so `server/` was excluded. That deferred
+the collision rather than answering it, and it came back one directory in.
+
+So a short string is now looked for the way it would actually be **written** —
+between quotes, or between the tags of a JSX child. `word: 'No'` matches;
+`Nothing` does not. The long case is untouched.
+
+Two things about the implementation are deliberate. It is an index scan and not
+a built regular expression, because the pattern needs a backtick, an escaped
+needle and `\s` — and `\s` inside a template literal is not a whitespace class,
+it is the letter `s`. That is a silent wrong answer inside a guard, which is the
+worst place for one, and it is a mistake this project has now made twice.
+
+And the sharpening was mutation-checked before it was believed. Sharpening a
+check and weakening a check look identical from the diff: both make something
+stop failing. `R154-short-word-copy-invisible` restores the component's own copy
+of a two-character word and the guard still goes red, which the old substring
+version could not have distinguished from the word `Nothing` at all.

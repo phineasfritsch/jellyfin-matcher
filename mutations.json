@@ -49,12 +49,12 @@
       "ruling": "R54",
       "claim": "the failure panel names WHICH system did not answer",
       "file": "src/ui/components/DiagnosisPanel.tsx",
-      "find": "          <Row label=\"FROM\" title={diagnosis.upstream} detail=\"The system that did not answer.\" />\n",
+      "find": "          <Row\n            label={t('diagnosis.labelFrom')}\n            title={diagnosis.upstream}\n            detail={t('diagnosis.fromDetail')}\n          />\n",
       "replace": "",
       "expect": [
         "src/ui/__tests__/controls.render.test.tsx"
       ],
-      "note": "R129's 'assertion satisfied by its own neighbour': the middle third was toContain('Jellyfin'), a substring of the headline asserted one line above, so deleting this row left all nine cases green."
+      "note": "R129's 'assertion satisfied by its own neighbour': the middle third was toContain('Jellyfin'), a substring of the headline asserted one line above, so deleting this row left all nine cases green. Re-pointed when F3 moved the row's detail into the catalogue; the mutation still deletes the whole FROM row, which is the claim -- that the panel names WHICH system failed rather than leaving the host to read it as \"the app is broken\"."
     },
     {
       "id": "R98-diagnosis-dismiss-inert",
@@ -599,6 +599,18 @@
         "server/__tests__/restart.test.ts"
       ],
       "note": "R149 made this worth pinning. `seatSockets` is deliberately not snapshotted -- every id in it names a connection that died with the process -- so a restore leaves it empty, and `ownsSeat` answers TRUE for an unknown seat by design. R112 survives only because `disconnect` reads its identity from the socket's own session data, which only a successful join sets, and both join paths claimSeat in the same breath. That coupling is what this mutation defends: break it and every restored room loses the protection silently."
+    },
+    {
+      "id": "R154-short-word-copy-invisible",
+      "ruling": "R154",
+      "claim": "a component keeping its own copy of a short catalogued word is still caught",
+      "file": "src/ui/components/VoteRow.tsx",
+      "find": "word: t('vote.no'),",
+      "replace": "word: 'No',",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "The duplication guard was `code.includes(text)`, which is right for a sentence and meaningless for a word: \"No\" is inside \"Nothing\" and \"Not your fault\". That made every short word uncatalogueable -- and No, Yes and Maybe are exactly what a translator changes. R154 made the short case look for the string as it would actually be WRITTEN. This mutation is the proof the sharpening did not cost the guard its teeth: restore the component's own copy of a two-character word and it still goes red."
     }
   ]
 }

@@ -303,6 +303,70 @@ export const en = {
     text: 'Carry on without an account',
     why: 'R55: the way out is the same size and shape as the way in. It was 14px grey underlined "Back" under a full-width green button, which a guest who will never make an account reads as a trial wall. The words have to say what declining GETS you, not merely that you can retreat -- nothing here is gated that a guest cannot simply skip.',
   },
+
+  /*
+    The failure panel (R54, R98).
+
+    Three causes used to produce one symptom -- a short or missing deck -- and
+    all three reached the host as "it's broken", by text, at 11pm. The three row
+    labels are the questions being answered in order: what happened, which
+    system, and who can do something about it. They are short because they are a
+    column of fixed-width labels, not because they are abbreviations to expand:
+    a translator should keep them to roughly this width or the rows stop lining
+    up, and should not lengthen them into sentences.
+
+    `ERR` is not here, and stays hardcoded in the component. app/guide/page.tsx
+    documents these three labels by printing them, so the duplication guard sees
+    the string in two UI files and is right to: catalogue it now and the guide
+    would be quietly holding a second copy of a translated label. It moves when
+    the guide does, which is the same reason `Sign in` is still in four files.
+  */
+  'diagnosis.canPlay': 'Can still play',
+  'diagnosis.notYourFault': {
+    text: 'Not your fault',
+    why: 'R54: the panel appears when something upstream failed, and the person reading it did nothing wrong. This is the line that says so. It must not be softened into an apology from the app or hardened into blame on a named service -- the FROM row already names the system.',
+  },
+  'diagnosis.labelFrom': 'FROM',
+  'diagnosis.labelFix': 'FIX',
+  'diagnosis.fromDetail': {
+    text: 'The system that did not answer.',
+    why: 'R54: the FROM row exists so the host knows WHICH system to go and look at, rather than reading the whole panel as "the app is broken". Dropping this detail leaves a bare service name with nothing saying what it means.',
+  },
+  'diagnosis.whatNow': 'What now',
+  'diagnosis.pickAgain': {
+    text: 'Pick genres again',
+    why: 'R98: the way out. Every row in this panel is a Listing Row, which is deliberately not interactive, so the panel explained a dead end and then was one -- while its own FIX row said to pick genres again, which the server had already made possible and no control on screen could reach. This is the control that fixed that, so the words have to name the action it performs.',
+  },
+
+  /*
+    The four vote controls (R06, R25, R50).
+
+    Two halves that must stay in step. `word` is printed on the button; `say` is
+    the start of its accessible name, which R134 requires to CONTAIN the printed
+    word. Translate one without the other and a screen-reader user is told to
+    press a control whose label they cannot find on screen.
+
+    `say` is a fragment on purpose -- the component appends the film's title and
+    the signed weight, so it reads "Vote no on Alien, -5". R50: naming the film
+    is the point, because three cards can go by before you notice what you voted
+    on. A translator may reorder within the fragment but has to leave it able to
+    take a title after it.
+  */
+  'vote.group': 'Vote',
+  'vote.no': 'No',
+  'vote.maybe': 'Maybe',
+  'vote.yes': 'Yes',
+  'vote.super': 'Strong',
+  'vote.sayNo': {
+    text: 'Vote no on',
+    why: 'R25/R50: the accessible name has to contain the word on the button and then name the film. "Dislike" is not an answer to "what did I just vote on".',
+  },
+  'vote.sayMaybe': 'Vote maybe on',
+  'vote.sayYes': 'Vote yes on',
+  'vote.saySuper': {
+    text: 'Strong yes on',
+    why: 'R25: the button prints "Strong", so the accessible name starts with it. This is the one of the four where the printed word and the spoken phrase could drift apart without looking wrong.',
+  },
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

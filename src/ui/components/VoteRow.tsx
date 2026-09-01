@@ -1,6 +1,7 @@
 'use client';
 
 import { VOTE_POINTS } from '../../lib/match';
+import { t } from '../strings';
 
 /**
  * The four vote controls.
@@ -18,10 +19,10 @@ import { VOTE_POINTS } from '../../lib/match';
  */
 
 const VOTES = [
-  { key: 'no', glyph: '✕', word: 'No', points: VOTE_POINTS.DISLIKE, skin: 'text-destructive ring-destructive/40 bg-destructive/[0.12]', say: 'Vote no on' },
-  { key: 'maybe', glyph: '?', word: 'Maybe', points: VOTE_POINTS.MAYBE, skin: 'text-foreground ring-white/20 bg-white/[0.07]', say: 'Vote maybe on' },
-  { key: 'yes', glyph: '♥', word: 'Yes', points: VOTE_POINTS.LIKE, skin: 'text-accent ring-accent/40 bg-accent/[0.12]', say: 'Vote yes on' },
-  { key: 'super', glyph: '★', word: 'Strong', points: VOTE_POINTS.SUPER, skin: 'text-maybe ring-maybe/40 bg-maybe/[0.12]', say: 'Strong yes on' },
+  { key: 'no', glyph: '✕', word: t('vote.no'), points: VOTE_POINTS.DISLIKE, skin: 'text-destructive ring-destructive/40 bg-destructive/[0.12]', say: t('vote.sayNo') },
+  { key: 'maybe', glyph: '?', word: t('vote.maybe'), points: VOTE_POINTS.MAYBE, skin: 'text-foreground ring-white/20 bg-white/[0.07]', say: t('vote.sayMaybe') },
+  { key: 'yes', glyph: '♥', word: t('vote.yes'), points: VOTE_POINTS.LIKE, skin: 'text-accent ring-accent/40 bg-accent/[0.12]', say: t('vote.sayYes') },
+  { key: 'super', glyph: '★', word: t('vote.super'), points: VOTE_POINTS.SUPER, skin: 'text-maybe ring-maybe/40 bg-maybe/[0.12]', say: t('vote.saySuper') },
 ] as const;
 
 function signed(n: number): string {
@@ -54,7 +55,7 @@ export function VoteRow({
       */
       className="grid shrink-0 grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-2 px-3 pb-1 pt-2"
       role="group"
-      aria-label="Vote"
+      aria-label={t('vote.group')}
     >
       {VOTES.map((v) => (
         <button
