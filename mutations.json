@@ -851,6 +851,18 @@
         "src/ui/__tests__/strings.test.ts"
       ],
       "note": "A type-only React import, which is the plausible way this happens -- somebody makes Segment carry a node and TypeScript raises no objection. server/handlers.ts imports this file for its own refusals, so the catalogue being framework-free is what keeps a UI dependency out of the server's graph. The constraint used to be a comment that R158 wrote and everyone believed."
+    },
+    {
+      "id": "R178-server-keeps-its-own-copy",
+      "ruling": "R178",
+      "claim": "a server file cannot hold a second copy of a catalogued message",
+      "file": "server/index.ts",
+      "find": "res.status(401).json({ error: err instanceof Error ? err.message : t('auth.failed') });",
+      "replace": "res.status(401).json({ error: err instanceof Error ? err.message : 'Login failed' });",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "The duplicate as it actually was. R176 let the server import the catalogue and the duplication guard did not follow -- it scanned src/ui and app, so handlers.ts and index.ts could hardcode sentences the catalogue already held, which is the exact fault the guard exists to prevent in the files just given access to it. Two copies drift: the tests assert the rendered screen, so the component's copy ships and the catalogue's is the one a translator edits."
     }
   ]
 }

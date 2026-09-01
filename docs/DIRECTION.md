@@ -3420,3 +3420,32 @@ turns out, is the fix that names the key.
 The attempt is recorded rather than the conclusion alone, because "we tried and
 a guard stopped us" is the useful half. The next person to look at U8 will see
 the same obvious remaining work and needs to know it was examined.
+
+### R178 — The guard did not follow the catalogue into the server
+
+R176 let `server/handlers.ts` import the catalogue. The duplication guard did
+not follow: it scans `src/ui/` and `app/`, which is where the catalogue's
+readers used to live. So the files that had just been given access to it were
+the only files that could hold a second copy of a message without anything
+saying so.
+
+It found one on the first run. `server/index.ts` fell back to `'Login failed'`
+in the `/api/login` route while `auth.failed` held the same words. Two copies of
+one message is worse than the one it started as, and the failure mode is the one
+R145 wrote down: the tests assert the rendered screen, so the hardcoded copy is
+the one that ships and the catalogue's is the one a translator edits. They drift
+silently and the app quietly stops saying what the catalogue says it says.
+
+**Written-copy matching at every length here, not just for short strings.** In a
+server source the only question is "did somebody type this literal", and plain
+substring matching answers a different one. `lobby.scopeLocal` is "Jellyfin
+only", which sits inside `diagnose.ts`'s "Switching the room back to Jellyfin
+only will work now" — a different sentence naming the same mode, and precisely
+the collision that got `server/` excluded from this guard originally. R154 built
+the machinery to tell those apart; this is the second place it earns its keep.
+
+The pattern is worth naming because it is now three for three: R173 found the
+duplication guard's scope outliving its reason, R177 found B03's scope holding
+firm for a reason that still applied, and this is a scope that failed to move
+when the thing it was scoped around did. **A guard's scope is a claim with an
+expiry date, and nothing checks it.**

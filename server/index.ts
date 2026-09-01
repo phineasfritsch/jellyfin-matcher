@@ -47,6 +47,7 @@ import { buildDeckForRoom, genresForScope } from './deckService';
 import { cacheWritable, historyHealth, recordWatched } from './history';
 import { assertSafeForDeclaredExposure, describeExposure, exposureBanner } from './exposure';
 import { loadSnapshot, saveSnapshot } from './persistence';
+import { t } from '../src/ui/strings';
 import { RoomStore, type Room, type RoomSettings } from './store';
 import * as handlers from './handlers';
 import type { Ctx } from './handlers';
@@ -261,7 +262,7 @@ app.post('/api/login', async (req, res) => {
     res.json({ token, name: user.name });
   } catch (err) {
     loginLimiter.record(who);
-    res.status(401).json({ error: err instanceof Error ? err.message : 'Login failed' });
+    res.status(401).json({ error: err instanceof Error ? err.message : t('auth.failed') });
   }
 });
 

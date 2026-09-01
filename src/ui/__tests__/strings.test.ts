@@ -19,6 +19,29 @@ import { en, t, why, type MessageKey } from '../strings';
 
 const keys = Object.keys(en) as MessageKey[];
 
+/**
+ * Did somebody TYPE this sentence here, as opposed to it merely occurring?
+ *
+ * A written string sits between quotes or between the tags of a JSX child.
+ * Plain substring matching cannot tell that from a longer sentence that happens
+ * to contain the words -- "Jellyfin only" lives inside "Switching the room back
+ * to Jellyfin only will work now", which is a different message about the same
+ * mode, and that collision is why server sources were excluded from the
+ * duplication guard in the first place (R178).
+ */
+const OPENS = ["'", '"', '`', '>'];
+const CLOSES = ["'", '"', '`', '<'];
+function holdsWritten(code: string, text: string): boolean {
+  for (let i = code.indexOf(text); i !== -1; i = code.indexOf(text, i + 1)) {
+    let before = i - 1;
+    while (before >= 0 && /\s/.test(code[before]!)) before--;
+    let after = i + text.length;
+    while (after < code.length && /\s/.test(code[after]!)) after++;
+    if (OPENS.includes(code[before] ?? '') && CLOSES.includes(code[after] ?? '')) return true;
+  }
+  return false;
+}
+
 describe('the catalogue is usable', () => {
   it('has entries at all, so nothing below is vacuous', () => {
     expect(keys.length).toBeGreaterThan(5);
@@ -484,6 +507,44 @@ describe('no message is hardcoded as well as catalogued', () => {
           ? `"${text.slice(0, 45)}..." is in NO source file, not even the catalogue -- is the value written with an escaped quote?`
           : `"${text.slice(0, 45)}..." is in ${holders.length} UI files; a component still has its own copy`,
       ).toEqual(['src/ui/strings.ts']);
+    });
+  }
+});
+
+describe('no server file keeps a copy either (R178)', () => {
+  /*
+    R176 let the server import the catalogue, and the duplication guard did not
+    follow. It scans `src/ui/` and `app/`, so `server/handlers.ts` could hardcode
+    a sentence the catalogue already holds and nothing would say so -- the exact
+    fault the guard exists to prevent, in the files that had just been given
+    access to it.
+
+    It found one immediately: `server/index.ts` fell back to 'Login failed' in
+    the /api/login route while the catalogue held the same words as
+    `auth.failed`.
+
+    Written-copy matching at EVERY length here, not just for short strings. In
+    server sources the question is only ever "did somebody type this literal",
+    and plain substring matching answers a different one: `lobby.scopeLocal` is
+    "Jellyfin only", which sits inside diagnose.ts's "Switching the room back to
+    Jellyfin only will work now" -- a different sentence that happens to name the
+    mode, and the collision that made this scope get excluded in the first place.
+  */
+  const SERVER = appSources().filter((f) => f.path.startsWith('server/'));
+
+  it('scans server sources, or this guard is vacuous', () => {
+    expect(SERVER.length, 'no server files scanned').toBeGreaterThan(5);
+  });
+
+  for (const key of keys) {
+    const text = t(key);
+    const holders = SERVER.filter((f) => holdsWritten(f.code, text)).map((f) => f.path);
+    if (holders.length === 0) continue;
+    it(`${key} is not written out again in ${holders.join(', ')}`, () => {
+      expect(
+        holders,
+        `${holders.join(', ')} writes "${text.slice(0, 40)}..." rather than asking the catalogue`,
+      ).toEqual([]);
     });
   }
 });
