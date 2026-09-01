@@ -141,7 +141,21 @@ else
   # "nobody is playing".
   case "$body" in
     *'"ok":true'*|*'"ok": true'*)
-      rooms="$(printf '%s' "$body" | sed -n 's/.*"rooms"[[:space:]]*:[[:space:]]*\([0-9]\{1,\}\).*/\1/p')"
+      # R161: prefer the count of rooms somebody is CONNECTED to. `rooms` counts
+      # Map entries, so after a restart every restored room reads as busy until
+      # people come back -- which is the state this script meets after every
+      # deploy it performs, and it would then defer the next one for nobody.
+      #
+      # Falling back to `rooms` is what makes this safe to roll out. This script
+      # is updated by hand on the host and the container updates itself, so the
+      # two are routinely different ages. A version REQUIRING activeRooms would
+      # read nothing from an older container and refuse -- and refusing is what
+      # stops the container being replaced, so the deploy that fixes it is the
+      # one the change prevents.
+      rooms="$(printf '%s' "$body" | sed -n 's/.*"activeRooms"[[:space:]]*:[[:space:]]*\([0-9]\{1,\}\).*/\1/p')"
+      if [ -z "$rooms" ]; then
+        rooms="$(printf '%s' "$body" | sed -n 's/.*"rooms"[[:space:]]*:[[:space:]]*\([0-9]\{1,\}\).*/\1/p')"
+      fi
       ;;
   esac
 

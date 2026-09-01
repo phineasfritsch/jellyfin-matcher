@@ -155,6 +155,18 @@ app.get('/healthz', async (_req, res) =>
     startedAt: new Date(STARTED_AT).toISOString(),
     uptimeSec: Math.round((Date.now() - STARTED_AT) / 1000),
     rooms: store.roomCount(),
+    /*
+      R161: what autodeploy actually needs to know.
+
+      `rooms` stays exactly as it was, and that is deliberate rather than
+      tidy-mindedness. scripts/deploy/autodeploy.sh REFUSES to deploy when it
+      cannot read a room count -- so renaming this field would make an old
+      container unreadable to a new script, the script would refuse, and the
+      container could never be replaced. The deploy that fixes it is the one
+      the bug prevents. Adding a field is the only change that is safe in both
+      directions.
+    */
+    activeRooms: store.activeRoomCount(),
     upstreams: {
       jellyfin: Boolean(process.env.JELLYFIN_URL && process.env.JELLYFIN_API_KEY),
       jellyseerr: Boolean(process.env.JELLYSEERR_URL && process.env.JELLYSEERR_API_KEY),

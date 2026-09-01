@@ -257,6 +257,26 @@ export class RoomStore {
     return this.rooms.size;
   }
 
+  /**
+   * Rooms with somebody actually in them (R161).
+   *
+   * `roomCount` counts Map entries, which is the right number for "is this
+   * server doing anything" and the wrong one for "would restarting interrupt
+   * a night". A finished room sits there until the idle TTL reaps it two hours
+   * later, and a restored room counts every member disconnected until they
+   * come back -- so both look busy to anything reading the total.
+   *
+   * Connectedness is already the test of who can stall a room (R112), so it is
+   * the same test here: a room nobody is connected to is not a night.
+   */
+  activeRoomCount(): number {
+    let n = 0;
+    for (const room of this.rooms.values()) {
+      if (Object.values(room.users).some((u) => u.connected)) n += 1;
+    }
+    return n;
+  }
+
   private generateCode(): string {
     for (;;) {
       let code = '';

@@ -659,6 +659,18 @@
         "server/__tests__/restart.test.ts"
       ],
       "note": "restore() trusted the file's shape -- room.lastActivity straight into arithmetic, room.users straight into Object.values -- and a snapshot is a file on a volume the host owns, written by whatever build ran last. A null room threw, the throw reached an uncaught promise chain in server/index.ts because restoreRooms runs BEFORE nextApp.prepare(), the process exited before listening, and the container restarted onto the same file. loadSnapshot guarded JSON that would not parse and let JSON that parsed into the wrong thing through the cast."
+    },
+    {
+      "id": "R161-restored-rooms-look-busy",
+      "ruling": "R161",
+      "claim": "a restored room nobody has come back to does not read as a night in progress",
+      "file": "server/store.ts",
+      "find": "      if (Object.values(room.users).some((u) => u.connected)) n += 1;",
+      "replace": "      if (room) n += 1;",
+      "expect": [
+        "server/__tests__/restart.test.ts"
+      ],
+      "note": "Reverts activeRoomCount to what roomCount already says. The mutation is invisible on a live server -- the two numbers agree whenever anybody is connected -- and only diverges in the state autodeploy meets after every deploy it performs: a snapshot restored with every member disconnected. That is why the test drives a real restart rather than asserting the counter in isolation."
     }
   ]
 }

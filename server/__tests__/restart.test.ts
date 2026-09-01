@@ -337,3 +337,68 @@ describe('a snapshot that is not what it claims', () => {
     expect(after.getRoom(created.roomId), 'a good room was lost with the bad one').toBeTruthy();
   });
 });
+
+describe('what counts as a night in progress', () => {
+  /*
+    R161. scripts/deploy/autodeploy.sh refuses to replace the container while
+    /healthz reports rooms, and it reported `this.rooms.size` -- every Map entry.
+
+    A finished room sits in that Map until the idle TTL reaps it two hours
+    later, and after a restart every restored room is there with all its members
+    disconnected until they come back. Both read as busy, so an update could
+    wait hours for nobody. Connectedness is already the test of who can stall a
+    room (R112); this makes it the test of whether a room is worth deferring a
+    deploy for.
+
+    `rooms` is deliberately still reported unchanged. The script refuses when it
+    cannot read a count, so a rename would make an old container unreadable to a
+    new script -- and the refusal is what stops the container being replaced, so
+    the deploy that fixes it is the one the change prevents.
+  */
+  it('agrees with the total while people are actually connected', () => {
+    /*
+      Written after getting this wrong. The first version of this test asserted
+      that a room everybody had left sat in the Map until the TTL reaped it, and
+      it does not: leaveRoom removes a room when its last member goes, so
+      `roomCount` already excludes it. The live-room half of R161 needed no fix,
+      and saying so is worth more than a test dressed up to pass.
+
+      What remains true is the restored case below, which is the state autodeploy
+      meets after every single deploy it performs.
+    */
+    const store = new RoomStore();
+    const ravi = phone(store, 'socket-ravi');
+    handlers.createRoom(ravi.ctx, { name: 'Ravi' });
+    expect(store.activeRoomCount()).toBe(1);
+    expect(store.roomCount()).toBe(1);
+
+    handlers.disconnect(ravi.ctx);
+    expect(store.roomCount(), 'the last member leaving already removes the room').toBe(0);
+    expect(store.activeRoomCount()).toBe(0);
+  });
+
+  it('does not count a restored room until somebody comes back', async () => {
+    // The restart case, which is the one autodeploy meets most often: the
+    // container it just replaced left a snapshot, and every member in it is
+    // disconnected by construction.
+    const before = new RoomStore();
+    const created = handlers.createRoom(phone(before, 's1').ctx, { name: 'Ravi' }) as {
+      roomId: string;
+      userId: string;
+      secret: string;
+    };
+    await saveSnapshot(before.snapshot(), cfg());
+
+    const after = new RoomStore();
+    after.restore((await loadSnapshot(cfg()))!);
+    expect(after.roomCount()).toBe(1);
+    expect(after.activeRoomCount(), 'a restored room counts as busy before anyone returns').toBe(0);
+
+    handlers.joinRoom(phone(after, 's2').ctx, {
+      roomId: created.roomId,
+      userId: created.userId,
+      secret: created.secret,
+    });
+    expect(after.activeRoomCount(), 'a room somebody came back to is a night again').toBe(1);
+  });
+});

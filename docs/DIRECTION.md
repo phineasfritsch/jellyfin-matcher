@@ -2902,3 +2902,33 @@ stated its own priority in a comment — no boot loop — and then only defended
 half of it that had occurred to somebody. A stated intention is not a check,
 which is the same lesson as R157 one layer down: there, prose outlived a fix;
 here, prose outran the code that was supposed to implement it.
+
+### R161 — A restored room is not a night in progress
+
+`scripts/deploy/autodeploy.sh` refuses to replace the container while `/healthz`
+reports rooms, and `/healthz` reported `this.rooms.size`.
+
+After a restart, R149 puts every room back with every member disconnected, by
+construction — their sockets died with the process. So the state this script
+meets **after every deploy it performs** is a set of rooms that read as busy and
+contain nobody, and the next update defers behind them until the idle TTL clears
+them two hours later.
+
+Connectedness is already the test of who can stall a room (R112). `activeRoomCount`
+makes it the test of whether a room is worth deferring a deploy for.
+
+**I got the other half of this wrong and it is worth recording.** The first
+version also claimed a finished room sat in the Map until the TTL reaped it.
+It does not: `leaveRoom` removes a room when its last member goes, so the total
+already excluded it. The test says so now rather than being quietly reshaped to
+pass, because a ruling that overstates the problem it solved is the same fault
+as a doc that overstates a failure (R157).
+
+**`rooms` is still reported, unchanged, and that is the load-bearing decision.**
+The script REFUSES when it cannot read a count, and the script is updated by hand
+on the host while the container updates itself — so the two are routinely
+different ages. Renaming the field would make an old container unreadable to a
+new script; the script would refuse; and refusing is precisely what stops the
+container being replaced. The deploy that fixes it is the one the change
+prevents. Adding a field, and reading it with a fallback, is the only shape that
+is safe in both directions.
