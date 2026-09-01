@@ -532,7 +532,28 @@ layout is on every in-room screen.
 that takes focus. **Fix, if confirmed:** `scroll-padding-block` on `.scroll-body`
 sized to the two chrome surfaces.
 
-### R3 — 1.4.12 Text Spacing (AA). Never considered.
+### R3 — 1.4.12 Text Spacing (AA). ~~Never considered.~~ Measured (R186).
+
+> **Measured, and no new loss.** `npm run measure:spacing` renders the deck in
+> real Chrome against the compiled stylesheet, with the criterion's four values
+> forced, at 402x874, 320x568 and 320x256 — the last being 1280x1024 at 400%
+> zoom, the tightest viewport this app claims to support and the one where R137
+> had to teach the shell to release.
+>
+> Clipped regions: **0 to 0** at every viewport. Truncated lines: **1 to 1**.
+>
+> The one truncation is there with the overrides OFF as well: it is the long
+> film title R84 chose to `truncate`, and the full title is on the details
+> sheet. That is a deliberate design decision and not this criterion, which asks
+> only about loss the reader's own stylesheet CAUSES. Only the delta is 1.4.12,
+> and the delta is nothing.
+>
+> Two limits, so nobody reads more into it. It measures a faithful skeleton and
+> the real stylesheet, not the React tree — the same caveat R137's reflow
+> measurement carries. And "clipped" means content taller than a box whose
+> computed `overflow-y` hides it; content that overflows a box which can scroll
+> is the R137 fix working, and counting that as loss would have turned a pass
+> into a failure and eventually a failure into a pass.
 
 The criterion requires no loss of content when a user stylesheet forces line
 height to 1.5× the font size, letter spacing to 0.12em, word spacing to 0.16em
@@ -616,7 +637,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 1.4.5 Images of Text | AA | N/A | None. |
 | 1.4.10 Reflow | AA | **PASS (measured)** | **R1 was a FAIL, fixed (R137)** — at 320×256 the vote row sat 116px below a surface that could not scroll. `npm run measure:reflow` in real Chrome. |
 | 1.4.11 Non-text Contrast | AA | **PARTIAL** | **F2 partly fixed (R135)** — every text input is now on a 3.57:1 token, computed in `css.test.ts`. Ghost buttons and ratings tiles stay under 3:1 deliberately; the slider track is still open. |
-| 1.4.12 Text Spacing | AA | **UNVERIFIED** | **R3** — never considered, and the layout clips. |
+| 1.4.12 Text Spacing | AA | **PASS (measured)** | **R3 settled (R186)** — `measure:spacing` forces the four values in real Chrome at three viewports including 1280x1024 at 400% zoom: no clipping, and the one truncated line is truncated without the overrides too. |
 | 1.4.13 Content on Hover or Focus | AA | N/A | No tooltips, popovers or hover-revealed content anywhere. `title` in this codebase is a component prop that renders visible text, not the HTML attribute; the one real `<title>` is inside the QR's SVG, which the criterion exempts as user-agent chrome. |
 
 ### Operable

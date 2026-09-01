@@ -54,7 +54,7 @@ const VIEWPORTS = [
   { name: '402x874  (the only size this repo has ever used)', width: 402, height: 874 },
 ];
 
-function stylesheet(): string {
+export function stylesheet(): string {
   const dir = path.join(process.cwd(), '.next/static/css');
   if (!fs.existsSync(dir)) {
     console.log('no compiled css -- running next build (once)');
