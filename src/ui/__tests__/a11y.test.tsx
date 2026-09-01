@@ -21,6 +21,7 @@ vi.mock('../socket', () => ({
 
 const { Confetti } = await import('../components/Confetti');
 const { Knockout } = await import('../components/Knockout');
+const { Lobby } = await import('../components/Lobby');
 const { MovieDetails } = await import('../components/MovieDetails');
 const { SwipeDeck } = await import('../components/SwipeDeck');
 const { WinnerScreen } = await import('../components/WinnerScreen');
@@ -747,5 +748,54 @@ describe('SC 4.1.3 — counts that move because of other people', () => {
     const regions = [...container.querySelectorAll('[role="status"]')];
     const counted = regions.find((r) => /\d+ of \d+ in/.test(r.textContent ?? ''));
     expect(counted, 'the submitted count is not in a live region').toBeTruthy();
+  });
+});
+
+describe('SC 1.3.1 Info and Relationships -- every room screen has one h1', () => {
+  /*
+    F8, executed. `Lobby`, `Knockout` and `SwipeDeck` rendered <h2> and nothing
+    above it: Group's section titles and SwipeCard's film title claimed to be
+    second-level headings under no first-level heading at all, so heading
+    navigation on the deck landed on a film title with nothing over it.
+
+    This is a rule rather than three instances, the way R153 did it for names:
+    every screen a room spends its evening on, checked for exactly one h1 with
+    a real accessible name. "Exactly one" matters as much as "at least one" --
+    two h1s is the same structural lie in the other direction.
+
+    Deliberately not a pin. A pin would find `<h1` in the source and be
+    satisfied by one sitting in a branch that never renders; these mount the
+    screen and read the heading off it.
+  */
+  const SCREENS: Array<[string, () => React.ReactElement]> = [
+    ['the lobby', () => <Lobby roomHook={hook(room({ status: 'LOBBY' }))} />],
+    ['the genre picker', () => <Knockout roomHook={hook(picking())} />],
+    ['the deck', () => <SwipeDeck roomHook={hook(room())} />],
+  ];
+
+  for (const [name, mount] of SCREENS) {
+    it(`${name} has exactly one first-level heading`, () => {
+      const { container } = render(mount());
+      const h1s = [...container.querySelectorAll('h1')];
+      expect(h1s.length, `${name} has ${h1s.length} h1 elements, not one`).toBe(1);
+      expect(
+        accessibleName(h1s[0]!).trim(),
+        `${name}'s h1 has no accessible name`,
+      ).not.toBe('');
+    });
+  }
+
+  it('the elimination round keeps its heading too', () => {
+    // The knockout is two screens wearing one component, and the second one
+    // renders from a different return statement -- so it can lose the heading
+    // on its own.
+    const ballot = picking();
+    ballot.knockout = {
+      ...ballot.knockout,
+      phase: 'ELIMINATION',
+      pool: ['Action', 'Comedy', 'Drama'],
+    };
+    const { container } = render(<Knockout roomHook={hook(ballot)} />);
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
   });
 });

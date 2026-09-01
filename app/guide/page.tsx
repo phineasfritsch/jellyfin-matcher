@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Clapperboard, Laptop, Search, Smartphone, Tv } from 'lucide-react';
+import { t } from '../../src/ui/strings';
 
 // Embedded in Jellyfin via the Custom Tabs plugin (an iframe pointing here),
 // so it renders standalone with no login gate.
@@ -24,7 +25,7 @@ export const dynamic = 'force-dynamic';
   moves with the rest — the duplication guard already scans `app/`, so it will
   notice if a copy is left behind.
 */
-const HEADING = 'How to use the server';
+const HEADING = t('guide.heading');
 
 export const metadata: Metadata = {
   title: HEADING,
@@ -42,7 +43,7 @@ function host(url: string | undefined, fallback: string): string {
 export default function GuidePage() {
   const jellyfinUrl = process.env.JELLYFIN_URL ?? '';
   const jellyseerrUrl = process.env.JELLYSEERR_URL ?? '';
-  const jellyfinHost = host(jellyfinUrl, 'your Jellyfin server');
+  const jellyfinHost = host(jellyfinUrl, t('guide.jellyfinFallback'));
   const jellyseerrHost = host(jellyseerrUrl, 'Jellyseerr');
 
   return (
@@ -56,36 +57,36 @@ export default function GuidePage() {
         </p>
       </header>
 
-      <Section id="tv" icon={<Tv aria-hidden className="size-6" />} title="Watch on your TV">
+      <Section id="tv" icon={<Tv aria-hidden className="size-6" />} title={t('guide.tvTitle')}>
         <p className="mb-5 text-muted-fg">
           Almost every TV platform has a Jellyfin app. Install it, point it at{' '}
-          <Code>{jellyfinUrl || 'your server address'}</Code>, and sign in with the account you were
+          <Code>{jellyfinUrl || t('guide.serverAddressFallback')}</Code>, and sign in with the account you were
           given.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <ClientCard
-            name="Android TV / Google TV / Chromecast"
-            detail="Official Jellyfin app from the Play Store. Easiest option, best supported."
+            name={t('guide.androidTv')}
+            detail={t('guide.androidTvDetail')}
           />
           <ClientCard
-            name="Amazon Fire TV / Fire Stick"
-            detail="Official Jellyfin app from the Amazon Appstore. Search 'Jellyfin' on the device."
+            name={t('guide.fireTv')}
+            detail={t('guide.fireTvDetail')}
           />
           <ClientCard
-            name="Apple TV"
-            detail="Swiftfin (free, official) from the App Store. Infuse works well too if you use it."
+            name={t('guide.appleTv')}
+            detail={t('guide.appleTvDetail')}
           />
           <ClientCard
-            name="Roku"
-            detail="Official Jellyfin channel from the Roku store. Solid, a little plainer than the rest."
+            name={t('guide.roku')}
+            detail={t('guide.rokuDetail')}
           />
           <ClientCard
-            name="Samsung (Tizen) / LG (webOS)"
-            detail="Jellyfin is in both smart-TV stores. If yours is missing, a cheap Fire Stick fixes it."
+            name={t('guide.smartTv')}
+            detail={t('guide.smartTvDetail')}
           />
           <ClientCard
-            name="Kodi"
-            detail="Add the Jellyfin for Kodi plugin if you already run Kodi and want one unified library."
+            name={t('guide.kodi')}
+            detail={t('guide.kodiDetail')}
           />
         </div>
       </Section>
@@ -93,20 +94,20 @@ export default function GuidePage() {
       <Section
         id="phone"
         icon={<Smartphone aria-hidden className="size-6" />}
-        title="Watch on your phone or tablet"
+        title={t('guide.phoneTitle')}
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <ClientCard
-            name="iPhone / iPad"
-            detail="Swiftfin (free, official) is the one to get. Infuse is a slicker paid alternative with better format support."
+            name={t('guide.iphone')}
+            detail={t('guide.iphoneDetail')}
           />
           <ClientCard
-            name="Android"
-            detail="Official Jellyfin app works fine. Findroid is a great community-built alternative; Streamyfin is another good one."
+            name={t('guide.android')}
+            detail={t('guide.androidDetail')}
           />
         </div>
         <p className="mt-5 text-muted-fg">
-          Each one asks for the server address (<Code>{jellyfinUrl || 'your server address'}</Code>)
+          Each one asks for the server address (<Code>{jellyfinUrl || t('guide.serverAddressFallback')}</Code>)
           and your login, then your library and resume points sync everywhere.
         </p>
       </Section>
@@ -114,16 +115,16 @@ export default function GuidePage() {
       <Section
         id="laptop"
         icon={<Laptop aria-hidden className="size-6" />}
-        title="Watch on your laptop or desktop"
+        title={t('guide.laptopTitle')}
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <ClientCard
-            name="Any web browser"
-            detail={`Just go to ${jellyfinHost} and sign in. Nothing to install. Chrome, Edge, Firefox, and Safari all work.`}
+            name={t('guide.browser')}
+            detail={t('guide.browserDetail', { host: jellyfinHost })}
           />
           <ClientCard
-            name="Jellyfin Media Player"
-            detail="Free desktop app for Windows, macOS, and Linux. Smoother playback and more file types than the browser."
+            name={t('guide.mediaPlayer')}
+            detail={t('guide.mediaPlayerDetail')}
           />
         </div>
       </Section>
@@ -131,7 +132,7 @@ export default function GuidePage() {
       <Section
         id="request"
         icon={<Search aria-hidden className="size-6" />}
-        title="Want something we don't have?"
+        title={t('guide.requestTitle')}
       >
         <p className="mb-4 text-muted-fg">
           We use <strong className="text-foreground">Jellyseerr</strong> for requests. If a movie or
@@ -144,9 +145,9 @@ export default function GuidePage() {
               Go to <Code>{jellyseerrUrl || jellyseerrHost}</Code> and sign in with your Jellyfin
               account (same login).
             </>,
-            'Search for the movie or show you want.',
-            'Open it and hit Request. For a show you can pick specific seasons.',
-            "That's it. It shows up in Jellyfin once it finishes downloading.",
+            t('guide.requestStep2'),
+            t('guide.requestStep3'),
+            t('guide.requestStep4'),
           ]}
         />
       </Section>
@@ -154,7 +155,7 @@ export default function GuidePage() {
       <Section
         id="matcher"
         icon={<Clapperboard aria-hidden className="size-6" />}
-        title="Can't agree on a movie? Use Matcher"
+        title={t('guide.matcherTitle')}
       >
         <p className="mb-4 text-muted-fg">
           <strong className="text-foreground">Jellyfin Matcher</strong> is a swipe game for picking
@@ -162,11 +163,11 @@ export default function GuidePage() {
         </p>
         <Steps
           steps={[
-            'One person opens Matcher and taps Create Room. A short code and QR appear.',
-            'Everyone else scans the QR or types the code, then picks server-only or any movie.',
-            "You each check the genres you're up for; a quick knockout narrows it to two.",
-            'Then swipe: right to like, left to pass, up for maybe, star for a super like. Tap a poster for the trailer and ratings.',
-            'When everyone likes the same movie it locks in. If the deck runs out first, points decide a winner anyway.',
+            t('guide.matcherStep1'),
+            t('guide.matcherStep2'),
+            t('guide.matcherStep3'),
+            t('guide.matcherStep4'),
+            t('guide.matcherStep5'),
           ]}
         />
         <a
@@ -174,7 +175,7 @@ export default function GuidePage() {
           target="_top"
           className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-accent px-6 font-semibold text-background transition active:scale-95"
         >
-          <Clapperboard aria-hidden className="size-5" /> Open Matcher
+          <Clapperboard aria-hidden className="size-5" /> {t('guide.openMatcher')}
         </a>
       </Section>
 

@@ -55,6 +55,14 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {/*
+        R156: the level-one heading these three screens never had (F8).
+        sr-only because the room's own layout cannot scroll and has no room
+        for a title bar -- what was missing was the heading STRUCTURE, not a
+        visible one. Without it the deck's film title was an <h2> under
+        nothing, so heading navigation landed mid-document.
+      */}
+      <h1 className="sr-only">{t('knockout.headingPicking')}</h1>
       {/* R136: moves when somebody else answers, so it says so (4.1.3). */}
       <Bar left={t('knockout.prompt')} right={`${submittedCount} of ${members.length} in`} liveRight />
 
@@ -171,6 +179,14 @@ function EliminationPhase({ roomHook }: { roomHook: RoomHook }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {/*
+        R156: the level-one heading these three screens never had (F8).
+        sr-only because the room's own layout cannot scroll and has no room
+        for a title bar -- what was missing was the heading STRUCTURE, not a
+        visible one. Without it the deck's film title was an <h2> under
+        nothing, so heading navigation landed mid-document.
+      */}
+      <h1 className="sr-only">{t('knockout.headingElimination')}</h1>
       {/* R136: the pool shrinks as the room votes, with focus elsewhere. */}
       <Bar left={t('knockout.voteOut')} right={`${pool.length} left · 2 survive`} liveRight />
 

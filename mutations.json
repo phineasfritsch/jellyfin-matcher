@@ -331,9 +331,9 @@
       "find": "    text: 'Asked, and your server accepted it. It appears in Jellyfin once it finishes downloading.',",
       "replace": "    text: 'Asked. It appears in Jellyfin once the host approves it.',",
       "expect": [
-        "src/ui/__tests__/winner.render.test.tsx"
+        "src/ui/__tests__/strings.test.ts"
       ],
-      "note": "The old copy verbatim. Restoring it left nine of nine green, because /ada asked/i still matched (R129). There is nothing left to approve on this branch. Re-pointed at the catalogue when F3 moved the sentence out of WinnerScreen.tsx -- the claim is about what the room is told, and the catalogue is now where that is decided."
+      "note": "The old copy verbatim. Restoring it left nine of nine green, because /ada asked/i still matched (R129). There is nothing left to approve on this branch. Re-pointed at the catalogue when F3 moved the sentence out of WinnerScreen.tsx -- the claim is about what the room is told, and the catalogue is now where that is decided. The audit then caught a second, subtler error in that very re-point: the target file moved to strings.ts but `expect` still named winner.render.test.tsx, so the harness ran 14 cases that never look at this sentence and reported the claim hollow. Moving a mutation's FILE without moving the test that guards it is its own defect, and the only reason it was found is that a SURVIVED verdict is a gate failure rather than a note."
     },
     {
       "id": "R100-winner-confirm-promises-the-deck",
@@ -611,6 +611,18 @@
         "src/ui/__tests__/strings.test.ts"
       ],
       "note": "The duplication guard was `code.includes(text)`, which is right for a sentence and meaningless for a word: \"No\" is inside \"Nothing\" and \"Not your fault\". That made every short word uncatalogueable -- and No, Yes and Maybe are exactly what a translator changes. R154 made the short case look for the string as it would actually be WRITTEN. This mutation is the proof the sharpening did not cost the guard its teeth: restore the component's own copy of a two-character word and it still goes red."
+    },
+    {
+      "id": "R156-deck-loses-its-h1",
+      "ruling": "R156",
+      "claim": "every screen a room spends its evening on has one first-level heading",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "      <h1 className=\"sr-only\">{t('deck.heading')}</h1>\n",
+      "replace": "",
+      "expect": [
+        "src/ui/__tests__/a11y.test.tsx"
+      ],
+      "note": "F8 in docs/ACCESSIBILITY.md: the deck rendered SwipeCard's film title as an <h2> with no <h1> above it anywhere on the page, so heading navigation landed on a film claiming to be a second-level heading under nothing. The heading is sr-only, which is exactly why a person cannot notice it going missing -- nothing on screen changes. Only a test that mounts the screen and counts can."
     }
   ]
 }

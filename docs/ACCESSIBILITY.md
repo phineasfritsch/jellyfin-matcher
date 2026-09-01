@@ -405,23 +405,48 @@ to get captions. The cost of the link is the only thing holding the embed in
 place, and a report of that cost being paid anyway is the evidence that would
 flip it. Not a preference, and not another reading of the criteria.
 
-### F8 — 1.3.1 Info and Relationships (A), partial. Three screens have no `h1`.
+### F8 — 1.3.1 Info and Relationships (A). ~~Three screens have no `h1`.~~ FIXED (R156).
 
-`Lobby`, `Knockout` and `SwipeDeck` render `<h2>` — `Group`'s section titles,
-and `SwipeCard`'s film title — with **no `<h1>` anywhere on the page**. The
-winner screen has one, the home screen has one, the join gate and login have
-one. The three screens a room spends its evening on do not.
+`Lobby`, `Knockout` and `SwipeDeck` rendered `<h2>` — `Group`'s section titles,
+and `SwipeCard`'s film title — with **no `<h1>` anywhere on the page**. Heading
+navigation on the deck landed on a film title claiming to be a second-level
+heading under nothing.
 
-Heading navigation on the deck therefore lands on a film title that claims to be
-a second-level heading under nothing.
+Each of the three now carries an `sr-only` `<h1>` naming what the screen is for:
+"Room lobby", "Choosing genres" / "Narrowing the genres", "Swiping for a film".
+`sr-only` because what was missing is the heading STRUCTURE, not a visible
+title — the room's layout deliberately cannot scroll and has nowhere to put one.
 
-### F9 — 2.4.2 Page Titled (A), partial. Every page has the same title.
+**Guarded by a test, not a pin**, in `a11y.test.tsx`: each screen is mounted and
+asserted to have exactly one `<h1>` with a real accessible name. Exactly one,
+because two is the same structural lie in the other direction. A pin would find
+`<h1` in the source and be satisfied by one in a branch that never renders.
+The knockout is checked twice — it is two screens wearing one component, and the
+elimination round renders from its own return statement, so it can lose the
+heading by itself. `R156-deck-loses-its-h1` deletes the deck's and the audit
+goes red; nothing on screen changes when it does, which is the point.
 
-`app/layout.tsx` sets `title: 'Jellyfin Matcher'` and neither
-`app/room/[roomId]/page.tsx` nor `app/guide/page.tsx` exports metadata of its
-own. So the guide, whose own `<h1>` reads "How to use the server", is titled
-"Jellyfin Matcher"; and a room's tab does not say which room. The criterion asks
-for a title that describes topic or purpose, which two of the three do not.
+### F9 — 2.4.2 Page Titled (A). ~~Every page has the same title.~~ FIXED.
+
+`app/layout.tsx` set `title: 'Jellyfin Matcher'` and neither the room route nor
+the guide exported metadata of its own, so all three tabs read the same and a
+room's tab did not say which room.
+
+All three now describe topic or purpose. The layout supplies a `template` of
+`'%s · Jellyfin Matcher'`; the guide exports `title: HEADING`, the same constant
+its `<h1>` renders, so the two cannot drift; and the room route's
+`generateMetadata` leads with the code — `Room ABCD` — because the code is what
+distinguishes one of these tabs from another and is what the room is about.
+
+A path that is not a four-character code gets the bare word "Room" instead. That
+is deliberate: a title claiming `Room <whatever was typed>` would assert a room
+by that name exists, which is exactly what the screen underneath is about to
+deny.
+
+**This entry stated a failure that had already been fixed.** It is recorded
+because an audit that overstates a failure is wrong in the same way as one that
+overstates a pass, and the only reason it was caught was reading the route
+before writing about it.
 
 ---
 
@@ -567,7 +592,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 1.2.3 Audio Desc. or Media Alt. | A | **FAIL (stated)** | **F7 decided** — no audio description exists for a cinema trailer, and the sheet's synopsis is not a media alternative for one. |
 | 1.2.4 Captions (Live) | AA | N/A | No live media. |
 | 1.2.5 Audio Description | AA | **FAIL (stated)** | **F7 decided** — same media, and this one has no media-alternative escape. |
-| 1.3.1 Info and Relationships | A | **PARTIAL** | Roles, groups and labels are right throughout (`role="group"` on the vote row, `radiogroup` on deck size, `Group` renders a real `<section>` with its heading). **F8**: three screens have no `h1`. |
+| 1.3.1 Info and Relationships | A | **PASS (tested)** | Roles, groups and labels are right throughout (`role="group"` on the vote row, `radiogroup` on deck size, `Group` renders a real `<section>` with its heading). **F8 fixed (R156)**: all three room screens carry one `sr-only` `<h1>`, mounted and counted in `a11y.test.tsx`. |
 | 1.3.2 Meaningful Sequence | A | PASS (read) | DOM order is reading order. The one reversal — the deck renders its three cards back-to-front for z-order — is invisible to the tree because the two behind are `aria-hidden`, which `a11y` checks holds no focusable element. |
 | 1.3.3 Sensory Characteristics | A | PASS (read) | No copy refers to shape, position, size or sound. Every instruction names its control. |
 | 1.3.4 Orientation | AA | **PASS (tested)** | **F1 fixed (R133)** — the manifest locks no orientation; `a11y` asserts it. |
@@ -593,7 +618,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 2.2.2 Pause, Stop, Hide | A | PASS (read) | Confetti is one-shot — longest delay 0.6s plus longest duration 3.0s, inside the five-second allowance — and returns `null` outright under reduced motion. Skeleton pulses and spinners are loading indicators that stop when their content arrives. `globals.css` clamps every animation under `prefers-reduced-motion`. `a11y` checks the confetti is hidden and takes no pointer events, and says in its own comment that it cannot see the 3.6s or the reduced-motion branch. |
 | 2.3.1 Three Flashes | A | PASS (read) | The confetti translates and rotates; nothing in the app flashes. |
 | 2.4.1 Bypass Blocks | A | N/A | No block of content repeated across pages. There is no navigation to skip. |
-| 2.4.2 Page Titled | A | **PARTIAL** | **F9** — all three routes inherit one title. |
+| 2.4.2 Page Titled | A | **PASS (read)** | **F9 fixed** — layout template plus per-route metadata; the room tab leads with its code, the guide with its own heading constant. |
 | 2.4.3 Focus Order | A | PASS (read) | DOM order matches visual order on every screen. In the sheet the backdrop's close button is DOM-first but visually behind; the trap keeps focus off it, so it is a keyboard-unreachable duplicate of the close control rather than a misordered stop. |
 | 2.4.4 Link Purpose (In Context) | A | PASS (read) | Two links exist — "Play in Jellyfin" and "Watch trailer". Both describe themselves. |
 | 2.4.5 Multiple Ways | AA | N/A | Three routes, and a room is a step in a process, which the criterion exempts. |

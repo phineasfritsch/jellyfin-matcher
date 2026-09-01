@@ -126,18 +126,9 @@ export function LoginScreen({
       </header>
 
       <form onSubmit={submit} className="gel flex w-full flex-col gap-4 rounded-[var(--radius-card)] p-4">
-        {/*
-          R145: the two field labels and the submit button below are the three
-          strings this file could not move. "Username" and "Password" are
-          substrings of setUsername and setPassword right here, and "Sign in"
-          is a substring of four longer sentences elsewhere, so the duplication
-          guard in strings.test.ts -- which matches text, not tokens -- would
-          report each of them as a message held in two places. The reasoning is
-          written out in strings.ts beside the entries that did move.
-        */}
         <div className="flex flex-col gap-2">
           <label htmlFor="jf-user" className="text-label font-medium text-muted-fg">
-            Username
+            {t('auth.username')}
           </label>
           <input
             id="jf-user"
@@ -150,7 +141,7 @@ export function LoginScreen({
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="jf-pass" className="text-label font-medium text-muted-fg">
-            Password
+            {t('auth.password')}
           </label>
           <input
             id="jf-pass"
@@ -167,7 +158,7 @@ export function LoginScreen({
           className="mt-1 flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
         >
           {busy && <Loader2 aria-hidden className="size-5 animate-spin" />}
-          Sign in
+          {t('auth.submit')}
         </button>
         {error && (
           <p role="alert" className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-body font-semibold text-destructive ring-1 ring-destructive/35">

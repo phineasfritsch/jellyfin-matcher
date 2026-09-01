@@ -359,7 +359,7 @@ function RequestControl({
       setState('done');
     } catch (err) {
       setState('error');
-      setMessage(err instanceof Error ? err.message : 'Request failed');
+      setMessage(err instanceof Error ? err.message : t('winner.requestFailed'));
     }
   }
 
@@ -457,7 +457,7 @@ function RequestControl({
               )}
             </BigButton>
             <BigButton onClick={() => setState('idle')} tone="ghost">
-              Cancel
+              {t('winner.cancel')}
             </BigButton>
           </div>
         </div>

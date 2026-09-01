@@ -315,11 +315,9 @@ export const en = {
     a translator should keep them to roughly this width or the rows stop lining
     up, and should not lengthen them into sentences.
 
-    `ERR` is not here, and stays hardcoded in the component. app/guide/page.tsx
-    documents these three labels by printing them, so the duplication guard sees
-    the string in two UI files and is right to: catalogue it now and the guide
-    would be quietly holding a second copy of a translated label. It moves when
-    the guide does, which is the same reason `Sign in` is still in four files.
+    `ERR` sits with them: it was held back because `JELLYSEERR_URL` in
+    app/guide/page.tsx contains the letters, which R154 now tells apart from a
+    written copy.
   */
   'diagnosis.canPlay': 'Can still play',
   'diagnosis.notYourFault': {
@@ -452,6 +450,106 @@ export const en = {
   'join.submit': 'Join Room',
   'join.signInToJoin': 'Sign in to join room {roomId}',
   'join.failed': 'Could not join',
+
+  /*
+    The four strings R145 recorded as unmovable, moved.
+
+    Every one of them was blocked by the same thing and it was never a
+    duplicated message: `Username` and `Password` are substrings of
+    `setUsername` and `setPassword`; `Sign in` is a substring of the four
+    `Sign in to ...` reasons; `ERR` is a substring of `JELLYSEERR_URL` in
+    app/guide/page.tsx. A guard matching bare text cannot tell any of those from
+    a component keeping its own copy, so all four stayed put with the reason
+    written down.
+
+    R154 answered it -- a short string is now looked for as it would actually be
+    WRITTEN -- and these are what that was worth. The reason recorded for `ERR`
+    was additionally just wrong: it said the guide prints the label. The guide
+    has never contained the word.
+  */
+  'auth.username': 'Username',
+  'auth.password': 'Password',
+  'auth.submit': 'Sign in',
+  'diagnosis.labelErr': 'ERR',
+  'winner.cancel': 'Cancel',
+  'winner.requestFailed': {
+    text: 'Request failed',
+    why: 'The fallback when Jellyseerr gave no message of its own. It stays vaguer than a real diagnosis on purpose: naming a cause here would put a guess in front of somebody who can otherwise read the real one. R145 recorded this as unmovable because socket.ts contains the words -- but only inside the comment explaining this very screen, and appSources() strips comments, so it never actually was.',
+  },
+
+  /*
+    The household guide (app/guide/page.tsx), in part.
+
+    This page is prose, which makes it the one file where the shape of the
+    catalogue matters more than the count. Everything below is a WHOLE string: a
+    section heading, a client name, an app description, a numbered step.
+
+    Its paragraphs are not here, and that is a decision rather than a backlog.
+    They are sentences interleaved with markup -- the address sits in a <Code>,
+    two product names sit in <strong>, and the request step wraps a <Code> mid
+    sentence. `t()` returns a string and cannot carry an element, so the only way
+    to catalogue those today is one entry per fragment: 'Each one asks for the
+    server address (' and ') and your login, then...'. That is the single shape a
+    translator genuinely cannot work with, because word order across the
+    fragments is fixed by English and no entry can move a clause past the link.
+
+    Splitting a sentence into pieces to raise a coverage number would make the
+    catalogue worse at the only job it has. What those paragraphs need is a
+    message that can take an element as a placeholder, which is real work and is
+    not this change.
+  */
+  'guide.heading': 'How to use the server',
+  'guide.tvTitle': 'Watch on your TV',
+  'guide.phoneTitle': 'Watch on your phone or tablet',
+  'guide.laptopTitle': 'Watch on your laptop or desktop',
+  'guide.requestTitle': "Want something we don't have?",
+  'guide.matcherTitle': "Can't agree on a movie? Use Matcher",
+  'guide.serverAddressFallback': {
+    text: 'your server address',
+    why: 'Shown in place of the real address when JELLYFIN_URL is unset. It has to read as a placeholder a person is meant to substitute, not as an address to type.',
+  },
+  'guide.jellyfinFallback': 'your Jellyfin server',
+  'guide.openMatcher': 'Open Matcher',
+  'guide.androidTv': 'Android TV / Google TV / Chromecast',
+  'guide.androidTvDetail': 'Official Jellyfin app from the Play Store. Easiest option, best supported.',
+  'guide.fireTv': 'Amazon Fire TV / Fire Stick',
+  'guide.fireTvDetail': "Official Jellyfin app from the Amazon Appstore. Search 'Jellyfin' on the device.",
+  'guide.appleTv': 'Apple TV',
+  'guide.appleTvDetail': 'Swiftfin (free, official) from the App Store. Infuse works well too if you use it.',
+  'guide.roku': 'Roku',
+  'guide.rokuDetail': 'Official Jellyfin channel from the Roku store. Solid, a little plainer than the rest.',
+  'guide.smartTv': 'Samsung (Tizen) / LG (webOS)',
+  'guide.smartTvDetail': 'Jellyfin is in both smart-TV stores. If yours is missing, a cheap Fire Stick fixes it.',
+  'guide.kodi': 'Kodi',
+  'guide.kodiDetail': 'Add the Jellyfin for Kodi plugin if you already run Kodi and want one unified library.',
+  'guide.iphone': 'iPhone / iPad',
+  'guide.iphoneDetail': 'Swiftfin (free, official) is the one to get. Infuse is a slicker paid alternative with better format support.',
+  'guide.android': 'Android',
+  'guide.androidDetail': 'Official Jellyfin app works fine. Findroid is a great community-built alternative; Streamyfin is another good one.',
+  'guide.browser': 'Any web browser',
+  'guide.browserDetail': 'Just go to {host} and sign in. Nothing to install. Chrome, Edge, Firefox, and Safari all work.',
+  'guide.mediaPlayer': 'Jellyfin Media Player',
+  'guide.mediaPlayerDetail': 'Free desktop app for Windows, macOS, and Linux. Smoother playback and more file types than the browser.',
+  'guide.requestStep2': 'Search for the movie or show you want.',
+  'guide.requestStep3': 'Open it and hit Request. For a show you can pick specific seasons.',
+  'guide.requestStep4': "That's it. It shows up in Jellyfin once it finishes downloading.",
+  'guide.matcherStep1': 'One person opens Matcher and taps Create Room. A short code and QR appear.',
+  'guide.matcherStep2': 'Everyone else scans the QR or types the code, then picks server-only or any movie.',
+  'guide.matcherStep3': "You each check the genres you're up for; a quick knockout narrows it to two.",
+  'guide.matcherStep4': 'Then swipe: right to like, left to pass, up for maybe, star for a super like. Tap a poster for the trailer and ratings.',
+  'guide.matcherStep5': 'When everyone likes the same movie it locks in. If the deck runs out first, points decide a winner anyway.',
+
+  /*
+    R156: the three in-room screens' level-one headings (F8).
+
+    These are read and never seen, so they say what the screen is FOR rather
+    than repeating what is on it. A person navigating by heading arrives here
+    first and needs to know which part of the evening they are in.
+  */
+  'lobby.heading': 'Room lobby',
+  'knockout.headingPicking': 'Choosing genres',
+  'knockout.headingElimination': 'Narrowing the genres',
+  'deck.heading': 'Swiping for a film',
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

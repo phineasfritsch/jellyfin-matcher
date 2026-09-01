@@ -2670,3 +2670,82 @@ check and weakening a check look identical from the diff: both make something
 stop failing. `R154-short-word-copy-invisible` restores the component's own copy
 of a two-character word and the guard still goes red, which the old substring
 version could not have distinguished from the word `Nothing` at all.
+
+### R155 — The sentence a catalogue cannot hold
+
+F3 finished with `app/guide/page.tsx`, the household guide, and it is the one
+file where the SHAPE of the catalogue mattered more than the count.
+
+Thirty-nine strings moved: every section heading, all ten client cards, both
+numbered lists, the fallbacks shown when the server address is unset. What did
+not move is the page's prose, and that is a decision rather than a backlog.
+
+Those paragraphs are sentences interleaved with markup. The address sits inside
+a `<Code>`, two product names sit inside `<strong>`, and one request step wraps
+a `<Code>` mid-sentence. `t()` returns a string and cannot carry a React
+element, so the only way to catalogue them today is one entry per fragment:
+`'Each one asks for the server address ('` and `') and your login, then your
+library and resume points sync everywhere.'`
+
+That is the single shape a translator genuinely cannot work with. Word order
+across the fragments is frozen by English grammar, and no entry can move a
+clause past the link, so a language that puts the verb last simply cannot be
+expressed. Splitting the sentences would have raised the migration's coverage
+number and made the catalogue worse at the only job it has.
+
+What those paragraphs need is a message that can take an ELEMENT as a
+placeholder. That is real work -- a second rendering path returning nodes rather
+than a string -- and it is not this change. It is written here so the next person
+finds a decision instead of an omission.
+
+**A guard cannot find its own text if that text is escaped.** Four entries went
+red at once with "is in 0 UI files", because the catalogue held
+`'Can't agree on a movie? Use Matcher'` and the guard searched for
+`Can't agree on a movie? Use Matcher`. The apostrophe was a backslash escape, so
+the file did not literally contain the sentence it was claiming to hold.
+
+The message said "a component still has its own copy", which sent me looking for
+a duplicate that did not exist. Zero holders and two holders are opposite
+faults and now say so. The values are double-quoted instead, which is the fix:
+a catalogue whose entries cannot be found by a plain text search is a catalogue
+no text-matching guard can protect.
+
+### R156 — A heading nobody can see going missing
+
+F8 in the accessibility audit: `Lobby`, `Knockout` and `SwipeDeck` rendered
+`<h2>` and nothing above it. `Group`'s section titles and `SwipeCard`'s film
+title claimed to be second-level headings under no first-level heading at all,
+so somebody navigating the deck by heading landed on a film title with nothing
+over it. The winner screen, the home screen, the join gate and the login all had
+one. The three screens a room actually spends its evening on did not.
+
+Each now carries an `sr-only` `<h1>` saying what the screen is for: "Room
+lobby", "Choosing genres", "Narrowing the genres", "Swiping for a film". They
+are read and never seen, so they name the PART OF THE EVENING rather than
+repeating what is already on the screen.
+
+`sr-only` rather than visible, and that is not a dodge. What was missing is the
+heading STRUCTURE. The room's layout deliberately cannot scroll (R74) and has
+nowhere to put a title bar without taking space from the deck, and a visible
+heading repeating "Swiping for a film" above a screen full of film posters would
+be noise for everybody to fix a problem only one group has.
+
+**The guard is a test and deliberately not a pin.** A pin searches source and
+would be satisfied by an `<h1>` sitting in a branch that never renders — the
+A16 problem in a new place. `a11y.test.tsx` mounts each screen and asserts
+EXACTLY ONE `<h1>` carrying a real accessible name. Exactly one, because two
+first-level headings is the same structural lie pointing the other way. The
+knockout is checked twice: it is two screens wearing one component and the
+elimination round renders from its own return statement, so it can lose the
+heading on its own without the picker noticing.
+
+`R156-deck-loses-its-h1` deletes the deck's heading. Nothing on screen changes
+when it does — that is precisely why only a mounted test can catch it, and why
+this one is worth the entry.
+
+**And F9 was already fixed.** The audit still described every route inheriting
+one title, when the layout has a `template`, the guide exports its own heading
+constant as metadata, and the room route's `generateMetadata` leads with the
+code. Reading the route before writing about it is the only reason that was
+caught. An audit overstating a FAILURE is wrong in the same way as one
+overstating a pass, and it is the more comfortable mistake to leave alone.

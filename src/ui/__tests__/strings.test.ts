@@ -468,9 +468,21 @@ describe('no message is hardcoded as well as catalogued', () => {
     const text = t(key);
     it(`${key} appears once, in the catalogue`, () => {
       const holders = sources.filter((f) => holdsCopy(f.code, text)).map((f) => f.path);
+      /*
+        Zero holders and two holders are opposite problems, and this used to
+        report both as "a component still has its own copy".
+
+        Zero means the catalogue cannot find its OWN text, which in practice
+        means the value is written with an escaped apostrophe: the source says
+        `Can\'t` and the search is for `Can't`. Four guide entries hit this at
+        once, and the message sent me looking for a duplicate that did not
+        exist. Double-quote the value instead.
+      */
       expect(
         holders,
-        `"${text.slice(0, 45)}..." is in ${holders.length} UI files; a component still has its own copy`,
+        holders.length === 0
+          ? `"${text.slice(0, 45)}..." is in NO source file, not even the catalogue -- is the value written with an escaped quote?`
+          : `"${text.slice(0, 45)}..." is in ${holders.length} UI files; a component still has its own copy`,
       ).toEqual(['src/ui/strings.ts']);
     });
   }

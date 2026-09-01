@@ -66,6 +66,14 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      {/*
+        R156: the level-one heading these three screens never had (F8).
+        sr-only because the room's own layout cannot scroll and has no room
+        for a title bar -- what was missing was the heading STRUCTURE, not a
+        visible one. Without it the deck's film title was an <h2> under
+        nothing, so heading navigation landed mid-document.
+      */}
+      <h1 className="sr-only">{t('deck.heading')}</h1>
       {/* R40: readout only. Nothing in the top bar is tappable. */}
       <Bar
         left={room.lockedGenres.join(' + ')}

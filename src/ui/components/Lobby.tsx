@@ -65,6 +65,14 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {/*
+        R156: the level-one heading these three screens never had (F8).
+        sr-only because the room's own layout cannot scroll and has no room
+        for a title bar -- what was missing was the heading STRUCTURE, not a
+        visible one. Without it the deck's film title was an <h2> under
+        nothing, so heading navigation landed mid-document.
+      */}
+      <h1 className="sr-only">{t('lobby.heading')}</h1>
       {/* R40: a readout, never a control. */}
       <Bar
         left={`Room ${room.roomId}`}

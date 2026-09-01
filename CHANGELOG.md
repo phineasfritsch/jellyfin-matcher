@@ -155,7 +155,7 @@ refused once and the member rejoins by name. Nothing else about a room is affect
 - `docs/BOARD.md` records the review board — its mandates, how a round runs, and the
   rule that the product is finished only when all five vote finished. It had existed
   only inside chat sessions.
-- The gate is 9 checks: 932 test cases in 49 files, 190 pinned claims.
+- The gate is 9 checks: 983 test cases in 49 files, 190 pinned claims.
 - `npm run e2e:two` drives **two real browsers through four rooms** — a whole night,
   a knockout where one phone dies, a lobby drop that recovers, and a network blip that
   must not evict anybody. Until it existed, every harness here drove a single page, so

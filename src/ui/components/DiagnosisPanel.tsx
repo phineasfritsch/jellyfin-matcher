@@ -40,7 +40,7 @@ export function DiagnosisPanel({
       <div className="scroll-body flex min-h-0 flex-1 flex-col">
         <Group>
           <Row
-            label="ERR"
+            label={t('diagnosis.labelErr')}
             tone="stop"
             title={diagnosis.headline}
             detail={diagnosis.technical}
