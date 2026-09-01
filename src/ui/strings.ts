@@ -367,6 +367,91 @@ export const en = {
     text: 'Strong yes on',
     why: 'R25: the button prints "Strong", so the accessible name starts with it. This is the one of the four where the printed word and the spoken phrase could drift apart without looking wrong.',
   },
+
+  /*
+    The card itself.
+
+    Both of these name the film, and both are read rather than seen: the poster
+    alt is what a screen reader says INSTEAD of the image, and the details label
+    is on an icon-only button. R134: a control's accessible name must contain
+    the words on it, and this control has no words on it at all -- so the name
+    is the whole of what it offers, which is why it lists the three things
+    behind the button rather than saying "Details".
+  */
+  /*
+    A string with a placeholder in it is INVISIBLE to the duplication guard, and
+    this one proves it. The guard looks for the catalogued text; a component
+    building the same sentence writes `${card.title} poster`, which does not
+    contain `{title} poster` anywhere. SwipeCard and WinnerScreen both had their
+    own copy of this and the guard was green on it the whole time.
+
+    Both now come through here, so the sentence has one home. But nothing STOPS
+    a third file writing it by hand again -- that is the limit of a text-matching
+    guard, and it is worth knowing rather than assuming the green is a proof.
+  */
+  'card.posterAlt': '{title} poster',
+  'card.detailsLabel': {
+    text: 'Ratings, synopsis and trailer for {title}',
+    why: 'R134/A22: the button is an icon. "More info" would be a name that tells somebody nothing about whether it is worth the press, and naming the film is what lets a screen-reader user tell one card\'s button from the next.',
+  },
+  'card.noRatings': {
+    text: 'No ratings found for this one.',
+    why: 'R12: an empty state explains itself rather than showing a blank panel. A film with no ratings is a normal thing in a real library -- the line has to read as a fact about this film, not as a failure of the app.',
+  },
+  'card.yearUnknown': 'Year unknown',
+
+  /*
+    The front door.
+
+    Two of these are the only text on their control. The room code input and the
+    join button are an unlabelled box and an arrow icon, so `home.codeLabel` and
+    `home.joinLabel` are the whole of what a screen reader has to go on (A13,
+    A14) -- they are names, not descriptions, and must not grow into sentences.
+
+    `home.namePlaceholder` is an example, not a label. It has to read as a first
+    name a person might type; a translator should substitute a name common in
+    their language rather than transliterate this one.
+  */
+  'home.yourName': 'Your name',
+  'home.namePlaceholder': 'Phineas',
+  'home.createRoom': 'Create room',
+  'home.orJoin': 'or join one',
+  'home.codePlaceholder': 'ROOM CODE',
+  'home.codeLabel': 'Room code',
+  'home.joinLabel': 'Join room',
+  'home.signInToCreate': 'Sign in to create a room',
+  'home.needName': {
+    text: 'Enter your name first',
+    why: 'R55: the room is named by the people in it, so a seat with no name is not a seat. This fires before any network call, so it must say what to do rather than report a failure.',
+  },
+  'home.needCode': 'Enter a room code',
+  'home.createFailed': {
+    text: 'Could not create room',
+    why: 'The fallback when the server gave no message of its own. It must stay vaguer than a real diagnosis -- claiming a cause here would put a guess in front of somebody who could otherwise read the real one.',
+  },
+
+  /*
+    The join screen -- the first thing a guest ever sees.
+
+    They scanned a QR and landed here, and R55 is the whole design of it: the
+    screen says out loud that no account is needed, because a name field above a
+    button is a shape people have been trained to read as a sign-up. The
+    reassurance is load-bearing copy, not a nicety, and a translation that drops
+    it puts the trial wall back.
+
+    `join.namePlaceholder` is an example name, like `home.namePlaceholder`, and
+    is deliberately a different one -- the two screens sit either side of the
+    same QR and showing the same example twice reads like a stuck field.
+  */
+  'join.heading': 'Joining room',
+  'join.reassurance': {
+    text: 'Pick any name — it is what the room calls you tonight. No account needed.',
+    why: 'R55: this is the sentence that stops a guest bouncing off what looks like a sign-up. It has to say both halves -- that the name is disposable AND that no account is needed -- because either alone still reads as a form to fill in.',
+  },
+  'join.namePlaceholder': 'Ferb',
+  'join.submit': 'Join Room',
+  'join.signInToJoin': 'Sign in to join room {roomId}',
+  'join.failed': 'Could not join',
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

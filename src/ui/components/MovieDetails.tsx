@@ -146,7 +146,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
           <div>
             <h2 className="text-title font-semibold leading-tight tracking-[-0.015em]">{card.title}</h2>
             <p className="tabular text-label text-muted-fg">
-              {card.year ?? 'Year unknown'}
+              {card.year ?? t('card.yearUnknown')}
               {card.runtime != null && ` · ${card.runtime} min`}
               {card.genres.length > 0 && ` · ${card.genres.join(', ')}`}
             </p>
@@ -214,7 +214,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
 
         <h3 className="mb-2 text-sm font-semibold text-muted-fg">Ratings</h3>
         {card.allRatings.length === 0 ? (
-          <p className="text-sm text-muted-fg">No ratings found for this one.</p>
+          <p className="text-sm text-muted-fg">{t('card.noRatings')}</p>
         ) : (
           <ul className="grid grid-cols-2 gap-2">
             {card.allRatings.map((r) => (

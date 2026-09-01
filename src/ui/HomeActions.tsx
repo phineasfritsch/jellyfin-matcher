@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { ArrowRight, Loader2, Plus } from 'lucide-react';
 import { isLoggedIn, LoginScreen, useAuthConfig } from './AuthGate';
 import { emitAck, rememberTypedName, saveSession } from './socket';
+import { t } from './strings';
 
 export function HomeActions() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export function HomeActions() {
   const [showLogin, setShowLogin] = useState(false);
 
   async function createRoom() {
-    if (!name.trim()) return setError('Enter your name first');
+    if (!name.trim()) return setError(t('home.needName'));
     // Some deployments require a Jellyfin login before opening a room.
     if (config?.createRequires && !isLoggedIn()) {
       setShowLogin(true);
@@ -34,7 +35,7 @@ export function HomeActions() {
       saveSession(res.roomId, { userId: res.userId, name: name.trim(), secret: res.secret });
       router.push(`/room/${res.roomId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create room');
+      setError(err instanceof Error ? err.message : t('home.createFailed'));
       setBusy(null);
     }
   }
@@ -42,7 +43,7 @@ export function HomeActions() {
   if (showLogin) {
     return (
       <LoginScreen
-        reason="Sign in to create a room"
+        reason={t('home.signInToCreate')}
         onLoggedIn={() => {
           setShowLogin(false);
           void createRoom();
@@ -53,7 +54,7 @@ export function HomeActions() {
   }
 
   function joinRoom() {
-    if (!code.trim()) return setError('Enter a room code');
+    if (!code.trim()) return setError(t('home.needCode'));
     setBusy('join');
     /*
       R139 / WCAG 2.2 A 3.3.7. The join gate on the room page collects the name,
@@ -71,13 +72,13 @@ export function HomeActions() {
     <section className="gel flex w-full flex-col gap-5 rounded-[var(--radius-card)] p-4">
       <div className="flex flex-col gap-2">
         <label htmlFor="name" className="text-label font-medium text-muted-fg">
-          Your name
+          {t('home.yourName')}
         </label>
         <input
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Phineas"
+          placeholder={t('home.namePlaceholder')}
           autoComplete="given-name"
           className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-base outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
         />
@@ -94,12 +95,12 @@ export function HomeActions() {
         ) : (
           <Plus aria-hidden className="size-5" />
         )}
-        Create room
+        {t('home.createRoom')}
       </button>
 
       <div className="flex items-center gap-3 text-label text-muted-fg">
         <div className="h-px flex-1 bg-white/12" />
-        or join one
+        {t('home.orJoin')}
         <div className="h-px flex-1 bg-white/12" />
       </div>
 
@@ -107,11 +108,11 @@ export function HomeActions() {
         <input
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="ROOM CODE"
+          placeholder={t('home.codePlaceholder')}
           maxLength={4}
           autoCapitalize="characters"
           autoComplete="off"
-          aria-label="Room code"
+          aria-label={t('home.codeLabel')}
           className="tabular h-14 min-w-0 flex-1 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-center font-mono text-xl font-bold tracking-[0.35em] outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
         />
         <button
@@ -119,7 +120,7 @@ export function HomeActions() {
           onClick={joinRoom}
           disabled={busy !== null}
           className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-maybe text-on-primary transition active:scale-95 disabled:opacity-50"
-          aria-label="Join room"
+          aria-label={t('home.joinLabel')}
         >
           {busy === 'join' ? (
             <Loader2 aria-hidden className="size-5 animate-spin" />

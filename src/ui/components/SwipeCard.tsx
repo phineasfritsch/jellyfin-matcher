@@ -4,6 +4,7 @@ import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-m
 import { Info } from 'lucide-react';
 import type { MovieCandidate } from '../../lib/types';
 import { VOTE_POINTS } from '../../lib/match';
+import { t } from '../strings';
 
 /** A vote needs real travel, not just speed. See R49. */
 const SWIPE_DISTANCE = 110;
@@ -27,7 +28,7 @@ function ratingLine(card: MovieCandidate): string {
   if (card.scores.imdb != null) parts.push(`IMDb ${card.scores.imdb}`);
   if (card.scores.letterboxd != null) parts.push(`Letterboxd ${card.scores.letterboxd}`);
   if (card.scores.rt != null) parts.push(`RT critics ${card.scores.rt}`);
-  return parts.length ? parts.join(' · ') : 'No ratings found for this one.';
+  return parts.length ? parts.join(' · ') : t('card.noRatings');
 }
 
 export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProps) {
@@ -86,7 +87,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={card.posterUrl}
-              alt={`${card.title} poster`}
+              alt={t('card.posterAlt', { title: card.title })}
               className="absolute inset-0 h-full w-full object-cover"
               draggable={false}
               loading="eager"
@@ -112,7 +113,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
           {active && (
             <button
               type="button"
-              aria-label={`Ratings, synopsis and trailer for ${card.title}`}
+              aria-label={t('card.detailsLabel', { title: card.title })}
               onPointerDownCapture={(e) => e.stopPropagation()}
               onClick={onOpenDetails}
               /*
@@ -192,7 +193,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
         <div className="flex shrink-0 flex-col gap-1 border-t border-[var(--color-hairline)] px-4 py-3">
           <h2 className="truncate text-title font-semibold tracking-[-0.01em]">{card.title}</h2>
           <p className="tabular text-label text-muted-fg">
-            {card.year ?? 'Year unknown'}
+            {card.year ?? t('card.yearUnknown')}
             {card.runtime != null && ` · ${card.runtime} min`}
           </p>
           <p className="tabular text-label text-muted-fg">{ratingLine(card)}</p>

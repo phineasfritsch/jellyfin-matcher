@@ -10,6 +10,7 @@ import { Lobby } from './components/Lobby';
 import { SwipeDeck } from './components/SwipeDeck';
 import { WinnerScreen } from './components/WinnerScreen';
 import { useRoom } from './useRoom';
+import { t } from './strings';
 
 export function RoomClient({ roomId }: { roomId: string }) {
   const roomHook = useRoom(roomId);
@@ -128,7 +129,7 @@ function JoinGate({
   // Only strict deployments (MATCHER_AUTH=all) make guests sign in to join.
   if (config?.joinRequires && !isLoggedIn() && !loggedIn) {
     return (
-      <LoginScreen reason={`Sign in to join room ${roomId}`} onLoggedIn={() => setLoggedIn(true)} />
+      <LoginScreen reason={t('join.signInToJoin', { roomId })} onLoggedIn={() => setLoggedIn(true)} />
     );
   }
 
@@ -140,7 +141,7 @@ function JoinGate({
     try {
       await join(name.trim());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not join');
+      setError(err instanceof Error ? err.message : t('join.failed'));
       setBusy(false);
     }
   }
@@ -159,22 +160,22 @@ function JoinGate({
     <Centered>
       <div className="gel w-full max-w-sm rounded-[var(--radius-card)] p-5">
         <p className="text-label font-semibold uppercase tracking-[0.12em] text-super">
-          Joining room
+          {t('join.heading')}
         </p>
         <h1 className="tabular mt-1 text-display font-bold tracking-[0.28em]">{roomId}</h1>
         <p className="mt-2 text-body leading-relaxed text-muted-fg">
-          Pick any name — it is what the room calls you tonight. No account needed.
+          {t('join.reassurance')}
         </p>
 
         <form onSubmit={submit} className="mt-4 flex w-full flex-col gap-3">
           <label htmlFor="join-name" className="text-label font-medium text-muted-fg">
-            Your name
+            {t('home.yourName')}
           </label>
           <input
             id="join-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ferb"
+            placeholder={t('join.namePlaceholder')}
             autoComplete="given-name"
             className="h-12 rounded-[var(--radius-control)] bg-white/[0.07] px-4 text-row outline-none ring-1 ring-border focus:ring-2 focus:ring-secondary"
           />
@@ -184,7 +185,7 @@ function JoinGate({
             className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-on-primary transition active:scale-[0.985] disabled:opacity-50"
           >
             {busy && <Loader2 aria-hidden className="size-5 animate-spin" />}
-            Join Room
+            {t('join.submit')}
           </button>
           {(error ?? notice) && (
             <p

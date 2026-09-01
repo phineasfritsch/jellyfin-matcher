@@ -69,8 +69,8 @@ const A11Y: Pin[] = [
   { id: 'A10', why: 'The details sheet is a modal dialog, escapable and announced', find: 'role="dialog"' },
   { id: 'A11', why: 'The details sheet traps context as a modal', find: 'aria-modal="true"' },
   { id: 'A12', why: 'The details sheet has a named close control', find: 'aria-label="Close details"' },
-  { id: 'A13', why: 'Room code entry is labelled', find: 'aria-label="Room code"' },
-  { id: 'A14', why: 'Join control is named for screen readers', find: 'aria-label="Join room"' },
+  { id: 'A13', why: 'Room code entry is labelled', find: "aria-label={t('home.codeLabel')}" },
+  { id: 'A14', why: 'Join control is named for screen readers', find: "aria-label={t('home.joinLabel')}" },
   { id: 'A15', why: 'The member list is named', find: 'ariaLabel="Members"' },
   /*
     A16 was the literal attribute until F3 moved the name into the catalogue.
@@ -82,11 +82,11 @@ const A11Y: Pin[] = [
   */
   { id: 'A16', why: 'Final ranking is a named region, not a bare list', find: "ariaLabel={t('winner.ranking')}" },
   { id: 'A17', why: 'Session settings region is named', find: 'ariaLabel="Session settings"' },
-  { id: 'A18', why: 'Posters carry alt text built from the title', find: 'alt={`${card.title}' },
+  { id: 'A18', why: 'Posters carry alt text built from the title', find: "alt={t('card.posterAlt', { title: card.title })}" },
   { id: 'A19', why: 'Login fields are bound to their labels', find: 'htmlFor="jf-user"' },
   { id: 'A20', why: 'Password field is bound to its label', find: 'htmlFor="jf-pass"' },
   { id: 'A21', why: 'Runtime slider is bound to its label', find: 'htmlFor="runtime"' },
-  { id: 'A22', why: 'The icon-only details button says what is behind it, not just that details exist', find: 'Ratings, synopsis and trailer for ${card.title}' },
+  { id: 'A22', why: 'The icon-only details button says what is behind it, not just that details exist', find: 'Ratings, synopsis and trailer for {title}' },
 ];
 
 /**
@@ -174,7 +174,7 @@ const SWEEP: Pin[] = [
   { id: 'S08', why: 'The play action names where it plays, not a bare icon (R12)', find: 'Play in Jellyfin' },
   { id: 'S09', why: 'The request action names the system it will hit, before it is pressed (R09/R33)', find: 'Request via Jellyseerr' },
   { id: 'S10', why: 'The join-name field on the room shell is bound to its label', find: 'htmlFor="join-name"' },
-  { id: 'S11', why: 'The login says which room it is for, so a guest knows what it unlocks (R10)', find: 'Sign in to join room ${roomId}' },
+  { id: 'S11', why: 'The login says which room it is for, so a guest knows what it unlocks (R10)', find: 'Sign in to join room {roomId}' },
   { id: 'S12', why: 'Password managers are told this is a password field, not a text box', find: 'autoComplete="current-password"' },
   { id: 'S13', why: 'The username field is fillable by a password manager', find: 'autoComplete="username"' },
   { id: 'S14', why: 'The password is masked', find: 'type="password"' },

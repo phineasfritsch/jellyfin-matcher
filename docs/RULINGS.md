@@ -26,21 +26,21 @@ defined at their first citation.
 | **R09** | `docs/REDESIGN.md:120` | `src/ui/strings.ts:241` |
 | **R10** | `docs/REDESIGN.md:122` | `src/ui/AuthGate.tsx:114` +1 |
 | **R11** | `docs/REDESIGN.md:124` | — |
-| **R12** | `docs/REDESIGN.md:126` | `src/ui/components/SwipeCard.tsx:24` +4 |
+| **R12** | `docs/REDESIGN.md:126` | `src/ui/components/SwipeCard.tsx:25` +5 |
 | **R13** | `docs/REDESIGN.md:128` | `src/ui/components/EmptyState.tsx:6` |
 | **R14** | `docs/REDESIGN.md:133` | — |
 | **R15** | `docs/REDESIGN.md:135` | — |
 | **R16** | `docs/REDESIGN.md:137` | — |
 | **R17** | `docs/REDESIGN.md:141` | `app/layout.tsx:6` |
-| **R18** | `docs/REDESIGN.md:143` | `src/ui/components/SwipeCard.tsx:145` |
+| **R18** | `docs/REDESIGN.md:143` | `src/ui/components/SwipeCard.tsx:146` |
 | **R19** | `docs/DIRECTION.md:111` | — |
 | **R20** | `docs/DIRECTION.md:112` | — |
-| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:74` +2 |
+| **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:75` +2 |
 | **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:125` |
 | **R23** | `docs/DIRECTION.md:115` | — |
 | **R24** | `docs/DIRECTION.md:116` | — |
 | **R25** | `docs/DIRECTION.md:117` | `src/ui/components/VoteRow.tsx:9` +3 |
-| **R26** | `docs/DIRECTION.md:118` | `src/ui/components/SwipeCard.tsx:145` |
+| **R26** | `docs/DIRECTION.md:118` | `src/ui/components/SwipeCard.tsx:146` |
 | **R27** | `docs/DIRECTION.md:119` | — |
 | **R28** | `docs/DIRECTION.md:120` | — |
 | **R29** | `docs/DIRECTION.md:124` | `src/ui/components/MovieDetails.tsx:189` +2 |
@@ -63,16 +63,16 @@ defined at their first citation.
 | **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:229` +8 |
 | **R47** | _at its citation_ | `src/lib/knockout.ts:18` +4 |
 | **R48** | _at its citation_ | `server/handlers.ts:232` +3 |
-| **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
+| **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:9` +1 |
 | **R50** | _at its citation_ | `src/ui/components/VoteRow.tsx:15` +3 |
 | **R51** | _at its citation_ | `src/ui/components/VoteRow.tsx:44` +1 |
 | **R52** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:32` +2 |
 | **R53** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:78` +1 |
 | **R54** | _at its citation_ | `server/diagnose.ts:8` +6 |
-| **R55** | _at its citation_ | `src/ui/AuthGate.tsx:178` +1 |
-| **R58** | `docs/DIRECTION.md:221` | `src/ui/components/SwipeCard.tsx:189` |
-| **R59** | `docs/DIRECTION.md:247` | `src/ui/components/SwipeCard.tsx:182` |
-| **R60** | _at its citation_ | `src/ui/components/SwipeCard.tsx:131` +4 |
+| **R55** | _at its citation_ | `src/ui/AuthGate.tsx:178` +4 |
+| **R58** | `docs/DIRECTION.md:221` | `src/ui/components/SwipeCard.tsx:190` |
+| **R59** | `docs/DIRECTION.md:247` | `src/ui/components/SwipeCard.tsx:183` |
+| **R60** | _at its citation_ | `src/ui/components/SwipeCard.tsx:132` +4 |
 | **R61** | _at its citation_ | `server/handlers.ts:68` +11 |
 | **R62** | _at its citation_ | `server/validate.ts:73` +2 |
 | **R63** | _at its citation_ | `server/settlement.ts:65` +6 |
@@ -83,7 +83,7 @@ defined at their first citation.
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:204` |
-| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:152` |
+| **R73** | _at its citation_ | `src/ui/RoomClient.tsx:153` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:150` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
 | **R76** | _at its citation_ | `server/index.ts:575` |
@@ -94,7 +94,7 @@ defined at their first citation.
 | **R81** | `docs/DIRECTION.md:281` | `src/ui/components/MovieDetails.tsx:48` +1 |
 | **R82** | `docs/DIRECTION.md:297` | `scripts/gate.ts:134` +1 |
 | **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:64` |
-| **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:178` +1 |
+| **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:179` +1 |
 | **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:80` +3 |
 | **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:123` +13 |
 | **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:326` +11 |
@@ -106,9 +106,9 @@ defined at their first citation.
 | **R93** | `docs/DIRECTION.md:609` | `server/handlers.ts:22` +2 |
 | **R94** | `docs/DIRECTION.md:651` | — |
 | **R95** | `docs/DIRECTION.md:702` | `src/ui/components/VoteRow.tsx:76` +1 |
-| **R96** | `docs/DIRECTION.md:731` | `src/ui/components/SwipeCard.tsx:119` |
+| **R96** | `docs/DIRECTION.md:731` | `src/ui/components/SwipeCard.tsx:120` |
 | **R97** | `docs/DIRECTION.md:750` | `server/settlement.ts:77` +2 |
-| **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:50` +5 |
+| **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:51` +5 |
 | **R99** | `docs/DIRECTION.md:816` | `server/handlers.ts:87` +5 |
 | **R100** | `docs/DIRECTION.md:849` | — |
 | **R101** | `docs/DIRECTION.md:876` | — |

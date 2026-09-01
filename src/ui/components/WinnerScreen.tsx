@@ -126,7 +126,7 @@ export function WinnerScreen({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={winner.posterUrl}
-              alt={`${winner.title} poster`}
+              alt={t('card.posterAlt', { title: winner.title })}
               className="min-h-0 w-full flex-1 object-cover"
             />
           ) : null}
@@ -140,7 +140,7 @@ export function WinnerScreen({
               {winner.title}
             </h1>
             <p className="tabular mt-1.5 text-label text-muted-fg">
-              {winner.year ?? 'Year unknown'}
+              {winner.year ?? t('card.yearUnknown')}
               {winner.runtime != null && ` · ${winner.runtime} min`}
             </p>
             {/*
