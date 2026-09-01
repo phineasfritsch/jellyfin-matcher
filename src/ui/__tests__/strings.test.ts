@@ -538,7 +538,13 @@ describe('no screen keeps a sentence of its own', () => {
           !/[,({[]$/.test(l) &&
           !/^(return|function|export|import|const|let|await|if|else|for|while|type|interface|class|new|throw)\b/.test(
             l,
-          ),
+          ) &&
+          // An operator makes a line code however English it reads. A wrapped
+          // ternary leaves `err instanceof Error` alone on its line: three
+          // words, no punctuation, indistinguishable from a label by shape.
+          // Third false-positive class this rule has been taught, and they are
+          // all the same lesson -- source is not prose with tags around it.
+          !/\b(instanceof|typeof|as)\b/.test(l),
       );
 
     /*

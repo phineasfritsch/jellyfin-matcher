@@ -204,9 +204,30 @@ export function useRoom(roomId: string): RoomHook {
     [act],
   );
 
+  /*
+    R164: an empty list is a claim about the library, not a report of a failure.
+
+    This rejected, and the picker's effect caught it by setting the genres to
+    `[]` -- so a room whose Jellyfin did not answer saw an empty genre picker,
+    which reads as "your library has no genres". R54 exists because three
+    different causes used to reach the host as "it's broken"; presenting a
+    failure as a fact about their library is the same defect, told confidently.
+
+    Still returns a list, because the picker needs one either way. The
+    difference is that the room is now told why it is empty.
+  */
   const listGenres = useCallback(async () => {
-    const res = await emitAck<{ genres: string[] }>('genres:list', {});
-    return res.genres;
+    try {
+      const res = await emitAck<{ genres: string[] }>('genres:list', {});
+      return res.genres;
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Could not read the genres from your server. Try again in a moment.',
+      );
+      return [];
+    }
   }, []);
 
   const submitGenres = useCallback(

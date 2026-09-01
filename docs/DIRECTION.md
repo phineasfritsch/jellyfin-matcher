@@ -3000,3 +3000,26 @@ the deck putting its card back, reads the boolean.
 The mutation keeps the boolean and drops the banner. That is the version that
 passes every test asserting the ACTION and is still wrong to the person holding
 the phone: the tap does nothing and nothing says why.
+
+### R164 — An empty list is an answer, and it was the wrong one
+
+The genre picker's effect read `listGenres().then(setGenres).catch(() => setGenres([]))`.
+The rejection was caught, which is why nothing about it looked wrong.
+
+But an empty list is not a neutral fallback here — it is a CLAIM. A room whose
+Jellyfin did not answer saw an empty genre picker, which says "your library has
+no genres", confidently, in the app's own voice. R54 exists because three
+different causes used to reach the host as "it's broken" by text at 11pm; this
+is the same defect with better manners, and worse consequences, because nobody
+goes looking for a server problem after the app has already given them an
+answer.
+
+The list is still returned — the picker needs one either way, and a library with
+genuinely no genres is a real thing that is not an error. What changed is that
+the room is told WHY it is empty, through the same banner R163 just made
+reliable.
+
+**Why this survived every test.** An empty list renders perfectly. Every
+assertion about the picker passes with the failure swallowed, because the picker
+is behaving correctly — it is being lied to upstream. The mutation restores the
+old line exactly and only the honesty test goes red.

@@ -707,6 +707,18 @@
         "src/ui/__tests__/useroom.render.test.tsx"
       ],
       "note": "Keeps the boolean and drops the banner, which is the version that looks fine in every test asserting the ACTION and wrong to the person holding the phone: the tap does nothing and nothing says why. R93 made sure every refusal reaches the ack; five call sites then discarded it, and returning a boolean rather than rethrowing is what stops that fix having to be repeated at each of them."
+    },
+    {
+      "id": "R164-empty-list-hides-a-failure",
+      "ruling": "R164",
+      "claim": "an empty genre picker says whether the library is empty or unreachable",
+      "file": "src/ui/useRoom.ts",
+      "find": "      setError(\n        err instanceof Error\n          ? err.message\n          : 'Could not read the genres from your server. Try again in a moment.',\n      );\n      return [];",
+      "replace": "      return [];",
+      "expect": [
+        "src/ui/__tests__/useroom.render.test.tsx"
+      ],
+      "note": "Restores the old behaviour exactly: the failure is swallowed and the picker is handed an empty list. Every test about the PICKER still passes, because an empty list is a perfectly valid thing to render -- which is why this sat unnoticed. The room is told its library has no genres when the truth is that its server did not answer, and nobody goes looking for a server problem after the app has given them an answer."
     }
   ]
 }

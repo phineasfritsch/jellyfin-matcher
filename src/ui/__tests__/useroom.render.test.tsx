@@ -241,3 +241,59 @@ describe('a refusal reaches the person who caused it (R163)', () => {
     expect(probe.latest().error, 'a working vote set an error banner').toBeNull();
   });
 });
+
+describe('an empty genre list says whether it is empty or broken (R164)', () => {
+  /*
+    The picker's effect used to catch a failed `genres:list` by setting the
+    genres to `[]`. So a room whose Jellyfin did not answer saw an empty genre
+    picker -- which reads as "your library has no genres".
+
+    R54 exists because three different causes used to reach the host as "it's
+    broken" at 11pm. Presenting a failure as a confident fact about their
+    library is the same defect wearing better manners: nobody goes looking for a
+    server problem when the app has told them the answer.
+  */
+  it('still hands back a list, because the picker needs one', async () => {
+    store.join = (event) =>
+      event === 'genres:list'
+        ? Promise.reject(new Error('Jellyfin did not answer'))
+        : Promise.resolve({ userId: 'u_1', secret: 's' });
+    const probe = mount();
+    await act(async () => {});
+    let genres: string[] | undefined;
+    await act(async () => {
+      genres = await probe.latest().listGenres();
+    });
+    expect(genres, 'the picker was handed a rejection instead of a list').toEqual([]);
+  });
+
+  it('says why it is empty', async () => {
+    store.join = (event) =>
+      event === 'genres:list'
+        ? Promise.reject(new Error('Jellyfin did not answer'))
+        : Promise.resolve({ userId: 'u_1', secret: 's' });
+    const probe = mount();
+    await act(async () => {});
+    await act(async () => {
+      await probe.latest().listGenres();
+    });
+    expect(
+      probe.latest().error,
+      'an empty picker is the only thing a broken library looks like',
+    ).toBe('Jellyfin did not answer');
+  });
+
+  it('says nothing when the list is genuinely empty', async () => {
+    // A library with no genres is a real thing, and it is not an error.
+    store.join = (event) =>
+      event === 'genres:list'
+        ? Promise.resolve({ genres: [] })
+        : Promise.resolve({ userId: 'u_1', secret: 's' });
+    const probe = mount();
+    await act(async () => {});
+    await act(async () => {
+      await probe.latest().listGenres();
+    });
+    expect(probe.latest().error, 'an empty library was reported as a failure').toBeNull();
+  });
+});

@@ -24,9 +24,9 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    listGenres()
-      .then(setGenres)
-      .catch(() => setGenres([]));
+    // R164: listGenres reports its own failure and hands back an empty list, so
+    // an empty picker is no longer the only thing a broken library looks like.
+    void listGenres().then(setGenres);
   }, [listGenres]);
 
   if (!room || !userId) return null;
