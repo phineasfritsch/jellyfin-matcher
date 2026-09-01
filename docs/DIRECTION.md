@@ -2957,3 +2957,18 @@ them.
 Two tests, because the lazy fix for "this might throw" is to stop calling it,
 and `handlers.disconnect` is where R112's seat release lives. One asserts the
 call sits inside a `try`; the other asserts it is still made.
+
+**R162, continued: a timer callback is a callback.** Having established that a
+throw escaping `disconnect` ends the process, the same question was worth asking
+of everything else that runs without a caller. Two timers touch the store: the
+idle sweep, which walks every room and runs whether or not anybody is playing,
+and the thirty-second snapshot, where `store.snapshot()` executes synchronously
+inside the timer even though `saveSnapshot` itself never rejects.
+
+Both are guarded now, and the asymmetry is the point: a sweep that fails is a
+room reaped late, and a sweep that throws is every room gone at once. The same
+trade the disconnect guard makes.
+
+The limiter sweeps are left alone deliberately. They walk a Map of numbers with
+no room state in them, and wrapping every callback in the file to be seen doing
+it would make the guards mean less, not more.

@@ -86,7 +86,7 @@ defined at their first citation.
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:153` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:150` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
-| **R76** | _at its citation_ | `server/index.ts:621` |
+| **R76** | _at its citation_ | `server/index.ts:644` |
 | **R77** | _at its citation_ | `server/handlers.ts:110` +3 |
 | **R78** | _at its citation_ | `server/history.ts:80` +1 |
 | **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:97` +1 |

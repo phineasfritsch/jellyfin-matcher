@@ -683,6 +683,18 @@
         "server/__tests__/validate.test.ts"
       ],
       "note": "Every inbound event goes through `wrap`, which turns a throw into a refusal on the ack. `disconnect` has no ack, so R93's consolidation had nothing to hand it and left it bare. A throw in a socket.io callback is an uncaught exception: it ends the process and every room on it, over one dropped connection, at the moment a phone leaves -- which is a thing phones do constantly."
+    },
+    {
+      "id": "R162-sweep-unguarded",
+      "ruling": "R162",
+      "claim": "a throw in the idle sweep cannot end the process",
+      "file": "server/index.ts",
+      "find": "  try {\n    for (const id of store.cleanupStale()) {\n      io.in(id).disconnectSockets();\n    }\n  } catch (err) {\n    console.warn('The idle sweep failed; rooms will be reaped on a later pass.', err);\n  }",
+      "replace": "  for (const id of store.cleanupStale()) {\n    io.in(id).disconnectSockets();\n  }",
+      "expect": [
+        "server/__tests__/validate.test.ts"
+      ],
+      "note": "A setInterval callback is a callback. The sweep walks every room in the store and runs whether or not anybody is playing, so it is the timer most likely to meet something it did not expect -- and a throw out of it is an uncaught exception. A sweep that fails is a room reaped late; a sweep that throws is every room gone at once."
     }
   ]
 }

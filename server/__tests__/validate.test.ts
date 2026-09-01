@@ -218,6 +218,27 @@ describe('no socket event can take the process down', () => {
     ).toMatch(/try\s*\{\s*handlers\.disconnect\(ctx\);\s*\}\s*catch/);
   });
 
+  it('guards the timers that walk the store', () => {
+    /*
+      A setInterval callback is a callback: the same rule that made `disconnect`
+      fatal applies to the idle sweep and the snapshot. The sweep walks every
+      room in the store and runs whether or not anybody is playing, so it is the
+      timer most likely to meet something it did not expect.
+
+      A sweep that fails is a room reaped late. A sweep that throws is every
+      room gone at once.
+    */
+    const body = flat(server);
+    expect(
+      body,
+      'the idle sweep can throw out of its timer, which ends the process',
+    ).toMatch(/try \{ for \(const id of store\.cleanupStale\(\)\)/);
+    expect(
+      body,
+      'store.snapshot() runs synchronously in a timer and can throw out of it',
+    ).toMatch(/try \{ if \(store\.roomCount\(\) > 0\)/);
+  });
+
   it('still calls it, so the guard did not become a way of skipping the work', () => {
     // The lazy fix for "this might throw" is to stop calling it. R112's seat
     // release lives in there.

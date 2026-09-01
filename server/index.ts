@@ -536,9 +536,25 @@ io.on('connection', (socket) => {
 
 });
 
+/*
+  R162, again: a timer callback is a callback.
+
+  The same rule that made `disconnect` fatal applies here and to the snapshot
+  below -- a throw out of a setInterval callback is an uncaught exception and
+  ends the process. This one walks every room in the store, so it is the timer
+  most likely to meet something it did not expect, and it runs whether or not
+  anybody is playing.
+
+  A sweep that fails is a room reaped late. A sweep that throws is every room
+  gone at once.
+*/
 setInterval(() => {
-  for (const id of store.cleanupStale()) {
-    io.in(id).disconnectSockets();
+  try {
+    for (const id of store.cleanupStale()) {
+      io.in(id).disconnectSockets();
+    }
+  } catch (err) {
+    console.warn('The idle sweep failed; rooms will be reaped on a later pass.', err);
   }
 }, 10 * 60 * 1000).unref();
 
@@ -591,7 +607,14 @@ async function restoreRooms(): Promise<void> {
 */
 const SNAPSHOT_INTERVAL_MS = 30_000;
 setInterval(() => {
-  if (store.roomCount() > 0) void saveSnapshot(store.snapshot());
+  // saveSnapshot never rejects by contract, but `store.snapshot()` runs here,
+  // synchronously, inside the timer. A throw from it would end the process --
+  // and losing the ability to save rooms must not cost the rooms themselves.
+  try {
+    if (store.roomCount() > 0) void saveSnapshot(store.snapshot());
+  } catch (err) {
+    console.warn('Could not take a room snapshot this pass.', err);
+  }
 }, SNAPSHOT_INTERVAL_MS).unref();
 
 /*
