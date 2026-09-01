@@ -61,7 +61,16 @@ is left of it.
       a different origin, so no stored caption preference reaches the frame and
       captions are off on every trailer, every time.
 
-- [ ] **Prove F1 in a browser.** `server/__tests__/restart.test.ts` drives the
+- [ ] **WRITE the browser proof for F1, then run it.** Not "run the harness" --
+      there is no restart in `scripts/e2e-two-phones.ts` and there never was
+      (R180). It drives four rooms and attaches to a server somebody else
+      started, so it cannot kill one. A new harness has to own the process.
+      What it must show beyond the unit test: socket.io reconnecting by itself,
+      the seat secret surviving in phone storage across the gap, each deck
+      resuming at its own position, and the "hold on" message clearing rather
+      than outliving the restart (R150).
+
+- [ ] **~~Prove F1 in a browser.~~** `server/__tests__/restart.test.ts` drives the
       real handlers through a snapshot, a fresh store and a rejoin, which is the
       whole server-side path. The plan's condition says "both phones carry on",
       and only `npm run e2e:two` can show that. Needs a machine with a live

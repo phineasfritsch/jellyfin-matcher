@@ -3478,3 +3478,36 @@ the script on every host stops deploying, silently, with the same recovery.
 Written after noticing that my own change from earlier today had introduced
 something load-bearing and left it unguarded, which is R178 one file over: the
 guard did not follow the decision.
+
+### R180 — "Needs a machine" was hiding "was never written"
+
+PLAN-1.1's first condition asks for a test that restarts the process mid-deck
+and has both phones carry on. Its entry said the server side was done and the
+browser proof needed a machine with a live Jellyfin — and that was reported, out
+loud, repeatedly, as the one thing a session could not close.
+
+`scripts/e2e-two-phones.ts` contains no restart. No kill, no SIGTERM, no
+snapshot, nothing. It drives four rooms — the happy path, a phone dying in the
+knockout, a phone losing its network in the lobby, a five-second blip — and it
+ATTACHES to a server somebody else started, so it could not restart one even if
+a step asked it to.
+
+The remaining work was never "run the harness". It is "write a harness that owns
+the server process".
+
+**Why this hid so well.** "Blocked on hardware" and "not written" produce the
+same status line — the item sits open, nobody argues, and the reason sounds
+better than it is. It survived because every check around it was true: the
+server-side test exists and is thorough, the harness exists and is good, and
+`npm run e2e:two` is a real command that really does need a live Jellyfin. Three
+true statements, arranged into a false one.
+
+It was found by reading the harness to see whether running it would be worth the
+person's evening — which is the only question that would have exposed it, and
+one nobody asks about a task they believe is merely waiting.
+
+What the missing harness must prove, beyond what `restart.test.ts` already does
+at the handler level: socket.io reconnecting on its own, the seat secret
+surviving in the phone's own storage across the gap, each deck resuming at its
+own position rather than at zero, and the "hold on" message clearing itself
+rather than outliving the restart it describes (R150).

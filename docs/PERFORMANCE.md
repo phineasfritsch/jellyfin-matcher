@@ -20,10 +20,14 @@ maintainer would ask first, which is not *how fast* but *what shape*.
 
 **The headline.** Every function on the deck-build path is linear in the size of
 the library, and after R143 and R144 nothing is superlinear across builds
-either. A 50,000-item deck build costs on the order of **half a second of this
-app's own CPU** and moves 150–250 MB through the heap to produce 50 cards. The
-thing most likely to break first at 50,000 items is no longer any of the code
-below — it is Jellyfin's own response time, which this benchmark cannot see.
+either. A 50,000-item deck build costs **0.5–1.5 seconds of this app's own CPU**
+— the range is the machine, not the input — and moves 150–250 MB through the
+heap to produce 50 cards. **B5's superlinear `JSON.parse` does not survive
+re-measurement**: the stage that reported it was timing a call R144 deleted, and
+the effect it named is allocation pressure that shows up identically on a body
+whose size never changes. The thing most likely to break first at 50,000 items
+is no longer any of the code below — it is Jellyfin's own response time, now
+paid 100 times per build, which this benchmark cannot see.
 
 ```
 npx tsx scripts/bench-deck.ts                      # 1k, 10k, 50k
@@ -146,19 +150,20 @@ this path, and it is always 50 cards.**
 
 | stage | 1,000 | 10,000 | 50,000 | µs/item at 50k |
 |---|---|---|---|---|
-| `jellyfin.getMovies` (2 genres) | 3.37 | 36.0 | 204.3 | 4.09 |
-| `jellyfin.getMovies` (unfiltered) | 3.12 | 30.7 | 309.4 | 6.19 |
-| `getMovies` (server ignores paging) | 2.95 | 33.1 | 341.5 | 6.83 |
-| `mdblist` warm cache | 5.94 | 35.6 | 211.8 | 4.24 |
-| `candidatesFromJellyfin` | 0.68 | 5.09 | 32.3 | 0.65 |
-| `buildDeck` | 0.46 | 6.56 | 38.7 | 0.77 |
-| **`buildDeckForRoom` local** | 12.0 | 96.1 | **573.4** | 11.47 |
-| **`buildDeckForRoom` wide** | 11.2 | 81.2 | **434.4** | 8.69 |
+| `jellyfin.getMovies` (2 genres) | 5.14 | 35.0 | 313.3 | 6.27 |
+| `jellyfin.getMovies` (unfiltered) | 10.5 | 32.7 | 343.2 | 6.86 |
+| `getMovies` (server ignores paging) | 8.11 | 26.7 | 250.8 | 5.02 |
+| `mdblist` warm cache | 7.92 | 77.6 | 274.6 | 5.49 |
+| `candidatesFromJellyfin` | 0.73 | 10.5 | 44.4 | 0.89 |
+| `buildDeck` | 0.52 | 17.5 | 51.0 | 1.02 |
+| **`buildDeckForRoom` local** | 19.9 | 128.7 | **653.2** | 13.06 |
+| **`buildDeckForRoom` wide** | 18.0 | 105.5 | **487.0** | 9.74 |
 
-Per-item cost is **flat across a 50× range** for every stage on this run
-(`buildDeckForRoom local`: 12.00 → 9.61 → 11.47 µs/item). That is the shape the
-gate asks about, and it is the same shape the operation counts prove
-independently below.
+Per-item cost is **flat to within the run-to-run noise across a 50× range**
+(`buildDeckForRoom local`: 19.89 → 12.87 → 13.06 µs/item; a quieter run of the
+same code gave 12.00 → 9.61 → 11.47). That is the shape the gate asks about, and
+it is the same shape the operation counts prove independently below — with far
+less argument, which is the point.
 
 **Paging is not a CPU win.** The `server ignores paging` row is the same
 `getMovies` against a server that answers every page with the whole library —
@@ -169,12 +174,12 @@ the size of the largest single body, which is what one deadline has to survive.
 
 ### Read the spread first
 
-A second run of the identical benchmark on the identical machine gave
-**895 ms** for the local 50,000-item build against 573 ms here, and six runs
-during this session spanned **518–1,564 ms** for that one figure. The
-`mdblist warm cache` stage spanned 212–738 ms. The machine was carrying 40–72%
-background load from other agents throughout, and none of that load is in the
-input.
+Seven runs of the identical benchmark on the identical machine during one
+session spanned **518–1,564 ms** for the local 50,000-item build — the figure
+recorded above, 653 ms, sits in the lower half of that. The `mdblist warm cache`
+stage spanned 212–738 ms. `buildDeck` at 10,000 items read 6.56 ms on one run
+and 17.5 ms on the next. The machine was carrying 40–72% background load from
+other agents throughout, and none of that load is in the input.
 
 This is why `src/lib/__tests__/scale.test.ts` contains no millisecond assertion
 at all, and why every conclusion in this document rests on a counted quantity
@@ -190,18 +195,20 @@ on transient cost.
 |---|---|---|
 | `jellyfin.getMovies` (2 genres) | 17.7 MB | — |
 | `jellyfin.getMovies` (unfiltered) | 34.0 MB | — |
-| `getMovies` (server ignores paging) | 17.5 MB | **111.2 MB** |
-| `mdblist` warm cache | 28.2 MB | — |
-| `candidatesFromJellyfin` | 15.1 MB | — |
+| `getMovies` (server ignores paging) | 17.5 MB | 29.0 MB |
+| `mdblist` warm cache | 28.2 MB | 44.3 MB |
+| `candidatesFromJellyfin` | 15.2 MB | — |
 | `buildDeck` | 0.0 MB | — |
-| `buildDeckForRoom` local | 0.1 MB | **106.0 MB** |
+| `buildDeckForRoom` local | 0.1 MB | **95.7 MB** |
 
 Those overlap inside one build. A 50,000-item deck build moves on the order of
 **150–250 MB** through the heap to produce 50 cards.
 
-Note which row has the largest transient: the paging-blind server. Refusing to
-trust `StartIndex` costs an id `Set`, and being *sent* the library twice costs
-the rest.
+The `retained` column is stable across runs — it is a property of the data, not
+of the machine. The `peak+` column is a high-water mark for the whole process,
+so it lands on whichever stage happened to allocate past the previous high;
+across runs the paging-blind stage has read anywhere from 29 MB to 113 MB. Read
+it as "this build reached here", not as a per-stage total.
 
 ---
 
@@ -223,12 +230,12 @@ timed:
 
 | shape | items | bodies | largest body | total | ms | MB/s | µs/body |
 |---|---|---|---|---|---|---|---|
-| one body (pre-R144) | 1,000 | 1 | 0.6 MB | 0.6 MB | 2.05 | 299 | 1,874 |
-| 500-title pages (ships) | 1,000 | 2 | **0.28 MB** | 0.6 MB | 2.02 | 297 | 944 |
-| one body (pre-R144) | 10,000 | 1 | 5.6 MB | 5.6 MB | 17.8 | 348 | 16,135 |
-| 500-title pages (ships) | 10,000 | 20 | **0.28 MB** | 5.6 MB | 22.5 | 281 | 1,001 |
-| one body (pre-R144) | 50,000 | 1 | **28.1 MB** | 28.1 MB | 144.1 | 218 | 129,216 |
-| 500-title pages (ships) | 50,000 | 100 | **0.28 MB** | 28.1 MB | 171.4 | 179 | 1,575 |
+| one body (pre-R144) | 1,000 | 1 | 0.6 MB | 0.6 MB | 4.00 | 188 | 2,977 |
+| 500-title pages (ships) | 1,000 | 2 | **0.28 MB** | 0.6 MB | 4.27 | 202 | 1,390 |
+| one body (pre-R144) | 10,000 | 1 | 5.6 MB | 5.6 MB | 27.5 | 295 | 19,072 |
+| 500-title pages (ships) | 10,000 | 20 | **0.28 MB** | 5.6 MB | 32.9 | 183 | 1,538 |
+| one body (pre-R144) | 50,000 | 1 | **28.1 MB** | 28.1 MB | 182.8 | 194 | 144,987 |
+| 500-title pages (ships) | 50,000 | 100 | **0.28 MB** | 28.1 MB | 192.4 | 211 | 1,330 |
 
 The largest single body went from **28.1 MB to 0.28 MB, a factor of 100, and it
 stays 0.28 MB for any library**. The *total* bytes parsed is the same either way
@@ -238,11 +245,12 @@ smaller and stopped growing.
 
 **3. There is no evidence the parse was ever superlinear — the flag was the
 heap.** The paged row parses a body whose size never changes with the library,
-so its µs/body cannot be superlinear in the library by construction. Across six
-runs it read **1,231 / 1,305 / 1,384 / 1,575 / 2,630 / 3,940 µs** for the same
-0.28 MB of JSON — a 3.2× spread with no change in input, rising in some runs and
-falling in others. A per-byte cost that wanders by 3× on fixed-size work cannot
-support a ×13.9-versus-×10 complexity claim about work that grew tenfold.
+so its µs/body cannot be superlinear in the library by construction. Across
+seven runs at 50,000 items it read **1,231 / 1,305 / 1,330 / 1,384 / 1,575 /
+2,630 / 3,940 µs** for the same 0.28 MB of JSON — a 3.2× spread with no change
+in input at all, and it rose with library size in some runs and fell in others.
+A per-byte cost that wanders by 3× on fixed-size work cannot support a
+×13.9-versus-×10 complexity claim about work that grew tenfold.
 
 So the honest verdict is not "the parse was quadratic and paging fixed it". It
 is: **the flag was allocation and collection pressure wearing a complexity
@@ -258,18 +266,19 @@ candidate count:
 
 | candidates | ms | ms × prev | µs/cand | field reads | reads × prev | **reads/cand** |
 |---|---|---|---|---|---|---|
-| 2,000 | 1.82 | — | 0.909 | 12,946 | — | **6.47** |
-| 4,000 | 6.41 | ×3.53 | 1.603 | 25,674 | ×1.98 | **6.42** |
-| 8,000 | 10.1 | ×1.57 | 1.258 | 51,690 | ×2.01 | **6.46** |
-| 16,000 | 16.0 | ×1.59 | 1.000 | 103,204 | ×2.00 | **6.45** |
-| 32,000 | 26.3 | ×1.64 | 0.822 | 206,583 | ×2.00 | **6.46** |
-| 64,000 | 63.6 | ×2.42 | 0.994 | 413,477 | ×2.00 | **6.46** |
+| 2,000 | 1.84 | — | 0.921 | 12,946 | — | **6.47** |
+| 4,000 | 6.90 | ×3.75 | 1.724 | 25,674 | ×1.98 | **6.42** |
+| 8,000 | 9.36 | ×1.36 | 1.170 | 51,690 | ×2.01 | **6.46** |
+| 16,000 | 19.9 | ×2.13 | 1.247 | 103,204 | ×2.00 | **6.45** |
+| 32,000 | 37.0 | ×1.85 | 1.155 | 206,583 | ×2.00 | **6.46** |
+| 64,000 | 72.8 | ×1.97 | 1.137 | 413,477 | ×2.00 | **6.46** |
 
 Reads per candidate is **flat at 6.46 across a 32× range**, and each doubling
-doubles the count to within rounding. `buildDeck` is linear. The `ms × prev`
-column wobbles between ×1.57 and ×3.53 for an algorithm provably doing exactly
-twice the work each row — which is the same point the parse section makes, in a
-place where the ground truth is not in dispute.
+doubles the count to within rounding — identically on every run, because a
+counted read has no scheduler. `buildDeck` is linear. The `ms × prev` column
+wobbles between ×1.36 and ×3.75 for an algorithm provably doing exactly twice
+the work each row, which is the same point the parse section makes, in a place
+where the ground truth is not in dispute.
 
 **No function on the deck-build path is superlinear in a single build.**
 
@@ -295,14 +304,23 @@ first time this repo has had the *measured* half of that comparison.
 
 | items | first night | cache left: base | log | bytes/entry | read it back |
 |---|---|---|---|---|---|
-| 1,000 | 13.4 ms | 0.4 MB | 0.0 MB | 975 | 4.23 ms |
-| 10,000 | 10.5 ms | 2.2 MB | 2.2 MB | 977 | 24.5 ms |
-| 50,000 | 20.7 ms | 11.2 MB | 10.4 MB | 978 | **229.6 ms** |
+| 1,000 | 20.3 ms | 0.4 MB | 0.0 MB | 975 | 4.65 ms |
+| 10,000 | 16.9 ms | 2.2 MB | 2.2 MB | 977 | 31.3 ms |
+| 50,000 | 16.3 ms | 11.2 MB | 10.4 MB | 978 | **153.7 ms** |
 
 "read it back" is the cache in the state the writer actually leaves it — a base
-plus an un-compacted log — which is **more** than the `mdblist warm cache` stage
-above measures, since that stage reads a freshly compacted base with no log.
-Both states ship; the log state is the common one.
+plus an un-compacted log, which is the state a household is usually in, since a
+compaction only happens when the log has caught up with the base.
+
+**Do not read that 153.7 ms against the 274.6 ms in the wall-clock table.** They
+are different caches: the `mdblist warm cache` stage reads a compacted 42.0 MB
+base holding every title in the library, and this reads a 21.6 MB base-plus-log
+holding only the titles a `Drama + Comedy` room asked about. Per megabyte they
+are 6.5 and 7.1 ms — close enough that this run says nothing confident about
+which state is dearer, only that both are dominated by the size of the file.
+
+`bytes/entry` is **975–978 across all three sizes**, stable to 0.3%. It is worth
+noting because the next section turns on it.
 
 ### Correction: the old figure was 1.36 GB and it should have been ~640 MB
 
@@ -355,19 +373,19 @@ previous version of this list are gone because the code changed under them.
    page that runs long costs a page, but there are a hundred of them.
 
 2. **The ratings cache is re-parsed on every build, and it does not scale with
-   the question.** 42 MB and ~212 ms warm (230 ms in the base-plus-log state a
-   real cache is usually in), paid identically whether the room needs 25,000
-   ratings or the 120 that Any Movie mode asks for. It is the single largest
-   app-side cost in the build. On slower storage than an SSD it dominates
-   everything else here.
+   the question.** 42 MB and 212–738 ms across runs, paid identically whether
+   the room needs 25,000 ratings or the 120 that Any Movie mode asks for. It is
+   the single largest app-side cost in the build in most runs. On slower storage
+   than an SSD it dominates everything else here. R143 made *writing* it cheap
+   and left *reading* it exactly as it was.
 
-3. **Memory.** ~150–250 MB moving through the heap per build, with a 106 MB peak
+3. **Memory.** ~150–250 MB moving through the heap per build, with a 96 MB peak
    on the end-to-end stage. Nothing in the repo sets a container memory limit, so
    on a NAS with a default cap this is a plausible OOM, and an OOM mid-build
    looks to the room like the server vanished.
 
 4. **Any Movie mode fetches the whole library to use 120 titles.** At 50,000
-   items the wide build costs 434 ms while considering 0.5% as many candidates as
+   items the wide build costs 487 ms while considering 0.5% as many candidates as
    the local one. Purely to resolve Play links.
 
 5. **`buildDeck` allocates ~25,000 objects to keep 50.** Cheap per object, and

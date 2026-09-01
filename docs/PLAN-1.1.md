@@ -14,13 +14,26 @@ noted, but the reason to do it is the household.
 
 ## Done means
 
-1. **A restart does not end the night.** — **Server side done; the browser
-   proof is the one thing a session cannot close.** Rooms are snapshotted and
-   restored (R149/R150), and `server/__tests__/restart.test.ts` drives the real
-   handlers through a snapshot, a fresh store and a rejoin — including that a
-   phone which never came back is not counted present, and that R112 still
-   refuses a stale socket a seat in a restored room. What remains is
-   `npm run e2e:two`, which needs a machine with a live Jellyfin.
+1. **A restart does not end the night.** — **Server side done. The browser
+   proof DOES NOT EXIST, and this entry said otherwise (R180).** Rooms are
+   snapshotted and restored (R149/R150), and `server/__tests__/restart.test.ts`
+   drives the real handlers through a snapshot, a fresh store and a rejoin —
+   including that a phone which never came back is not counted present, and that
+   R112 still refuses a stale socket a seat in a restored room.
+
+   What this condition asks for is a test that restarts the PROCESS mid-deck and
+   has both phones carry on. `scripts/e2e-two-phones.ts` does not do that and
+   cannot: it drives four rooms — the happy path, a phone dying in the knockout,
+   a phone losing its network in the lobby, a five-second blip — and it attaches
+   to a server somebody else started. There is no kill, no restart, no snapshot
+   anywhere in it.
+
+   So the remaining work is **writing** a harness that owns the server process,
+   not running one that exists. What it must prove, beyond what the unit test
+   already does: that socket.io reconnects on its own, that the stored seat
+   secret survives in the phone's storage across the gap, that the deck resumes
+   at each phone's own position, and that the "hold on" message clears itself
+   rather than outliving the restart it describes (R150).
 2. ~~A room can settle early.~~ **Answered: do not build (R152).** The focus
    group returned 5 of 5 against, and the reason is structural — any card
    everyone liked already ends the room, so a mid-deck "leader" is the app's own
