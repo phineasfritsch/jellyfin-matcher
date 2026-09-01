@@ -755,6 +755,18 @@
         "server/__tests__/deckService.test.ts"
       ],
       "note": "Sends every room down the wide path. Nothing on screen looks wrong -- the deck is simply bigger and better -- while a household that asked for their own library only is shown films they do not have, offered the chance to spend the host's disk on them, and has had their genre choices sent to a service they did not agree to involve. The scope switch had no test at all."
+    },
+    {
+      "id": "R168-boolean-coerced-not-checked",
+      "ruling": "R168",
+      "claim": "a phone cannot mark itself ready by sending the word \"false\"",
+      "file": "server/validate.ts",
+      "find": "  if (typeof value !== 'boolean') fail('boolean');\n  return value;",
+      "replace": "  return Boolean(value);",
+      "expect": [
+        "server/__tests__/validate.test.ts"
+      ],
+      "note": "Restores the original one-liner, which validated nothing in the module whose entire job is refusing what a phone sends. Boolean('false') is true, and so are Boolean({}) and Boolean([]) -- so a client that stringified its payload marked itself READY by sending the word \"false\", and the lobby then waited for nobody while telling everybody it was waiting. Found by listing exported functions that no test file so much as names; there were two."
     }
   ]
 }

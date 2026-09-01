@@ -3,11 +3,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from '../../scripts/lib/source-scan';
 import {
+  asBoolean,
   asCardId,
   asGenre,
   asGenres,
   asName,
   asRoomId,
+  asSecret,
   asSettings,
   asUserId,
   DECK_SIZES,
@@ -243,5 +245,55 @@ describe('no socket event can take the process down', () => {
     // The lazy fix for "this might throw" is to stop calling it. R112's seat
     // release lives in there.
     expect(server).toContain('handlers.disconnect(ctx)');
+  });
+});
+
+describe('the two validators nothing had ever called (R168)', () => {
+  /*
+    Found by listing every exported function no test file so much as names.
+    Two came back, and both live in the module whose job is refusing what a
+    phone sends.
+  */
+  it('takes a seat secret only in the exact shape it issues (R86)', () => {
+    const good = 'a'.repeat(64);
+    expect(asSecret(good)).toBe(good);
+  });
+
+  it('refuses anything else offered as a secret', () => {
+    /*
+      R86: a four-character room code is an invitation and the secret is the
+      credential. Every one of these is a plausible attempt -- an uppercase
+      copy-paste, a truncated value, a number, a missing field -- and each must
+      be refused rather than coerced into something that then gets compared.
+    */
+    for (const bad of [
+      'A'.repeat(64),
+      'a'.repeat(63),
+      'a'.repeat(65),
+      'g'.repeat(64),
+      `${'a'.repeat(63)} `,
+      '',
+      null,
+      undefined,
+      12345,
+      ['a'.repeat(64)],
+      { secret: 'a'.repeat(64) },
+    ]) {
+      expect(() => asSecret(bad), `${JSON.stringify(bad)} was accepted as a seat secret`).toThrow();
+    }
+  });
+
+  it('takes a boolean and refuses a word that looks like one', () => {
+    /*
+      This was `Boolean(value)`. `Boolean('false')` is true, so a client that
+      stringified its payload marked itself ready by sending the word "false" --
+      and the lobby then waited for nobody while telling everybody it was
+      waiting. Every other validator in the file refuses rather than guesses.
+    */
+    expect(asBoolean(true)).toBe(true);
+    expect(asBoolean(false)).toBe(false);
+    for (const bad of ['false', 'true', 0, 1, '', null, undefined, {}, []]) {
+      expect(() => asBoolean(bad), `${JSON.stringify(bad)} was coerced into a boolean`).toThrow();
+    }
   });
 });

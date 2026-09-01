@@ -117,5 +117,20 @@ export function asSettings(value: unknown): Partial<RoomSettings> {
 
 /** A ready flag. Anything truthy is a yes; this one really is just a boolean. */
 export function asBoolean(value: unknown): boolean {
-  return Boolean(value);
+  /*
+    R168: the one validator in this file that validated nothing.
+
+    It was `Boolean(value)`, in a module whose entire job is refusing what a
+    phone sends. `Boolean('false')` is true, and so is `Boolean({})` and
+    `Boolean([])` -- so a client with a bug that stringified its payload marked
+    itself READY by sending the word "false", and the lobby waited for nobody
+    while telling everyone it was waiting.
+
+    Coercion is the right default almost everywhere and the wrong one here,
+    because every neighbour in this file refuses rather than guesses, and a
+    reader who sees `asBoolean` beside `asSecret` is entitled to assume both
+    mean it. Our own client has always sent a real boolean.
+  */
+  if (typeof value !== 'boolean') fail('boolean');
+  return value;
 }

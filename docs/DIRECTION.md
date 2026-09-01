@@ -3112,3 +3112,30 @@ but exactly two locked genres, because a deck built from one or three is not the
 game the room played and silently building something is worse than refusing; and
 the watch history is consulted, so a second night with the same two genres is
 not the first night again (R105).
+
+### R168 — The validator that validated nothing
+
+After the untested MODULES were covered, the same question one level finer:
+which exported functions does no test file so much as name? Two, and both live
+in `server/validate.ts`, whose entire job is refusing what a phone sends.
+
+`asSecret` turned out to be strict and correct — 64 lowercase hex, exactly the
+shape it issues (R86) — and now has the cases that prove it: an uppercase
+copy-paste, a value one character short, a number, an array wrapping the right
+string. It was right all along and nothing said so.
+
+`asBoolean` was `return Boolean(value)`.
+
+`Boolean('false')` is true. So is `Boolean({})` and `Boolean([])`. A client that
+stringified its payload — which is a thing clients do — marked itself READY by
+sending the word "false", and the lobby waited for nobody while telling
+everybody it was waiting.
+
+Coercion is the right default nearly everywhere and the wrong one here. Every
+neighbour in that file refuses rather than guesses, and somebody reading
+`asBoolean` beside `asSecret` is entitled to assume both mean it. A function
+named for a check that performs none is worse than no function, because it
+occupies the place where the check would go.
+
+Our own client has always sent a real boolean, so nothing that ever worked stops
+working.
