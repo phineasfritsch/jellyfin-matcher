@@ -207,6 +207,21 @@ export class RoomStore {
     let expired = 0;
 
     for (const [code, room] of Object.entries(snap.rooms ?? {})) {
+      /*
+        R160: a room that is not a room is dropped, not thrown over.
+
+        Everything below this line trusts the shape -- `room.lastActivity` in
+        arithmetic, `room.users` in Object.values -- and a snapshot is a FILE.
+        A null entry, or one written by a build with a different shape, made
+        this throw. That rejection reached an uncaught `.then` chain in
+        server/index.ts, so the process exited, the container restarted, read
+        the same file and did it again: a boot loop, which is the exact outcome
+        loadSnapshot's own comment says it would rather lose a night than cause.
+      */
+      if (!room || typeof room.lastActivity !== 'number' || typeof room.users !== 'object' || !room.users) {
+        expired += 1;
+        continue;
+      }
       // The same TTL the sweeper uses. A night that ended three days ago must
       // not come back because the server happened to restart.
       if (now - room.lastActivity > ROOM_TTL_MS) {

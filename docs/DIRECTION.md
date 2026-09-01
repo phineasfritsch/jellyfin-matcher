@@ -2868,3 +2868,37 @@ reason beside it is a decision.
 It found one more on the way in: `Ratings`, the details sheet's heading, still
 recorded as unmovable because the word is inside `card.allRatings`. R154 tells
 an identifier from a written word, so it moved with the rest.
+
+### R160 — The snapshot may never stop the server starting
+
+R149 gave rooms a file to survive in. That file is the first thing the process
+reads, before `nextApp.prepare()`, and until now it was trusted.
+
+`loadSnapshot` guarded the case it thought of: JSON that will not parse, with a
+comment saying one lost night is better than a boot loop. It then **cast** the
+result and handed it on. JSON that parses into the wrong thing went straight
+through — and `restore` put `room.lastActivity` into arithmetic and `room.users`
+into `Object.values` without asking.
+
+So a null room, or a room from a build with a different shape, threw. The throw
+reached `void restoreRooms().then(() => nextApp.prepare())`, which had no
+`.catch()`. Node exits on an unhandled rejection, so the process died before it
+listened; the container restarted, read the same file, and did it again.
+
+That is the boot loop the comment said it would rather lose a night than cause,
+arriving through the door next to the one being watched. Recovery meant deleting
+a file by hand, on a home server, over a tunnel, while nobody could reach the
+app — and the app is the thing you would use to notice.
+
+Fixed at both boundaries, because they answer different questions. `restore`
+drops a room that is not a room and counts it expired, so one bad entry does not
+cost the good rooms beside it — that case is tested, because "be defensive" that
+throws away the whole file is a different bug wearing the same fix. And
+`restoreRooms` is wrapped, so whatever else that file does one day, the app
+still comes up with no rooms rather than not at all.
+
+**Neither guard is the interesting part.** The interesting part is that the code
+stated its own priority in a comment — no boot loop — and then only defended the
+half of it that had occurred to somebody. A stated intention is not a check,
+which is the same lesson as R157 one layer down: there, prose outlived a fix;
+here, prose outran the code that was supposed to implement it.

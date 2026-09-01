@@ -564,7 +564,23 @@ setInterval(() => {
   if (store.roomCount() > 0) void saveSnapshot(store.snapshot());
 }, SNAPSHOT_INTERVAL_MS).unref();
 
-void restoreRooms().then(() => nextApp.prepare()).then(() => {
+/*
+  R160: the snapshot may never stop the server starting.
+
+  restoreRooms reads a file. `store.restore` is defensive about its contents
+  now, but the guarantee that matters is at this boundary: whatever goes wrong
+  in there -- a shape nothing anticipated, a filesystem error mid-read -- the
+  app still comes up, with no rooms rather than not at all. An unhandled
+  rejection here exits the process, and a container that exits on boot reads the
+  same file when it restarts. Losing the rooms costs one evening; a boot loop
+  costs the app until somebody deletes a file by hand over a tunnel.
+*/
+void restoreRooms()
+  .catch((err) => {
+    console.warn('Could not restore rooms; starting with none.', err);
+  })
+  .then(() => nextApp.prepare())
+  .then(() => {
   httpServer.listen(PORT, () => {
     console.log(`jellyfin-matcher server listening on :${PORT}`);
     for (const line of exposureBanner(exposure)) console.log(`  ${line}`);

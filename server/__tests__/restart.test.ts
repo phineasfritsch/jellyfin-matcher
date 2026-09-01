@@ -278,3 +278,62 @@ describe('seat ownership after a restore', () => {
     expect(room.users[created.userId]!.connected).toBe(true);
   });
 });
+
+describe('a snapshot that is not what it claims', () => {
+  /*
+    R160. `restore` trusted the file's shape: `room.lastActivity` went straight
+    into arithmetic and `room.users` into Object.values. A snapshot is a FILE,
+    on a volume the host owns, written by whatever build ran last.
+
+    A null room, or one from a build with a different shape, threw. That throw
+    reached an uncaught promise chain in server/index.ts -- restoreRooms runs
+    BEFORE nextApp.prepare() -- so the process exited before listening. The
+    container restarts, reads the same file, and does it again.
+
+    That is a boot loop, and it is the precise outcome loadSnapshot's own
+    comment says it would rather lose a night than cause. It only guarded
+    against JSON that would not parse; JSON that parses into the wrong thing
+    went straight through the cast.
+
+    Recovery would have meant deleting a file by hand, on a home server, over a
+    tunnel, while nobody could reach the app.
+  */
+  const rotten: Array<[string, unknown]> = [
+    ['a null room', null],
+    ['a room with no timestamp', { users: {} }],
+    ['a room whose timestamp is text', { lastActivity: 'yesterday', users: {} }],
+    ['a room with no members at all', { lastActivity: Date.now() }],
+    ['a room whose members are a string', { lastActivity: Date.now(), users: 'nobody' }],
+  ];
+
+  for (const [name, room] of rotten) {
+    it(`drops ${name} instead of taking the server down`, () => {
+      const store = new RoomStore();
+      const snap = {
+        version: 1,
+        savedAt: Date.now(),
+        userSeq: 1,
+        rooms: { AB12: room },
+        secrets: {},
+      } as never;
+      expect(() => store.restore(snap), `${name} threw out of restore`).not.toThrow();
+      expect(store.getRoom('AB12'), `${name} was restored as if it were a room`).toBeUndefined();
+    });
+  }
+
+  it('still restores the good rooms sitting beside a bad one', () => {
+    // The failure mode worth avoiding twice: one unreadable entry costing every
+    // other room in the file.
+    const before = new RoomStore();
+    const created = handlers.createRoom(phone(before, 's1').ctx, { name: 'Ravi' }) as {
+      roomId: string;
+    };
+    const snap = before.snapshot() as unknown as { rooms: Record<string, unknown> };
+    snap.rooms.ZZZZ = null;
+
+    const after = new RoomStore();
+    const { restored } = after.restore(snap as never);
+    expect(restored).toBe(1);
+    expect(after.getRoom(created.roomId), 'a good room was lost with the bad one').toBeTruthy();
+  });
+});

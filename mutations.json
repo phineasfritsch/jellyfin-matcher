@@ -647,6 +647,18 @@
         "src/ui/__tests__/strings.test.ts"
       ],
       "note": "R159 shipped with a stated blind spot: its whole-line rule could not see a sentence inline with its tag, and Reconnecting... had to be found by hand. Requiring a closing tag right after the text closes it without reintroducing the collision that made the first attempt unusable -- useState<string>(x) has no </ after it. This mutation is the proof the second rule bites where the first could not."
+    },
+    {
+      "id": "R160-snapshot-shape-trusted",
+      "ruling": "R160",
+      "claim": "a malformed room in the snapshot is dropped rather than taking the server down",
+      "file": "server/store.ts",
+      "find": "      if (!room || typeof room.lastActivity !== 'number' || typeof room.users !== 'object' || !room.users) {\n        expired += 1;\n        continue;\n      }\n",
+      "replace": "",
+      "expect": [
+        "server/__tests__/restart.test.ts"
+      ],
+      "note": "restore() trusted the file's shape -- room.lastActivity straight into arithmetic, room.users straight into Object.values -- and a snapshot is a file on a volume the host owns, written by whatever build ran last. A null room threw, the throw reached an uncaught promise chain in server/index.ts because restoreRooms runs BEFORE nextApp.prepare(), the process exited before listening, and the container restarted onto the same file. loadSnapshot guarded JSON that would not parse and let JSON that parsed into the wrong thing through the cast."
     }
   ]
 }
