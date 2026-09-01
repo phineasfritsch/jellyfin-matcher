@@ -671,6 +671,18 @@
         "server/__tests__/restart.test.ts"
       ],
       "note": "Reverts activeRoomCount to what roomCount already says. The mutation is invisible on a live server -- the two numbers agree whenever anybody is connected -- and only diverges in the state autodeploy meets after every deploy it performs: a snapshot restored with every member disconnected. That is why the test drives a real restart rather than asserting the counter in isolation."
+    },
+    {
+      "id": "R162-disconnect-unguarded",
+      "ruling": "R162",
+      "claim": "a throw while releasing a seat cannot end the process",
+      "file": "server/index.ts",
+      "find": "    try {\n      handlers.disconnect(ctx);\n    } catch (err) {\n      console.warn('Failed to release a seat on disconnect.', err);\n    }",
+      "replace": "    handlers.disconnect(ctx);",
+      "expect": [
+        "server/__tests__/validate.test.ts"
+      ],
+      "note": "Every inbound event goes through `wrap`, which turns a throw into a refusal on the ack. `disconnect` has no ack, so R93's consolidation had nothing to hand it and left it bare. A throw in a socket.io callback is an uncaught exception: it ends the process and every room on it, over one dropped connection, at the moment a phone leaves -- which is a thing phones do constantly."
     }
   ]
 }

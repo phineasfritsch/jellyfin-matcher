@@ -190,3 +190,37 @@ describe('shutting down', () => {
     expect(server).toMatch(/The server is restarting/);
   });
 });
+
+describe('no socket event can take the process down', () => {
+  /*
+    R162. Every inbound event goes through `wrap`, which turns a throw into a
+    refusal on the ack (R93 consolidated eleven copies of that decision into
+    one). `disconnect` was the exception, and not by judgement: it has no ack to
+    refuse to, so there was nothing for the wrapper to do and it was left bare.
+
+    A throw in a socket.io callback is an uncaught exception. It ends the
+    PROCESS -- every room on the server, over one dropped connection, at the
+    moment a phone leaves. Which is a thing phones do constantly.
+
+    Asserted as text because this lives in server/index.ts, which has no unit
+    harness; the file above already reads itself this way for the same reason.
+    What it checks is that the call is inside a try, not that the try is
+    correct -- and that is the whole difference between crashing and not.
+  */
+  const server = readFileSync(join(ROOT, 'server', 'index.ts'), 'utf8');
+  const flat = (src: string) => src.replace(/\s+/g, ' ');
+
+  it('guards the disconnect handler, which has no ack to refuse to', () => {
+    const body = flat(server);
+    expect(
+      body,
+      'handlers.disconnect is called without a try; one throw ends every room on this server',
+    ).toMatch(/try\s*\{\s*handlers\.disconnect\(ctx\);\s*\}\s*catch/);
+  });
+
+  it('still calls it, so the guard did not become a way of skipping the work', () => {
+    // The lazy fix for "this might throw" is to stop calling it. R112's seat
+    // release lives in there.
+    expect(server).toContain('handlers.disconnect(ctx)');
+  });
+});

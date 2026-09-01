@@ -2932,3 +2932,28 @@ new script; the script would refuse; and refusing is precisely what stops the
 container being replaced. The deploy that fixes it is the one the change
 prevents. Adding a field, and reading it with a fallback, is the only shape that
 is safe in both directions.
+
+### R162 — The handler with nothing to refuse to
+
+R93 found eleven socket handlers each carrying its own try/catch and turned them
+into one wrapper: a throw becomes a refusal on the ack, because a refusal that
+never reaches the ack is a phone that hangs.
+
+`disconnect` was left out, and not by judgement. It has no ack. There was
+nothing for the wrapper to do with it, so it stayed bare — and a throw in a
+socket.io event callback is an uncaught exception, which ends the **process**.
+Every room on the server, over one dropped connection, at the moment a phone
+leaves. Which is a thing phones do constantly.
+
+The absence had a reason, which is exactly why it survived being read. "No ack,
+so nothing to wrap" answers the question the wrapper was designed for and not
+the question that matters here, which is whether a throw escapes.
+
+There is nobody to report to: the socket asking is already gone. So the guard
+logs and lets the rest of the server stand. The failure it converts to is a seat
+left held until the idle sweeper clears it — one stalled room instead of all of
+them.
+
+Two tests, because the lazy fix for "this might throw" is to stop calling it,
+and `handlers.disconnect` is where R112's seat release lives. One asserts the
+call sits inside a `try`; the other asserts it is still made.

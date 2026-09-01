@@ -497,9 +497,27 @@ io.on('connection', (socket) => {
     }),
   );
 
+  /*
+    R162: the one handler with no ack, and so the one R93 did not wrap.
+
+    Every event above goes through `wrap`, which turns a throw into a refusal on
+    the ack. `disconnect` has no ack to refuse to, so it was left bare -- and a
+    throw in a socket.io event callback is an uncaught exception, which ends the
+    PROCESS. Every other room on this server goes with it, over one dropped
+    connection.
+
+    There is nobody to report to here: the socket asking is already gone. So the
+    only useful thing is to leave the rest of the server standing and say what
+    happened. The seat may be left held, which the idle sweeper clears; that is
+    a stalled room rather than every room.
+  */
   socket.on('disconnect', () => {
     liveTokens.delete(socket.id);
-    handlers.disconnect(ctx);
+    try {
+      handlers.disconnect(ctx);
+    } catch (err) {
+      console.warn('Failed to release a seat on disconnect.', err);
+    }
   });
 
   socket.on('genres:list', async (_payload: unknown, ack?: Ack) => {
