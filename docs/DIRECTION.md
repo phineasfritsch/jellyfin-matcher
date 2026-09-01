@@ -3322,3 +3322,32 @@ value.
 
 R173 is what made this worth writing now: those 22 server sentences stopped
 being log copy the moment R163 put every refusal in front of a household.
+
+### R175 — Two alphabets, described as one
+
+The elimination round breaks a tie alphabetically, and a room where everybody
+abstains falls back to the same rule so the round cannot loop forever. One
+comment covered both: "Alphabetical, same as a tie."
+
+The tie used `localeCompare`. The fallback used a bare `.sort()`, which is
+code-unit order. They agree on almost everything and disagree on exactly one
+pair in TMDb's own genre list: `.sort()` puts **TV Movie** before **Thriller**,
+because `V` is 0x56 and `h` is 0x68, while collation puts Thriller first — the
+way somebody reading a list would.
+
+So a room that tied dropped Thriller and a room that all abstained dropped TV
+Movie, from an identical pool, under a rule stated once. Nothing looked wrong:
+both are genres, both eliminations are legal, and the room has no way to know
+which path resolved its round.
+
+`localeCompare` with no locale argument is the second half. It asks the RUNTIME
+where it is, so two servers handed identical votes could eliminate different
+genres — and a knockout exists precisely so the room can see why a genre went.
+
+Both paths now use one lowercased code-unit comparison. Deterministic on every
+machine, and it agrees with what a household means by alphabetical.
+
+Found by reading the knockout for edge cases — ties, abstains, departures —
+after the coverage sweeps ran out. The logic around it is careful and
+well-argued; R87's treatment of a member who votes and then leaves is exactly
+right. The defect was in the sentence that claimed two branches were the same.

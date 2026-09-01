@@ -827,6 +827,18 @@
         "server/__tests__/validate.test.ts"
       ],
       "note": "The ordinary thing somebody writes while debugging, and it is a publication: fail() sends err.message verbatim to the phone, and a room code is an invitation rather than a credential (R86), so anybody who can reach the app and guess four characters reads it. Nothing today leaks -- every interpolation is a status code, an id or a count. This is about the next one."
+    },
+    {
+      "id": "R175-two-alphabets",
+      "ruling": "R175",
+      "claim": "a tie and a full abstain drop the same genre from the same pool",
+      "file": "src/lib/knockout.ts",
+      "find": "      : [...state.pool].sort(byName).map((g) => [g, 0] as const);",
+      "replace": "      : [...state.pool].sort().map((g) => [g, 0] as const);",
+      "expect": [
+        "src/lib/__tests__/knockout.test.ts"
+      ],
+      "note": "Restores the bare .sort(), which is code-unit order. It disagrees with collation on exactly one pair in TMDb's own genre list -- 'TV Movie' before 'Thriller', because V is 0x56 and h is 0x68 -- so the same pool dropped a different genre depending on whether a tie or a full abstain resolved the round, while one comment described both as alphabetical. Everything else about the knockout still passes."
     }
   ]
 }

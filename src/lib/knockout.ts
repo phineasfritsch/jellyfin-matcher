@@ -145,6 +145,30 @@ export function submitElimination(
   return resolveElimination({ ...state, elimVotes }, deciderIds);
 }
 
+/**
+ * R175: one alphabet, and one that does not depend on where the server is.
+ *
+ * The tie-break used `localeCompare` and the everybody-abstained fallback used
+ * a bare `.sort()`, while the comment between them said they were the same
+ * rule. They are not. On TMDb's own genre list they disagree about exactly one
+ * pair: code-unit order puts "TV Movie" before "Thriller" because `V` (0x56)
+ * sorts under `h` (0x68), and collation puts "Thriller" first the way a person
+ * reading a list would. So a tie dropped Thriller and a room that all
+ * abstained dropped TV Movie, from the same pool, by a rule described once.
+ *
+ * `localeCompare` with no locale also asks the RUNTIME where it is. Two servers
+ * given identical votes could eliminate different genres, and the room would
+ * have no way to tell why -- which is the opposite of what a knockout is for.
+ *
+ * Lowercased code-unit comparison: deterministic everywhere, and it agrees with
+ * what a household means by alphabetical.
+ */
+const byName = (a: string, b: string): number => {
+  const x = a.toLowerCase();
+  const y = b.toLowerCase();
+  return x < y ? -1 : x > y ? 1 : 0;
+};
+
 /** The ELIMINATION resolution, separated from the act of voting. See R87. */
 function resolveElimination(next: KnockoutState, deciderIds: string[]): KnockoutState {
   const state = next;
@@ -163,11 +187,12 @@ function resolveElimination(next: KnockoutState, deciderIds: string[]): Knockout
     tally.set(g, (tally.get(g) ?? 0) + 1);
   }
   // A whole room abstaining still has to make progress, or the round loops
-  // forever with everyone waiting on everyone. Alphabetical, same as a tie.
+  // forever with everyone waiting on everyone. Alphabetical, same as a tie --
+  // and R175 is about that sentence having been false.
   const ranked =
     tally.size > 0
-      ? [...tally.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-      : [...state.pool].sort().map((g) => [g, 0] as const);
+      ? [...tally.entries()].sort((a, b) => b[1] - a[1] || byName(a[0], b[0]))
+      : [...state.pool].sort(byName).map((g) => [g, 0] as const);
   const eliminated = ranked[0]![0];
 
   const pool = state.pool.filter((g) => g !== eliminated);
