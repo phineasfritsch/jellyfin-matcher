@@ -108,6 +108,16 @@ is left of it.
       moment it might not. If it disagrees, that is auto-deploy deferring or
       failing, and the answer is in `docker compose logs` on the host.
 
+- [ ] **Decide U4: does the four-second guest join survive?**
+      Options and costs in [docs/EXPOSURE.md](docs/EXPOSURE.md). The decision
+      comes first; none of the four is hard to build afterwards.
+
+      The framing that kept this open was wrong (R184). "Safe by default costs
+      the guest join" is true only of `MATCHER_AUTH=all`. `create` already
+      exists, keeps the guest join completely, and costs the host one login per
+      twelve hours — so the cheapest option was never actually in tension with
+      the property everyone was protecting.
+
 - [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
       now far behind. A compose file can only name `:latest`, which is not a
       version and cannot be rolled back to.
