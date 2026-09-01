@@ -19,10 +19,18 @@
  *   JELLYFIN_URL=... JELLYFIN_API_KEY=... \
  *   PROBE_USER=kid PROBE_PASS=... npx tsx scripts/probe-user-scope.ts
  *
- * READ-ONLY, and deliberately so: it authenticates, counts, and prints. It
- * writes nothing, changes no setting, and creates no user. Set the parental
- * limit by hand in Jellyfin first — a script that configures the thing it is
- * testing proves less than one that does not.
+ * READS ONLY YOUR LIBRARY, which is not the same as writing nothing.
+ *
+ * An earlier version of this header said "it writes nothing". That was wrong,
+ * and wrong in the direction that matters when somebody runs a script against
+ * their own server: `POST /Users/AuthenticateByName` is state-changing. It
+ * mints an access token, and Jellyfin records a SESSION and a DEVICE against
+ * that account which persist and are visible in Dashboard → Devices.
+ *
+ * So: it creates no user, changes no setting, and reads nothing but two counts.
+ * It does leave a device entry, named below so you can find and delete it. Set
+ * the parental limit by hand in Jellyfin first — a script that configures the
+ * thing it is testing proves less than one that does not.
  *
  * WHAT A RESULT MEANS
  *
@@ -40,8 +48,14 @@ const KEY = process.env.JELLYFIN_API_KEY ?? '';
 const USER = process.env.PROBE_USER ?? '';
 const PASS = process.env.PROBE_PASS ?? '';
 
+/*
+  Named so the session this creates is obvious in Dashboard → Devices, and so
+  deleting it afterwards is a decision somebody can actually make. A probe that
+  leaves an anonymous device behind leaves a mystery behind.
+*/
 const CLIENT =
-  'MediaBrowser Client="Matcher probe", Device="probe", DeviceId="matcher-probe", Version="1"';
+  'MediaBrowser Client="Matcher parental-control probe", Device="probe", ' +
+  'DeviceId="matcher-probe-delete-me", Version="1"';
 
 function need(name: string, value: string) {
   if (!value) {
@@ -98,6 +112,23 @@ async function main() {
   });
   console.log(`  as ${USER}:${' '.repeat(Math.max(1, 22 - USER.length))}${asUser} movies\n`);
 
+  /*
+    Nothing to compare is not a refutation.
+
+    Two zeros satisfy `asUser === asServer` and printed NOT CONFIRMED, which
+    reads as evidence against the most serious claim in docs/TRUST.md. A server
+    key that sees no movies means the key is wrong, the URL is wrong, or the
+    library is empty — none of which say anything about parental controls.
+  */
+  if (asServer === 0) {
+    console.log(
+      'NOTHING WAS LEARNED. The server key sees zero movies, so there is no\n' +
+        'comparison to make. Check JELLYFIN_URL and JELLYFIN_API_KEY against a\n' +
+        'library that actually has films in it, then run this again.',
+    );
+    process.exit(2);
+  }
+
   if (asUser < asServer) {
     console.log(
       `CONFIRMED: the server key sees ${asServer - asUser} title(s) ${USER} cannot.\n` +
@@ -106,9 +137,12 @@ async function main() {
     );
   } else if (asUser === asServer) {
     console.log(
-      'NOT CONFIRMED on this server, with this user. The counts match, so either no\n' +
-        'restriction applies to this account or Jellyfin does not filter this query.\n' +
-        'Re-run against a user who genuinely cannot see something before concluding.',
+      `NOT CONFIRMED on this server, with this user. Both see ${asServer} movies, so\n` +
+        'either no restriction applies to this account or Jellyfin does not filter\n' +
+        'this query. Re-run against a user who genuinely cannot see something before\n' +
+        'concluding anything — and note the two counts come from DIFFERENT endpoints\n' +
+        '(/Items as the server, /Users/{id}/Items as the user), so an equal result is\n' +
+        'weaker evidence than an unequal one.',
     );
   } else {
     console.log(

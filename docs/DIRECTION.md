@@ -3955,3 +3955,33 @@ a judgement for a person. The exit code tracks the first, the output reports the
 second and says plainly that a growing line WITHOUT another home would still
 exit 0. A script that fails on its own documented pass is a script somebody
 stops running, and then the measurement stops happening at all.
+
+### R198 — "It writes nothing" was not true
+
+The parental-control probe is the one script in this repository that a person
+points at their own live Jellyfin with real credentials, so its header is a
+promise rather than a description. It said: "READ-ONLY, and deliberately so: it
+authenticates, counts, and prints. It writes nothing."
+
+`POST /Users/AuthenticateByName` is a state-changing call. It mints an access
+token, and the server records a SESSION and a DEVICE against that account which
+persist and are visible in Dashboard → Devices. The probe reads only two counts
+and changes no setting, but "writes nothing" was false, and false in the
+direction that matters: it is the sentence somebody reads before deciding
+whether to run it.
+
+Corrected, and the device is now named `matcher-probe-delete-me` so the trace it
+leaves is findable rather than anonymous. A probe that leaves something behind
+should say what, and say it in the place where the decision is made.
+
+**Two zeros were being reported as a refutation.** If the server key sees no
+movies -- a wrong key, a wrong URL, an empty library -- then `asUser === asServer`
+held and the script printed NOT CONFIRMED, which reads as evidence against the
+most serious claim in TRUST.md. It says NOTHING WAS LEARNED now, and exits 2 so
+the difference is legible to anything reading exit codes.
+
+**And an equal result is weaker than an unequal one**, because the two counts
+come from different endpoints -- `/Items` as the server, `/Users/{id}/Items` as
+the user. A difference is hard to explain away; a match could be Jellyfin
+declining to filter that particular query. The output says so rather than
+letting a match read as a clean refutation.

@@ -88,7 +88,14 @@ is left of it.
       it was filed here. It was not (R182), so for some time the most serious
       item in the trust model was waiting on a step nobody could run.
 
-      It is read-only and takes a minute: count movies with the server key,
+      It leaves ONE trace and this is the correction worth reading before you
+      run it: authenticating is a state-changing call, so Jellyfin records a
+      session and a device against that account. It is named
+      "matcher-probe-delete-me" and you can remove it in Dashboard → Devices.
+      An earlier version of this entry said the probe writes nothing, which was
+      wrong (R198).
+
+      Otherwise it takes a minute: count movies with the server key,
       count them again as a user with a parental limit, print both. Set the
       limit by hand in Jellyfin first — a script that configures the thing it is
       testing proves less than one that does not. Fewer for the user confirms
