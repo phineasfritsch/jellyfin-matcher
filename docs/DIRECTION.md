@@ -3985,3 +3985,32 @@ come from different endpoints -- `/Items` as the server, `/Users/{id}/Items` as
 the user. A difference is hard to explain away; a match could be Jellyfin
 declining to filter that particular query. The output says so rather than
 letting a match read as a clean refutation.
+
+### R199 — The colour underneath the thing you can see
+
+R187 gated contrast against `--color-background` and reported 17.05:1 for body
+text and 7.75:1 for every secondary line. Both numbers describe a surface nobody
+looks at.
+
+`body` sets that colour, and then `body::before` paints a full-viewport layer
+over it: `linear-gradient(168deg, #16211f, #0e1416, #080a0c)` with two radial
+tints. The token is the ground beneath the paint. R187's own argument was that
+these pairs are definitional rather than a guess about where something is drawn
+— and that argument was right about the FOREGROUND and wrong about the
+background, which is precisely the half nobody checked.
+
+Gated against the gradient's light end now, the worst ordinary case for light
+text: **14.55:1** and **6.61:1**. Lower than the numbers that were being
+reported, which is the point.
+
+**And there is one real number that arithmetic cannot settle.** Over the teal
+radial at its declared 0.24, muted text falls to **4.18:1**, under the 4.5 it
+owes. It is not gated, because the radial is centred at `8% -10%` — above the
+viewport — so its on-screen strength is lower than declared and unknowable from
+the CSS, and because most text rides a `.gel` pane with its own background. A
+capture of the top-left corner answers it in one reading, and that is queued.
+
+The pattern is the one R89 and R95 already named and this repository keeps
+relearning: arithmetic tells you what was declared, a photograph tells you what
+somebody sees, and the gap between them is where a confident wrong number
+lives.

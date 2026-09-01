@@ -58,17 +58,46 @@ export function paletteTokens(): Map<string, string> {
  * background is every secondary line in the app. Neither needs a capture to be
  * true, and either dropping below 4.5:1 is a real failure (R187).
  */
+/**
+ * R199: the surface text sits on is NOT `--color-background`.
+ *
+ * `body` sets that colour and `body::before` then paints a full-viewport layer
+ * over it: `linear-gradient(168deg, #16211f, #0e1416, #080a0c)` with two
+ * radial tints. So the token is the colour underneath the thing you can see,
+ * and gating against it reported 7.75:1 for muted text that is never drawn on
+ * 7.75:1 of anything.
+ *
+ * Gated against the LIGHT END of that gradient instead, which is the worst
+ * ordinary case for light text: least contrast, no tint, and unambiguously on
+ * screen. muted-fg is 6.61:1 there and foreground 14.55:1.
+ *
+ * What is deliberately NOT gated is the tinted corner. Over the teal radial at
+ * full strength the muted text falls to 4.18:1, under the 4.5 it owes -- but
+ * that radial is centred at `8% -10%`, above the viewport, so its on-screen
+ * alpha is lower than 0.24 and unknown from the CSS alone; and most text rides
+ * a `.gel` pane with its own background rather than the bare gradient. Deciding
+ * that needs `contrast.ts` on a real capture, which is exactly the split R89
+ * and R95 established: arithmetic says what is declared, a PNG says what a
+ * person sees.
+ */
+export const SURFACE = {
+  /** The lightest thing the gradient paints, and so the hardest to read on. */
+  gradientLight: '#16211f',
+  /** Full-strength teal tint over that. Reported, not gated -- see above. */
+  tintedLight: '#3f6f70',
+} as const;
+
 export const GATED_PAIRS = [
   {
     fg: '--color-foreground',
-    bg: '--color-background',
+    bg: SURFACE.gradientLight,
     min: 4.5,
-    why: 'body text on the page; if this fails, everything fails',
+    why: 'body text on the lightest painted surface; if this fails, everything fails',
   },
   {
     fg: '--color-muted-fg',
-    bg: '--color-background',
+    bg: SURFACE.gradientLight,
     min: 4.5,
-    why: 'every secondary line: the peer count, the year, the runtime, the fix row',
+    why: 'every secondary line -- the peer count, the year, the runtime, the fix row -- on the lightest painted surface',
   },
 ] as const;

@@ -41,7 +41,8 @@ function main() {
   console.log('\nGated — pairs that are what the tokens mean:\n');
   for (const pair of GATED) {
     const fg = t.get(pair.fg);
-    const bg = t.get(pair.bg);
+    // Token name, or a literal from the layer body::before paints (R199).
+    const bg = pair.bg.startsWith('#') ? pair.bg : t.get(pair.bg);
     if (!fg || !bg) {
       console.log(`  MISSING ${pair.fg} or ${pair.bg} — the palette moved and this did not`);
       failures += 1;

@@ -684,12 +684,27 @@ trailer and tried to get back out.
 
 ### R6 — 1.4.3 Contrast, Minimum (AA). ~~Measured, but not standing.~~ Partly standing (R187).
 
-> **The definitional pairs are gated now.** `--color-foreground` on
-> `--color-background` is what body text IS, and `--color-muted-fg` on
-> `--color-background` is every secondary line — the peer count, the year, the
-> runtime, the diagnosis fix row. Neither is a guess about where something is
-> drawn, so neither needs a capture, and `css.test.ts` fails if either drops
-> under 4.5:1. Today: **17.05:1** and **7.75:1**.
+> **The definitional pairs are gated now, against the surface actually painted
+> (R199).** `--color-foreground` is what body text IS and `--color-muted-fg` is
+> every secondary line — the peer count, the year, the runtime, the diagnosis
+> fix row — so neither is a guess about where something is drawn, and
+> `css.test.ts` fails if either drops under 4.5:1.
+>
+> The first version gated them against `--color-background` and reported
+> **17.05:1** and **7.75:1**. That token is the colour UNDERNEATH what anybody
+> sees: `body::before` paints a full-viewport
+> `linear-gradient(168deg, #16211f, #0e1416, #080a0c)` with two radial tints on
+> top. The gate now uses the gradient's light end, the worst ordinary case for
+> light text: **14.55:1** and **6.61:1**.
+>
+> **One number is not gated and should be read.** Over the teal radial at its
+> declared strength, muted text falls to **4.18:1** — under the 4.5 it owes.
+> That radial is centred at `8% -10%`, above the viewport, so its real on-screen
+> alpha is lower than 0.24 and cannot be known from the CSS; and most text rides
+> a `.gel` pane with its own background rather than the bare gradient. Settling
+> it needs `contrast.ts` on a capture of the top-left corner, which is the
+> R89/R95 split exactly: arithmetic says what is declared, a PNG says what a
+> person sees.
 >
 > `npm run contrast:tokens` also reports the accents — 6.14:1 to 11.20:1 — and
 > those stay OUT of the gate on purpose: an accent owes 4.5:1 as text and 3:1

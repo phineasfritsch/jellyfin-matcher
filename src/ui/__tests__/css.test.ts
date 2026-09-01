@@ -287,7 +287,9 @@ describe('the contrast that can be checked without a screenshot (R187)', () => {
   for (const pair of GATED_PAIRS) {
     it(`${pair.fg} on ${pair.bg} clears ${pair.min}:1 — ${pair.why}`, () => {
       const fg = palette.get(pair.fg);
-      const bg = palette.get(pair.bg);
+      // A pair's background is either a token name or, since R199, a literal
+      // colour from the layer body::before actually paints.
+      const bg = pair.bg.startsWith('#') ? pair.bg : palette.get(pair.bg);
       expect(fg, `${pair.fg} is gone from the palette`).toBeTruthy();
       expect(bg, `${pair.bg} is gone from the palette`).toBeTruthy();
       const r = ratio(fg!, bg!);

@@ -160,6 +160,17 @@ is left of it.
       or accept it and say so on screen. Both are answers. The current state,
       where the app implies the sign-in survives too, is not.
 
+- [ ] **Capture the top-left corner and measure it (R199).**
+      `npm run contrast` reads ink and paper out of a real PNG. The one number
+      arithmetic cannot settle is muted text over the teal radial: 4.18:1 at the
+      declared 0.24 alpha, under the 4.5 it owes.
+
+      The radial is centred at `8% -10%`, above the viewport, so its real
+      on-screen strength is lower and unknowable from the CSS — and most text
+      rides a `.gel` pane rather than the bare gradient. A capture of the top
+      bar at the top-left, where "1 / 50" is muted-fg on whatever is actually
+      there, answers it in one reading.
+
 - [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
       now far behind. A compose file can only name `:latest`, which is not a
       version and cannot be rolled back to.
