@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readDoc } from '../../../scripts/lib/source-scan';
+import { GATED_PAIRS, paletteTokens, ratio } from '../../../scripts/lib/contrast';
 
 /**
  * Properties whose declaration ORDER decides whether they ship at all.
@@ -253,4 +254,47 @@ describe('a viewport too short for the screen can still reach the controls', () 
     const shell = /<main className="([^"]*)"/.exec(readDoc('src/ui/RoomClient.tsx'))?.[1] ?? '';
     expect(shell, 'the shell element does not carry app-shell').toMatch(/\bapp-shell\b/);
   });
+});
+
+describe('the contrast that can be checked without a screenshot (R187)', () => {
+  /*
+    R6 records that contrast is measured but NOT STANDING: scripts/contrast.ts
+    reads ink and paper out of a committed PNG, has twice overturned arithmetic
+    about the wrong surface (R89, R95), and is deliberately ungated because a
+    check guessing at regions of an image would be noise.
+
+    That objection is about regions, and it does not reach the palette. Two
+    pairings are what the tokens MEAN rather than a guess about where they are
+    drawn: foreground on background is what body text is, and muted-fg on
+    background is every secondary line in the app. Neither needs a capture to
+    be true, and either dropping under 4.5:1 is a real failure.
+
+    So the definitional pairs are gated here and the accents are not, because
+    an accent owes 4.5:1 as text and 3:1 as a large control, and which one it
+    owes depends on how it is drawn -- the region problem again.
+
+    This does not replace contrast.ts and could not: a token says what the CSS
+    declares, a PNG says what a person sees after opacity and blending. Both
+    are true; they answer different questions.
+  */
+  const palette = paletteTokens();
+
+  it('reads a palette at all, so nothing below is vacuous', () => {
+    expect(palette.get('--color-background'), 'no --color-background in globals.css').toBeTruthy();
+    expect(palette.size).toBeGreaterThan(4);
+  });
+
+  for (const pair of GATED_PAIRS) {
+    it(`${pair.fg} on ${pair.bg} clears ${pair.min}:1 — ${pair.why}`, () => {
+      const fg = palette.get(pair.fg);
+      const bg = palette.get(pair.bg);
+      expect(fg, `${pair.fg} is gone from the palette`).toBeTruthy();
+      expect(bg, `${pair.bg} is gone from the palette`).toBeTruthy();
+      const r = ratio(fg!, bg!);
+      expect(
+        r,
+        `${pair.fg} on ${pair.bg} is ${r.toFixed(2)}:1, under the ${pair.min}:1 this owes`,
+      ).toBeGreaterThanOrEqual(pair.min);
+    });
+  }
 });

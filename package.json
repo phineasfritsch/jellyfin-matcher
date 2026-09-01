@@ -29,7 +29,8 @@
     "contrast": "tsx scripts/contrast.ts",
     "e2e:restart": "tsx scripts/e2e-restart.ts",
     "probe:userscope": "tsx scripts/probe-user-scope.ts",
-    "measure:spacing": "tsx scripts/measure-spacing.ts"
+    "measure:spacing": "tsx scripts/measure-spacing.ts",
+    "contrast:tokens": "tsx scripts/contrast-tokens.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

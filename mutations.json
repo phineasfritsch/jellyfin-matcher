@@ -875,6 +875,18 @@
         "server/__tests__/packaging.test.ts"
       ],
       "note": "The tidy-up that wedges the host. This script is copied over by hand while the container updates itself, so the two are routinely different ages; without the fallback a newer script reads nothing from an older container, and reading nothing is what makes it REFUSE. The refusal is what stops the container being replaced, so the deploy that would fix the mismatch is the one the mismatch prevents. Recovery is somebody noticing and editing a file on the host."
+    },
+    {
+      "id": "R187-muted-text-goes-grey",
+      "ruling": "R187",
+      "claim": "the secondary text colour clears 4.5:1 against the page",
+      "file": "app/globals.css",
+      "find": "  --color-muted-fg: #9ea69f;",
+      "replace": "  --color-muted-fg: #6b736c;",
+      "expect": [
+        "src/ui/__tests__/css.test.ts"
+      ],
+      "note": "The plausible change: somebody wants the secondary lines quieter and darkens the token a little. It looks better on the designer's monitor and drops muted-fg from 7.75:1 to roughly 3.7:1, under the 4.5 it owes -- taking the peer count, the year, the runtime and the diagnosis fix row with it. Nothing renders differently enough to notice in a screenshot review, which is why this is arithmetic and not an opinion."
     }
   ]
 }

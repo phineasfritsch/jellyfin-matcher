@@ -595,7 +595,23 @@ in the app and it exists only after a press, so the exposure is one control deep
 and reachable only on purpose. Still unverified: nobody has tabbed into a playing
 trailer and tried to get back out.
 
-### R6 — 1.4.3 Contrast, Minimum (AA). Measured, but not standing.
+### R6 — 1.4.3 Contrast, Minimum (AA). ~~Measured, but not standing.~~ Partly standing (R187).
+
+> **The definitional pairs are gated now.** `--color-foreground` on
+> `--color-background` is what body text IS, and `--color-muted-fg` on
+> `--color-background` is every secondary line — the peer count, the year, the
+> runtime, the diagnosis fix row. Neither is a guess about where something is
+> drawn, so neither needs a capture, and `css.test.ts` fails if either drops
+> under 4.5:1. Today: **17.05:1** and **7.75:1**.
+>
+> `npm run contrast:tokens` also reports the accents — 6.14:1 to 11.20:1 — and
+> those stay OUT of the gate on purpose: an accent owes 4.5:1 as text and 3:1
+> as a large control, and which it owes depends on how it is drawn. That is the
+> region problem, and it is the reason the paragraph below is still right.
+>
+> This does not replace `contrast.ts` and could not. A token says what the CSS
+> declares; a PNG says what a person sees after opacity and blending. R89 and
+> R95 are exactly the case where those two disagree.
 
 This is the one contrast claim the project has real evidence for.
 `scripts/contrast.ts` reads the ink and the paper out of a committed PNG and
