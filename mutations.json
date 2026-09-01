@@ -731,6 +731,18 @@
         "src/lib/__tests__/score.test.ts"
       ],
       "note": "Restores the original condition, which refused NaN and Infinity and admitted every ordinary-looking impossibility -- a changed API, a scale moving from 0-10 to 0-100, one bad row. Nothing validates MDBList's numbers at ingestion: MdblistRating is a type, which is a promise about shape and says nothing at runtime. A score of 1000 sorts its film to the top of every deck and wins any settlement decided on points."
+    },
+    {
+      "id": "R166-wide-film-claims-to-be-yours",
+      "ruling": "R166",
+      "claim": "a film you do not have is not presented as already in your library",
+      "file": "src/lib/candidates.ts",
+      "find": "      jellyfinItemId: libraryByTmdbId.get(m.tmdbId) ?? null,",
+      "replace": "      jellyfinItemId: libraryByTmdbId.get(m.tmdbId) ?? m.tmdbId.toString(),",
+      "expect": [
+        "src/lib/__tests__/candidates.test.ts"
+      ],
+      "note": "Makes every wide-mode film claim to be in the library. The chip reads 'On your server', the cost disclosure disappears, and the Play link points at an item id that does not exist -- so the room picks a film it cannot watch and was never told it would have to ask for. candidates.ts had no tests at all before this."
     }
   ]
 }

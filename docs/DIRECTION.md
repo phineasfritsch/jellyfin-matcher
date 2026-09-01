@@ -3055,3 +3055,37 @@ must overcome a zero they did not earn. It is written down and deliberately not
 fixed here: how the deck should treat an honestly unrated film is a different
 question, and answering it while fixing something else is how a fix becomes a
 rewrite.
+
+### R166 — The join nothing tested, and the field nothing reads
+
+`src/lib/candidates.ts` is where a library row, a discover result and a ratings
+lookup become the thing a room swipes. The deck sort reads what it produces, the
+cost disclosure reads what it produces, the Play link reads what it produces.
+It had no tests at all.
+
+That was found by asking a different question than "is this correct" — listing
+every module no test file imports. Three came back. This is the one that decides
+what a room is looking at.
+
+The tests assert the claims rather than transcribing fields. The one worth
+reading twice is library membership: `jellyfinItemId` is how the app knows a
+film is already yours rather than something it must ask your server to
+download (R42, R107). Its mutation makes every wide-mode film claim to be in the
+library — the chip reads "On your server", the cost disclosure vanishes, and the
+Play link points at an id that does not exist, so the room picks a film it
+cannot watch and was never told it would have to ask for.
+
+**And there are two answers to that question.** `JellyseerrMovie` carries
+`inLibrary`, derived from Jellyseerr's own media status and asserted in
+`jellyseerr.test.ts` — and nothing reads it. Membership is decided entirely by
+the `libraryByTmdbId` map the caller passes in.
+
+Using the map is right: it comes from the Jellyfin library and yields a real
+item id, which `inLibrary` cannot, and the id is what the Play link needs. What
+was wrong is that two answers to one question sat next to the disclosure about
+spending the host's disk with nothing recording which wins — and a parsed,
+tested field with no reader gives false confidence, because the test proves the
+parse is right about something the app then ignores.
+
+The behaviour is unchanged and now pinned, including the case where the two
+disagree, so the next person meets a decision instead of a surprise.
