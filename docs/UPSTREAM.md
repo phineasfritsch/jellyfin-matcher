@@ -55,7 +55,7 @@ keeps finding in other people's documents.
 | U5 | **Deployment parity verified.** At least one run proving what is deployed matches this repository. Never once done. | ❌ blocked on an address |
 | U6 | **Used by a household that is not the maintainer, for ten evenings.** With what broke written down. | ❌ never |
 | U7 | **Accessibility conformance stated and measured.** A named target (WCAG 2.2 AA), an audit against it, and the failures listed. | ⚠ partly — audited in docs/ACCESSIBILITY.md, six criteria fixed, three media failures and two unverified remain |
-| U8 | **Internationalisation.** Extraction is done: every sentence the UI says lives in `src/ui/strings.ts`, reached through `t()` or `Sentence`, with the reasoning a translator needs stored beside the load-bearing ones and asserted as data (R145). Three guards keep it that way — no component holds a second copy, no screen writes prose into its markup, and the promises that live in wording go red if a translation undoes them. What is NOT done is selection: there is one catalogue, `en`, and nothing chooses another. Jellyfin ships in dozens of languages. | 🟡 half — extracted, not selectable |
+| U8 | **Internationalisation.** Extraction is done: every sentence the UI says lives in `src/ui/strings.ts`, reached through `t()` or `Sentence`, with the reasoning a translator needs stored beside the load-bearing ones and asserted as data (R145). Three guards keep it that way — no component holds a second copy, no screen writes prose into its markup, and the promises that live in wording go red if a translation undoes them. What is NOT done is selection: there is one catalogue, `en`, and nothing chooses another. Nor is the server's own copy in it — 22 refusal messages in `server/handlers.ts` and the diagnostics in `server/diagnose.ts` are English in the source, and R163 made sure every one of them now reaches a phone's banner, so they are read by households and not only by logs. Jellyfin ships in dozens of languages. | 🟡 half — the UI extracted; selection and the server's own copy are not |
 | U9 | **Licence, provenance and dependency review.** Licence declared in both places, every dependency's licence checked, and every destination the app can reach written down with what it can see. | ✅ met — docs/DEPENDENCIES.md |
 | U10 | **Performance evidence at real library scale.** Deck build measured against 10,000+ items. | ✅ met — docs/PERFORMANCE.md; found and fixed a quadratic cache and an un-paginated fetch |
 | U11 | **A maintenance story.** The release is reproducible, dependencies and rot are checked on a schedule, security has a private path in, and the bus factor is stated rather than hidden. | ✅ met |
@@ -133,10 +133,14 @@ decision that costs the four-second guest join. U3 is architectural and needs a
 real server with parental controls to confirm its hypothesis before anything is
 designed.
 
-U8 moved, and it is worth saying exactly how far. The extraction is finished and
-guarded; a translator now has one file, with the reasoning attached to the
-sentences that carry a promise. Selection is not built — one catalogue, nothing
-choosing another — and that is deliberately not the same work. This row said
+U8 moved, and it is worth saying exactly how far. The UI's extraction is
+finished and guarded; a translator now has one file, with the reasoning attached
+to the sentences that carry a promise. Two things are not done and neither is
+the same work: selection — one catalogue, nothing choosing another — and the
+SERVER's own copy, which is 22 refusal messages plus the diagnostics, still
+English in the source. That second gap was easy to miss because those sentences
+used to reach mostly logs; R163 made every one of them land in a phone's banner,
+which is what turned them into copy a household reads. This row said
 "not started" for some time after it had started, which is the same fault R157
 was written for, one document further out.
 

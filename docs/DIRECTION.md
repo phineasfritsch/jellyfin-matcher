@@ -3259,3 +3259,37 @@ instead of the thing that produces it.
 `citations()` is exported now and the guard calls it, so the assertion is about
 what the generator can SEE rather than about what it wrote earlier. Narrow the
 pattern and it goes red immediately, with no regeneration involved.
+
+### R173 — The server says things too
+
+U8 was moved to half met this morning on the strength of the UI extraction, and
+the row read "every sentence the UI says lives in `src/ui/strings.ts`". That
+sentence is true and it is narrower than it sounds.
+
+`server/handlers.ts` throws 22 refusal messages — "Sign in with your Jellyfin
+account to create a room", "You are not in a room", "Deck build requires exactly
+2 locked genres" — and `server/diagnose.ts` writes the failure copy that the
+diagnosis panel renders. All of it is English in the source, and none of it is
+in the catalogue.
+
+The catalogue's own scope note anticipated this: server-side copy is "its own
+surface with its own wording", excluded on purpose when the first duplication
+guard tripped over `server/diagnose.ts`. That was a reasonable line to draw when
+those sentences mostly reached logs.
+
+**R163 moved the line without anybody noticing.** Before it, a refused action
+often failed silently on the phone — the message existed, and five call sites
+threw it away. Now every refusal lands in the banner, which means all 22 of
+those sentences are read by households rather than by maintainers. The exclusion
+survived the change that invalidated its reasoning.
+
+So the gate's wording is narrowed to what is actually true rather than the
+count being banked: the UI is extracted, selection is not built, and the
+server's copy is not in it. Closing that half means the server importing the
+catalogue — plausible, since both are TypeScript in one project, but it puts a
+UI module in the server's dependency graph and that is a decision, not a
+mechanical follow-on.
+
+Found while auditing pins for needles too broad to fail: 190 pins, three
+matching more than three places, and one of those three was a sentence that
+turned out to exist four more times in a file the catalogue does not cover.
