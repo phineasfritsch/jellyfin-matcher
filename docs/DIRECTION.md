@@ -3769,3 +3769,42 @@ wrong secret was still refused. F1 has its evidence.
 That distinction is worth keeping separate: the property was real all along, and
 the proof of it was worthless. Only the second one was ever in this repository's
 control, and it shipped green for hours.
+
+### R193 — Two metrics that could not fire, reporting a pass
+
+R186 graded 1.4.12 PASS on "clipped 0 to 0, truncated 1 to 1". Neither number
+could have been anything else.
+
+**The clipped check could never fire.** It asked whether a box hid content
+taller than itself. Where this layout clips, nothing overflows. Where content
+grows, R137's `max-height: 520px` release has already set the box to
+`overflow: visible` — and a visible box GROWS to fit, so `scrollHeight` equals
+`clientHeight` by definition. Zero at the roomy viewports because nothing
+overflowed; zero at the squeezed one because the box could not report overflow.
+Two opposite reasons, one number, no information.
+
+Worse, I had already "fixed" that check once — R186 records tightening it to
+require `overflow-y: hidden`, reasoning that overflow in a scrollable box is the
+R137 fix working rather than loss. That reasoning is right and it is what made
+the metric vacuous, because the only boxes that could overflow are exactly the
+ones the release had opened.
+
+**The truncation counter saturated.** A per-element boolean, on a fixture whose
+one long line is already truncated by design. It reads 1 with the overrides off
+and 1 with them on, and cannot see any amount of new clipping in between.
+
+Measured as an AMOUNT and as REACHABILITY instead, the picture is different:
+nothing becomes unreachable at any viewport — the document grows past the screen
+at 400% zoom and the page scrolls to it — while hidden text goes from 198px to
+374px, and per element every pixel of that is the one film title. The other
+three strings are 0 to 0.
+
+**The verdict survives and the evidence did not.** The pass now rests on a
+narrower and checkable claim: no content becomes unreachable, and the single
+string the reader's stylesheet hides more of is already truncated by design with
+its full text one tap away. What it no longer rests on is "the delta is
+nothing", which was only ever the sound a saturated counter makes.
+
+Second time today, after R192, that a green measurement of mine turned out to be
+incapable of going red — and both were found by somebody else reading the code
+rather than by me re-running it.

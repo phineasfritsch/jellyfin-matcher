@@ -117,7 +117,7 @@ async function main() {
       for (const vp of VIEWPORTS) {
         await page.setViewport({ width: vp.width, height: vp.height, deviceScaleFactor: 1 });
 
-        const readings: Record<string, { clipped: number; truncated: number }> = {};
+        const readings: Record<string, { unreachable: number; hiddenPx: number; docHeight: number }> = {};
         for (const spacing of ['off', 'on'] as const) {
           await page.setContent(
             `<!doctype html><html><head><style>${css}</style>` +
@@ -130,43 +130,56 @@ async function main() {
           // No named inner functions: tsx compiles them into a call to
           // esbuild's __name helper, which does not exist in the page.
           readings[spacing] = await page.evaluate(() => {
-            let clipped = 0;
-            for (const el of document.querySelectorAll('[data-shell],[data-region]')) {
-              /*
-                Overflowing is not losing. R137 taught the shell to RELEASE
-                below 520px of height, so at the 400% zoom viewport the content
-                is taller than the box and reachable by scrolling -- which is
-                the fix working, and counting it as loss would report a pass as
-                a failure and, worse, a failure as a pass once somebody
-                "corrected" the metric.
+            /*
+              R193: measure whether content is REACHABLE, not whether a box
+              overflows.
 
-                So the question is whether the overflow is reachable: content
-                taller than its box, in a box whose computed overflow-y hides
-                it, with no ancestor able to scroll to it.
-              */
-              const style = getComputedStyle(el);
-              const hides = style.overflowY === 'hidden' || style.overflowY === 'clip';
-              if (hides && el.scrollHeight > el.clientHeight + 1) clipped += 1;
-            }
-            let truncated = 0;
+              The first version asked whether a box hid content taller than
+              itself. That can never fire. Where the layout clips, nothing
+              overflows; where content grows, R137's media query has released
+              the box to `overflow: visible` -- and a visible box GROWS to fit,
+              so scrollHeight equals clientHeight by definition. Both viewports
+              reported zero for opposite reasons and the metric was vacuous at
+              every size.
+
+              What 1.4.12 actually asks is whether anything became unreachable.
+              So: is the document taller than the viewport, and can the page
+              scroll to the rest of it? Content past the fold with nothing able
+              to scroll is loss. Content past the fold that the page scrolls to
+              is the fix working.
+            */
+            const doc = document.scrollingElement!;
+            const overflows = doc.scrollHeight > doc.clientHeight + 1;
+            const html = getComputedStyle(document.documentElement).overflowY;
+            const body = getComputedStyle(document.body).overflowY;
+            const pageCanScroll = html !== 'hidden' && html !== 'clip' && body !== 'hidden' && body !== 'clip';
+            const unreachable = overflows && !pageCanScroll ? 1 : 0;
+
+            /*
+              Truncation as an AMOUNT, not a flag. A per-element boolean
+              saturates: the film title is already truncated with the overrides
+              off, so it counts 1 either way and any extra clipping the reader's
+              stylesheet causes is invisible. Summed hidden pixels move.
+            */
+            let hiddenPx = 0;
             for (const el of document.querySelectorAll('[data-clip]')) {
-              if (el.scrollWidth > el.clientWidth + 1) truncated += 1;
+              hiddenPx += Math.max(0, el.scrollWidth - el.clientWidth);
             }
-            return { clipped, truncated };
+            return { unreachable, hiddenPx, docHeight: doc.scrollHeight };
           });
         }
 
         const off = readings.off!;
         const on = readings.on!;
-        const newClip = on.clipped - off.clipped;
-        const newTrunc = on.truncated - off.truncated;
-        const verdict = newClip === 0 && newTrunc === 0 ? 'no new loss' : 'LOSS';
+        const verdict =
+          on.unreachable <= off.unreachable && on.hiddenPx <= off.hiddenPx ? 'no new loss' : 'LOSS';
         if (verdict === 'LOSS') losses += 1;
 
         console.log(
           `${screen.name} @ ${vp.name}\n` +
-            `  clipped regions   ${off.clipped} -> ${on.clipped}\n` +
-            `  truncated lines   ${off.truncated} -> ${on.truncated}\n` +
+            `  document height   ${off.docHeight} -> ${on.docHeight} (viewport ${vp.height})\n` +
+            `  unreachable       ${off.unreachable} -> ${on.unreachable}\n` +
+            `  hidden px in text ${off.hiddenPx} -> ${on.hiddenPx}\n` +
             `  ${verdict}\n`,
         );
       }

@@ -540,13 +540,39 @@ sized to the two chrome surfaces.
 > zoom, the tightest viewport this app claims to support and the one where R137
 > had to teach the shell to release.
 >
-> Clipped regions: **0 to 0** at every viewport. Truncated lines: **1 to 1**.
+> **Those first numbers were meaningless and are corrected here (R193).** The
+> original run reported "clipped 0 to 0, truncated 1 to 1" and neither half
+> could have said anything else: the clipped check required a box to hide
+> content taller than itself, which cannot happen — where the layout clips
+> nothing overflows, and where content grows R137's media query has released the
+> box to `overflow: visible`, and a visible box grows to fit. The truncation
+> counter was a per-element boolean, so the one already-truncated line saturated
+> at 1 with the overrides both off and on.
 >
-> The one truncation is there with the overrides OFF as well: it is the long
-> film title R84 chose to `truncate`, and the full title is on the details
-> sheet. That is a deliberate design decision and not this criterion, which asks
-> only about loss the reader's own stylesheet CAUSES. Only the delta is 1.4.12,
-> and the delta is nothing.
+> Measured properly — is anything UNREACHABLE, and how many pixels of text are
+> hidden:
+>
+> | viewport | document height | unreachable | hidden text px |
+> | --- | --- | --- | --- |
+> | 402x874 | 874 → 874 | 0 → 0 | 198 → **374** |
+> | 320x568 | 568 → 568 | 0 → 0 | 280 → **456** |
+> | 320x256 | 432 → 458 | 0 → 0 | 280 → **456** |
+>
+> Nothing becomes unreachable: the document grows past the viewport at 400% zoom
+> and the page scrolls to it, which is R137's release working.
+>
+> The hidden text does grow, and per element exactly one thing accounts for all
+> of it: the long film title, 198px hidden becoming 374px. "Action, Comedy",
+> "2007 · 160 min · Drama, Western" and "Undo — The Thing" are 0 → 0 at every
+> viewport.
+>
+> So the delta is real and it is one title, already truncated by design (R84),
+> whose full text is one tap away on the details sheet. That is the basis for
+> the pass: no content becomes unreachable, and the single string the reader's
+> stylesheet hides more of has another home in the app.
+>
+> It is a narrower claim than "the delta is nothing", which is what this entry
+> said when the counter could not see the delta.
 >
 > Two limits, so nobody reads more into it. It measures a faithful skeleton and
 > the real stylesheet, not the React tree — the same caveat R137's reflow
@@ -714,7 +740,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 1.4.5 Images of Text | AA | N/A | None. |
 | 1.4.10 Reflow | AA | **PASS (measured)** | **R1 was a FAIL, fixed (R137)** — at 320×256 the vote row sat 116px below a surface that could not scroll. `npm run measure:reflow` in real Chrome. |
 | 1.4.11 Non-text Contrast | AA | **PARTIAL** | **F2 partly fixed (R135)** — every text input is now on a 3.57:1 token, computed in `css.test.ts`. **The slider is settled (R190)**: the track is 1.57:1, and the THUMB — which is what identifies the control and carries its state — is 5.37:1 against that track and 8.42:1 against the page, so the part the criterion is about passes and the rail behind it is context. Ghost buttons and ratings tiles stay under 3:1 deliberately, which is what keeps this PARTIAL. |
-| 1.4.12 Text Spacing | AA | **PASS (measured)** | **R3 settled (R186)** — `measure:spacing` forces the four values in real Chrome at three viewports including 1280x1024 at 400% zoom: no clipping, and the one truncated line is truncated without the overrides too. |
+| 1.4.12 Text Spacing | AA | **PASS (measured)** | **R3 settled (R186), evidence corrected (R193)** — nothing becomes unreachable at any of three viewports; the page scrolls to the growth at 400% zoom. Hidden text grows 198px→374px and every pixel of it is one title, already truncated by design, whose full text is on the details sheet. The first run's "0→0, 1→1" was two metrics that could not fire. |
 | 1.4.13 Content on Hover or Focus | AA | N/A | No tooltips, popovers or hover-revealed content anywhere. `title` in this codebase is a component prop that renders visible text, not the HTML attribute; the one real `<title>` is inside the QR's SVG, which the criterion exempts as user-agent chrome. |
 
 ### Operable
