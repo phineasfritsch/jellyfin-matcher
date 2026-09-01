@@ -14,21 +14,40 @@ noted, but the reason to do it is the household.
 
 ## Done means
 
-1. **A restart does not end the night.** A room in progress survives the server
-   being replaced, proved by an end-to-end test that restarts the process
-   mid-deck and has both phones carry on.
+1. **A restart does not end the night.** — **Server side done; the browser
+   proof is the one thing a session cannot close.** Rooms are snapshotted and
+   restored (R149/R150), and `server/__tests__/restart.test.ts` drives the real
+   handlers through a snapshot, a fresh store and a rejoin — including that a
+   phone which never came back is not counted present, and that R112 still
+   refuses a stale socket a seat in a restored room. What remains is
+   `npm run e2e:two`, which needs a machine with a live Jellyfin.
 2. ~~A room can settle early.~~ **Answered: do not build (R152).** The focus
    group returned 5 of 5 against, and the reason is structural — any card
    everyone liked already ends the room, so a mid-deck "leader" is the app's own
    top pick, not the room's choice. Replaced by the bug it was masking: the deck
    no longer names the people it is waiting for (R151).
-3. **Every string is in the catalogue.** All nineteen UI files, the duplication
-   guard green, and `t()` the only way a sentence reaches a screen.
-4. **The four open accessibility items are closed or declined in writing.** No
-   `<h1>` on three routes, no per-route title, the winner screen's live region
-   inserted already full, and the trailer's missing captions.
+3. **Every string is in the catalogue.** — **DONE**, on the third attempt, and
+   the two failed ones are the useful part. It was called finished once with the
+   guide's prose left behind (R155 wrote down why: a sentence wrapping an
+   element could not be held without splitting it into fragments a translator
+   cannot reorder — R158 built the message type that fixed it), and finished
+   again with eight sentences still hardcoded, because completion had been
+   checked by listing FILES and a string lives in a BRANCH (R159). The guard
+   now asks the source, and its one blind spot — a sentence inline with its
+   tag — is stated in the test rather than implied away.
+4. **The four open accessibility items are closed or declined in writing.** —
+   **DONE.** The missing `<h1>` is fixed and tested (F8, R156); the per-route
+   titles and the live region were **already fixed while the audit still called
+   them failures** (F9, F5), which is why R157 now checks the audit against the
+   repository; and the trailer's captions are decided and stated rather than
+   left open (`FAIL (stated)`), including the cost the privacy choice imposes —
+   `youtube-nocookie.com` is a different origin, so no stored caption
+   preference reaches the frame.
 5. **`npm run gate` green by exit code**, mutation audit included, and the
-   counts synced.
+   counts synced. — **DONE and held there**: 9/9, 1036 cases in 50 files, 52 of
+   52 mutations killed. One of those mutations went SURVIVED mid-session and
+   caught a real defect in a re-pointed claim, which is the audit earning its
+   runtime.
 6. **Tagged `v1.1.0` and published**, so there is a version to pin and roll back
    to — which there has not been since `v0.9.0`.
 
