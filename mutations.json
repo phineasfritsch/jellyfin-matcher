@@ -911,6 +911,18 @@
         "server/__tests__/persistence.test.ts"
       ],
       "note": "?? rejects only null and undefined, so MATCHER_SNAPSHOT_FILE= -- which is how a variable gets commented out in a compose file -- survives as an empty string and becomes the path. Every save then fails on a file with no name, and saveSnapshot fails OPEN by design, so rooms silently stop surviving restarts and the logs say only that a save could not be written."
+    },
+    {
+      "id": "R196-restart-notices-collapse",
+      "ruling": "R196",
+      "claim": "a room is told whether to wait or to start again, and the two are different sentences",
+      "file": "src/ui/strings.ts",
+      "find": "    text: 'The server is restarting. This room is gone — start a new one.',",
+      "replace": "    text: 'The server is restarting. Hold on — your room will come back in a moment.',",
+      "expect": [
+        "server/__tests__/validate.test.ts"
+      ],
+      "note": "The translator's mistake, not the programmer's: two shutdown notices blurred into one message. Both are still SENT, so any check on the wiring passes -- but a household whose room is genuinely gone is told to wait for it, and waits. R149 made the optimistic one true, which is exactly what makes the pessimistic one necessary."
     }
   ]
 }

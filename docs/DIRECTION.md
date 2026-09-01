@@ -3882,3 +3882,36 @@ first-definition rule then lets a commented-out colour outrank the real one. A
 contrast gate reporting on a colour somebody explicitly rejected is worse than
 none, because it will be believed. Comment-stripped now; the numbers did not
 move, which means nothing was polluted today and the door is shut.
+
+### R196 — The line was right and I applied it to one file
+
+R176 drew a line worth keeping: the room's refusals are catalogued, the world's
+failures stay on the server. Then it applied that line to `handlers.ts` and
+stopped, and R177 wrote down that `diagnose.ts` was all that remained.
+
+An adversarial reviewer found five other server files writing English, and two
+of them send it to a phone. `auth.ts` refuses a login. `index.ts` broadcasts the
+shutdown notice that R150 is entirely about. Both were sitting outside the
+catalogue while the gate said the extraction was done.
+
+The restart pair are the load-bearing ones, and not because of their words.
+Which of the two a room receives decides whether the household waits or starts
+again — and R149 is what made the optimistic one true, which is precisely what
+makes the pessimistic one necessary. `R196-restart-notices-collapse` blurs them
+into one message: both are still SENT, so any check on the wiring passes, and a
+household whose room is genuinely gone is told to wait for it.
+
+`server.wrongPassword` carries its reason for the same kind of danger: it must
+not say WHICH of the two was wrong, because naming the username confirms an
+account exists to somebody guessing (R86). That is a sentence a translator would
+happily improve.
+
+**What stays on the server is now stated accurately**: `diagnose.ts`, because
+three of its fix lines name environment variables and B03 refuses a credential
+named in code that ships to guests (R177) — plus the log and operator lines,
+which no household reads.
+
+The pattern for the day, said once: a rule gets stated well, applied to the file
+in front of somebody, and recorded as finished. R178 was the guard that did not
+follow the catalogue. R194 was the guard that did not follow the messages. This
+is the catalogue that did not follow its own rule.

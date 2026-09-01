@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { withDeadline } from '../src/lib/deadline';
+import { t } from '../src/ui/strings';
 
 export type AuthMode = 'off' | 'requests' | 'create' | 'all';
 
@@ -104,7 +105,7 @@ export async function authenticateWithJellyfin(
   fetchFn: typeof fetch = withDeadline(fetch),
 ): Promise<AuthedUser> {
   const baseUrl = (process.env.JELLYFIN_URL ?? '').replace(/\/$/, '');
-  if (!baseUrl) throw new Error('Jellyfin is not configured');
+  if (!baseUrl) throw new Error(t('server.jellyfinNotConfigured'));
 
   const auth = `MediaBrowser Client="Jellyfin Matcher", Device="Matcher", DeviceId="${randomUUID()}", Version="1.0"`;
   const res = await fetchFn(`${baseUrl}/Users/AuthenticateByName`, {
@@ -116,7 +117,7 @@ export async function authenticateWithJellyfin(
     body: JSON.stringify({ Username: username, Pw: password }),
   });
 
-  if (res.status === 401) throw new Error('Wrong username or password');
+  if (res.status === 401) throw new Error(t('server.wrongPassword'));
   if (!res.ok) throw new Error(`Jellyfin login failed (${res.status})`);
 
   const body = (await res.json()) as { User?: { Id?: string; Name?: string } };

@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-184 rulings. 148 argued in a design document; the rest are
+185 rulings. 149 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -96,9 +96,9 @@ defined at their first citation.
 | **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:64` |
 | **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:179` +1 |
 | **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:88` +3 |
-| **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:124` +14 |
+| **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:124` +15 |
 | **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:327` +11 |
-| **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:91` +3 |
+| **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:92` +3 |
 | **R89** | `docs/DIRECTION.md:509` | `app/globals.css:37` |
 | **R90** | `docs/DIRECTION.md:536` | `server/handlers.ts:301` +13 |
 | **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:237` +10 |
@@ -158,8 +158,8 @@ defined at their first citation.
 | **R146** | `docs/DIRECTION.md:2384` | `app/guide/page.tsx:24` +3 |
 | **R147** | `docs/DIRECTION.md:2414` | `server/persistence.ts:7` +1 |
 | **R148** | `docs/DIRECTION.md:2469` | — |
-| **R149** | `docs/DIRECTION.md:2482` | `server/index.ts:589` +8 |
-| **R150** | _at its citation_ | `src/ui/useRoom.ts:71` +1 |
+| **R149** | `docs/DIRECTION.md:2482` | `server/index.ts:589` +10 |
+| **R150** | _at its citation_ | `src/ui/strings.ts:660` +3 |
 | **R151** | `docs/DIRECTION.md:2534` | `src/ui/components/SwipeDeck.tsx:150` +1 |
 | **R152** | `docs/DIRECTION.md:2558` | — |
 | **R153** | `docs/DIRECTION.md:2600` | — |
@@ -185,7 +185,7 @@ defined at their first citation.
 | **R173** | `docs/DIRECTION.md:3263` | — |
 | **R174** | `docs/DIRECTION.md:3297` | — |
 | **R175** | `docs/DIRECTION.md:3326` | `src/lib/knockout.ts:149` +1 |
-| **R176** | `docs/DIRECTION.md:3355` | `src/ui/strings.ts:611` |
+| **R176** | `docs/DIRECTION.md:3355` | `src/ui/strings.ts:611` +1 |
 | **R177** | `docs/DIRECTION.md:3386` | — |
 | **R178** | `docs/DIRECTION.md:3424` | — |
 | **R179** | `docs/DIRECTION.md:3453` | — |
@@ -199,5 +199,6 @@ defined at their first citation.
 | **R193** | `docs/DIRECTION.md:3773` | — |
 | **R194** | `docs/DIRECTION.md:3812` | — |
 | **R195** | `docs/DIRECTION.md:3849` | `server/persistence.ts:37` +1 |
+| **R196** | `docs/DIRECTION.md:3886` | `src/ui/strings.ts:655` |
 
 No ruling is orphaned.

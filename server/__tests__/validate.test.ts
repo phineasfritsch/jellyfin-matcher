@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { globSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from '../../scripts/lib/source-scan';
+import { t } from '../../src/ui/strings';
 import {
   asBoolean,
   asCardId,
@@ -189,7 +190,25 @@ describe('shutting down', () => {
   });
 
   it('tells the rooms before it goes, rather than dropping every socket silently', () => {
-    expect(server).toMatch(/The server is restarting/);
+    /*
+      R196 moved this sentence into the catalogue, so matching the text in
+      index.ts stopped working -- correctly. What matters is not where the words
+      live but that BOTH are still sent and still distinguishable: one asks a
+      household to wait for a room that is coming back (R149), the other tells
+      them to start again. Assert the wiring here and the wording in the
+      catalogue, which is where a translator can now break it.
+    */
+    expect(server, 'the shutdown notice is no longer sent').toMatch(
+      /t\('server\.restartHold'\)/,
+    );
+    expect(server, 'the room-is-gone notice is no longer sent').toMatch(
+      /t\('server\.restartGone'\)/,
+    );
+    expect(t('server.restartHold')).toMatch(/restarting/i);
+    expect(
+      t('server.restartHold'),
+      'the two shutdown notices have collapsed into one message',
+    ).not.toBe(t('server.restartGone'));
   });
 });
 

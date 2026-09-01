@@ -650,6 +650,35 @@ export const en = {
     why: 'R42: the request that spends the host\'s disk is attributed. Somebody pressing the button after somebody else needs to know it is already done and by whom, not merely that they failed.',
   },
 
+
+  /*
+    R196: the rest of the room-facing server copy.
+
+    R176 drew the line as "the room's refusals are catalogued, the world's
+    failures stay on the server", and then applied it only to handlers.ts. Two
+    other files send English straight to a phone: auth.ts refuses a login, and
+    index.ts broadcasts the shutdown notice that R150 is entirely about.
+
+    The restart pair are the load-bearing ones. Which of the two a room gets
+    decides whether the household waits or starts again, and R149 made the
+    first true -- so a translation that blurred them would either strand people
+    waiting for a room that is gone, or send them away from one that is coming
+    back.
+  */
+  'server.restartHold': {
+    text: 'The server is restarting. Hold on — your room will come back in a moment.',
+    why: 'R149/R150: this is only true because rooms are snapshotted. It promises the room returns, and the phone clears it on reconnect -- a banner that outlives what it describes makes the next real error look stale.',
+  },
+  'server.restartGone': {
+    text: 'The server is restarting. This room is gone — start a new one.',
+    why: 'The other half, and the difference matters more than the words: one asks a household to wait and the other asks them to start again. Keep them clearly distinct in any language.',
+  },
+  'server.jellyfinNotConfigured': 'Jellyfin is not configured',
+  'server.wrongPassword': {
+    text: 'Wrong username or password',
+    why: 'R86: it must not say WHICH was wrong. Naming the username confirms an account exists to somebody guessing.',
+  },
+  'server.credentialsRequired': 'Username and password required',
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

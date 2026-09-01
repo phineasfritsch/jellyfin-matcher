@@ -253,7 +253,7 @@ app.post('/api/login', async (req, res) => {
 
   const { username, password } = (req.body ?? {}) as { username?: string; password?: string };
   if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
+    return res.status(400).json({ error: t('server.credentialsRequired') });
   }
   try {
     const user = await authenticateWithJellyfin(username, password);
@@ -673,8 +673,8 @@ function shutdown(signal: string): void {
   void saveSnapshot(store.snapshot()).then((saved) => {
     io.emit('room:error', {
       message: saved
-        ? 'The server is restarting. Hold on — your room will come back in a moment.'
-        : 'The server is restarting. This room is gone — start a new one.',
+        ? t('server.restartHold')
+        : t('server.restartGone'),
     });
   });
 
