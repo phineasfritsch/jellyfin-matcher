@@ -81,6 +81,20 @@ is left of it.
       Movie need an account. Run with `MATCHER_AUTH=off`. Nothing false ships —
       the README embeds only 04, 05 and 08.
 
+- [ ] **Run the parental-control probe (U3's first step).**
+      `JELLYFIN_URL=... JELLYFIN_API_KEY=... PROBE_USER=... PROBE_PASS=... npm run probe:userscope`
+
+      docs/TRUST.md says this confirmation comes before U3 is designed, and said
+      it was filed here. It was not (R182), so for some time the most serious
+      item in the trust model was waiting on a step nobody could run.
+
+      It is read-only and takes a minute: count movies with the server key,
+      count them again as a user with a parental limit, print both. Set the
+      limit by hand in Jellyfin first — a script that configures the thing it is
+      testing proves less than one that does not. Fewer for the user confirms
+      the hypothesis; equal counts refute it on that server and the trust
+      argument then rests on over-privilege alone.
+
 - [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
       now far behind. A compose file can only name `:latest`, which is not a
       version and cannot be rolled back to.
