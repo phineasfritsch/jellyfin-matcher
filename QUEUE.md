@@ -138,6 +138,21 @@ is left of it.
       presses it takes to get out — leaving at all is a pass, never leaving is a
       Level A failure, and a large number passes while still being worth knowing.
 
+- [ ] **Decide what a restart does to a sign-in (R191).**
+      Rooms survive it; logins do not. `StoreSnapshot` carries rooms and seat
+      secrets, `AuthStore` is a plain Map rebuilt at boot.
+
+      Small today, because auth only gates Any Movie and requests — the cost is
+      a password prompt at the moment somebody presses Request, with nothing
+      connecting it to a deploy twenty minutes earlier. It stops being small if
+      U4's default becomes `create`, which the focus group recommends 5 of 5:
+      then a deploy between nights logs the host out before the next one.
+
+      Either persist sessions — which puts account-bound tokens in the snapshot
+      beside the seat secrets, a TRUST.md question rather than a plumbing one —
+      or accept it and say so on screen. Both are answers. The current state,
+      where the app implies the sign-in survives too, is not.
+
 - [ ] **Tag `v1.1.0`.** There has been nothing pinnable since `v0.9.0`, which is
       now far behind. A compose file can only name `:latest`, which is not a
       version and cannot be rolled back to.

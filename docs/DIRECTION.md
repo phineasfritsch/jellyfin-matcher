@@ -3687,3 +3687,39 @@ oversight.
 failures that are decided and closed, one partial that is deliberate, and one
 manual check that takes half a minute. U7 does not move — it is still partly
 met — but for the real reason rather than a stale one.
+
+### R191 — Rooms survive a restart. Logins do not.
+
+Found by a focus-group persona reading the source rather than answering the
+question asked, which is the best thing a persona ever does.
+
+`StoreSnapshot` carries `userSeq`, `rooms` and `secrets` (server/store.ts:119).
+`AuthStore` keeps its sessions in a plain `Map` (server/auth.ts:59) and is
+constructed fresh at boot (server/index.ts:58). So R149 restores the room and
+everybody in it, and signs all of them out on the way.
+
+**Today this is small and real.** Auth gates only switching to Any Movie and
+firing a request, so an auto-deploy mid-evening does not interrupt swiping — it
+means the request button asks for a password at the moment somebody presses it,
+with no explanation connecting that to a deploy that happened twenty minutes
+earlier. R150's "hold on, your room will come back" is true and incomplete: the
+room comes back, the sign-in does not.
+
+**It stops being small if the default becomes `create`.** The focus group
+recommends exactly that (5 of 5), and under it a host cannot start a night at
+all without signing in. Auto-deploy runs on push and defers only while rooms are
+LIVE, so the ordinary case — a deploy between nights — logs the host out before
+the next one. Two of the five personas named that friction from the doc alone;
+neither knew the sign-in also evaporates on every deploy, which makes it worse
+than either of them argued.
+
+**Not fixed here, and the reason is not laziness.** Persisting sessions means
+writing Jellyfin-account-bound tokens to disk. The snapshot already holds seat
+secrets at 0600, so the file is not categorically new — but a seat secret opens
+one room for one night and a session token is an account credential, and
+`docs/TRUST.md` is the document that should decide the difference. Accepting the
+gap and saying so in the UI is a legitimate answer too.
+
+What is not legitimate is the current state, where the app claims a restart does
+not end the night and quietly makes one of its two promises smaller than it
+sounds.
