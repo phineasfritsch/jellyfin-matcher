@@ -568,7 +568,7 @@ happens when the reader's stylesheet adds a third to every line box.
 **Would settle it:** the WCAG text-spacing bookmarklet against a running app, or
 the `measure-rows.ts` approach with the four properties forced.
 
-### R4 — 2.2.1 Timing Adjustable (A). Two limits, neither warned nor extendable.
+### R4 — 2.2.1 Timing Adjustable (A). ~~Two limits, neither warned nor extendable.~~ Argued (R188).
 
 Rooms are reaped after **2 hours idle** (`server/store.ts`); the timer is reset
 by `touch()` on activity, which is the safer of the two shapes — a room in use
@@ -578,6 +578,40 @@ exception, with no warning and no way to extend.
 
 Signing in again is not data loss, so this may be defensible. It has not been
 argued, and "nobody thought about it" is not the same as "it is fine".
+
+> **Argued now (R188), and it holds — with one gap named.**
+>
+> **The room's two hours is not a limit on completing anything.** `touch()`
+> resets it on activity, so a room being used never reaches it. What it reaps is
+> a room nobody is in. 2.2.1 governs a limit on a user's ability to complete an
+> activity; a timer that only fires once the activity has stopped is not one.
+>
+> **The session's twelve hours is a real limit, and the Essential exception is
+> the honest ground to stand on** — not the 20-hour one. Twelve is *below*
+> twenty, so that exception does not apply and the sentence above should not be
+> read as claiming it does. What applies is that a session lifetime is a
+> security control: extending it on request is precisely what it exists to
+> refuse, and a limit that can be extended indefinitely by asking is not a
+> session limit.
+>
+> **What expiry actually costs is the part that decides it.** Auth is not
+> required to be in a room. It gates switching to Any Movie and firing a
+> request (`wideRequires`, `requestRequires`). So a session expiring does not
+> end anybody's night, does not close a room, and does not discard a vote — the
+> next gated action asks for a password. Nothing in progress is lost, which is
+> the loss 2.2.1 is about.
+>
+> **The gap, stated rather than argued away:** there is no warning before
+> expiry. A host who signed in twelve hours ago meets a login screen at the
+> moment they press Request, with no notice that it was coming. That is not a
+> 2.2.1 failure on the reasoning above, and it is a real annoyance; warning
+> before re-authentication is 2.2.5 Re-authenticating, which is Level AAA and
+> outside the target this document sets.
+>
+> Graded **PASS (argued)** rather than PASS (tested), because this is reasoning
+> about what the limits govern, not a measurement. If somebody disagrees with
+> the Essential reading, the thing to attack is the paragraph above, which is
+> why it is written out.
 
 ### R5 — 2.1.2 No Keyboard Trap (A), one route not covered.
 
@@ -663,7 +697,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | 2.1.1 Keyboard | A | PASS (read) | Every control is a native `button`, `a`, `input` or `select`. `Listing.tsx` says why in its own comment; the deck's drag is an accelerator over buttons that already exist (R06), which `a11y` presses. |
 | 2.1.2 No Keyboard Trap | A | **PASS (tested)**, one risk | The sheet's trap cycles forward and backward and releases on Escape from inside — `a11y`, "SC 2.1.2". **R5**: the listener is on `window`, so focus inside the trailer iframe is outside its reach. |
 | 2.1.4 Character Key Shortcuts | A | N/A | The app binds exactly two keys, Escape and Tab, both inside the sheet. No single-character shortcut exists. |
-| 2.2.1 Timing Adjustable | A | **UNVERIFIED** | **R4** — a 2h idle room TTL and a 12h auth session, neither warned nor extendable. |
+| 2.2.1 Timing Adjustable | A | **PASS (argued)** | **R4 argued (R188)** — the 2h room TTL resets on activity, so it only reaps rooms nobody is in and limits no one completing anything. The 12h session is a security control under the Essential exception (NOT the 20-hour one — 12 is below 20), and expiry ends no night, closes no room and discards no vote: auth gates only Any Movie and requests. No warning before expiry, which is 2.2.5, AAA. |
 | 2.2.2 Pause, Stop, Hide | A | PASS (read) | Confetti is one-shot — longest delay 0.6s plus longest duration 3.0s, inside the five-second allowance — and returns `null` outright under reduced motion. Skeleton pulses and spinners are loading indicators that stop when their content arrives. `globals.css` clamps every animation under `prefers-reduced-motion`. `a11y` checks the confetti is hidden and takes no pointer events, and says in its own comment that it cannot see the 3.6s or the reduced-motion branch. |
 | 2.3.1 Three Flashes | A | PASS (read) | The confetti translates and rotates; nothing in the app flashes. |
 | 2.4.1 Bypass Blocks | A | N/A | No block of content repeated across pages. There is no navigation to skip. |
