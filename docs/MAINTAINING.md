@@ -7,6 +7,17 @@ the maintainer stops".*
 Two of those three are true. The first is not, and this document exists partly
 to say so where an adopter will see it before they depend on it.
 
+## Every command, and what it costs
+
+[COMMANDS.md](COMMANDS.md) lists all twenty-three, grouped by what running one
+actually costs: safe any time, safe but wants a browser, run-one-at-a-time, and
+reaches something outside this machine.
+
+The grouping is the point. Four of them bind a port, one rewrites real source
+files while it runs, one can fire a real download request at a real server, and
+two authenticate against a real deployment. That was recorded in prose here and
+in OPERATING.md, which is not where anybody looks before typing a command.
+
 ## The bus factor is one
 
 Every commit in this repository is from one person. There is no second
