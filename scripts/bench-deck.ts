@@ -860,6 +860,28 @@ async function parseShapeOf(fx: ItemsFixture, pageSize: number, reps: number): P
   const many = await measure(parseReps, () => parseBodies(pages));
   const bytes = whole[0]!.length;
   const pageBytes = Math.max(...pages.map((p) => p.length));
+
+  /*
+    The claim this whole section exists to make, asserted rather than printed.
+
+    docs/PERFORMANCE.md answers B5 with "the largest single body went from
+    28.1 MB to 0.28 MB and stays there for any library". That is one number in
+    one column, and a column is a thing that can be wired to the wrong variable
+    -- at which point the table reports that paging changed nothing and the
+    conclusion quietly inverts, with the script still exiting 0. It did exactly
+    that when the wiring was tried deliberately.
+
+    More than one body means each of them is smaller than all of them. A single
+    page (a library below the page size) is legitimately the whole library, so
+    that case is not a failure.
+  */
+  if (pages.length > 1 && pageBytes >= bytes) {
+    throw new Error(
+      `bench-deck: ${pages.length} pages but the largest is ${pageBytes} bytes against ` +
+        `${bytes} for the whole library. Paging cannot leave the largest body unchanged; ` +
+        `the parse-shape table is measuring or reporting the wrong thing.`,
+    );
+  }
   // The page bodies are dropped before returning: at 50,000 items they are a
   // second copy of the library, and leaving them reachable would charge every
   // later stage's collection for scanning them.
@@ -1506,12 +1528,24 @@ async function main(): Promise<void> {
       '  plus the first write. A real one is rate-limited, which is why nights are counted.',
     );
     console.log(
-      '  "read it back" is the cache in the state the writer leaves it -- base plus whatever',
+      '  "read it back" is the cache in the state the writer leaves it -- a base plus whatever',
     );
     console.log(
-      '  log has not been compacted yet -- against the `mdblist warm cache` stage above, which',
+      '  log has not been compacted yet, which is the state a household is usually in. It is',
     );
-    console.log('  reads a compacted base with no log and is therefore the cheaper state.');
+    console.log(
+      '  NOT comparable to the `mdblist warm cache` stage above by wall clock: that stage',
+    );
+    console.log(
+      '  reads a compacted base holding every title in the library, and this one holds only',
+    );
+    console.log(
+      '  the titles a room with these two genres asked about. Different caches, different',
+    );
+    console.log(
+      '  sizes. Both sizes are printed: base + log in this table, and the "ratings cache"',
+    );
+    console.log('  column of the Library table for the other. Compare per megabyte or not at all.');
   } else {
     console.log('Warming the ratings cache: skipped (--skip-warming).');
   }

@@ -3637,3 +3637,53 @@ examined.
 None of this moves a gate. Four of them are still exactly as red as they were
 this morning, and U6 is redder for being honest. What changed is that the next
 step for each one now exists.
+
+### R186–R190 — The at-risk section, emptied
+
+`docs/ACCESSIBILITY.md` keeps a section for criteria "this repository has no way
+to settle from where it stands". Each entry said what would settle it. Nothing
+had settled any of them since they were written, and the reason is the one R182
+named: a status that has not changed in months is the least surprising thing on
+the page, so nobody re-reads it.
+
+Every entry named a step. Four of them existed only as sentences.
+
+**R186 — 1.4.12 Text Spacing** said "never considered" and named the method:
+the measure-rows approach with the four properties forced. `measure:spacing`
+does that in real Chrome against the compiled stylesheet at three viewports,
+including 1280x1024 at 400% zoom. No clipping anywhere; the one truncated line
+is truncated with the overrides off too, and only the delta is this criterion.
+UNVERIFIED to PASS.
+
+**R187 — 1.4.3 Contrast** was measured but not gated, for the good reason that a
+check guessing at regions of a screenshot would be noise. That objection is
+about regions and does not reach the palette: foreground on background IS body
+text, muted-fg on background IS every secondary line. Both gated, 17.05:1 and
+7.75:1. The accents are reported and stay out, because which threshold an accent
+owes depends on how it is drawn.
+
+**R188 — 2.2.1 Timing** said outright that it had not been argued. The room's
+two hours resets on activity, so it limits nobody using it. The session's twelve
+hours rests on the Essential exception, NOT the 20-hour one — twelve is below
+twenty, and the original sentence could be read as claiming otherwise. Expiry
+ends no night and discards no vote. PASS (argued), with the missing pre-expiry
+warning named as 2.2.5, which is AAA.
+
+**R189 — 2.1.2 Keyboard Trap** could not be settled here and says why: the
+behaviour belongs to a real cross-origin frame, and a same-origin stand-in would
+let the parent's Escape handler fire, passing while the app failed. It is four
+steps and thirty seconds now, with the instruction that matters — record the
+number of Tab presses, because leaving at all is a pass and leaving after twelve
+is a different fact worth knowing.
+
+**R190 — the slider**, the last open sub-item, measured rather than argued: the
+track is 1.57:1, and the thumb that identifies the control and carries its state
+is 5.37:1 against the track and 8.42:1 against the page. The part the criterion
+is about passes; the rail behind it is context. 1.4.11 stays PARTIAL because the
+ghost buttons are deliberately under 3:1, which is a decision and not an
+oversight.
+
+**Nothing in the audit is UNVERIFIED any more.** What remains is three media
+failures that are decided and closed, one partial that is deliberate, and one
+manual check that takes half a minute. U7 does not move — it is still partly
+met — but for the real reason rather than a stale one.
