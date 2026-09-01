@@ -3511,3 +3511,44 @@ at the handler level: socket.io reconnecting on its own, the seat secret
 surviving in the phone's own storage across the gap, each deck resuming at its
 own position rather than at zero, and the "hold on" message clearing itself
 rather than outliving the restart it describes (R150).
+
+### R181 — The half of the proof that did not need a browser
+
+R180 found that F1's end-to-end claim had no test and that the browser harness
+could not be given one, since it attaches to a server somebody else started. The
+obvious conclusion was that the whole thing waits for an evening with a live
+Jellyfin.
+
+That conclusion was wrong, and the reason is worth keeping: **a lobby-phase room
+never builds a deck.** Everything up to the knockout is the room's own state, so
+the entire upstream apparatus is irrelevant to whether a room comes back. Most
+of what F1 claims can therefore be proved with no Jellyfin, no Chrome and no
+household — which also means it runs in CI, where the browser harness never
+will.
+
+`npm run e2e:restart` starts a real server, makes a real room over real sockets,
+**SIGKILLs the process**, starts a different one against the same snapshot file,
+and waits for the clients to come back by themselves.
+
+SIGKILL rather than a polite shutdown, deliberately. The case this exists for is
+the process dying at 9pm, so the thing that must have saved the room is the
+thirty-second timer, not the shutdown handler — a graceful stop would have
+tested the easy half and called it the hard one.
+
+It passed on the first run: room WMA6, both phones reconnected without being
+told to, both seats recovered from the secrets the clients held, and a stranger
+with the right room code and the wrong secret still refused (R86 — the restore
+must not become a way in).
+
+**What a green run does not mean**, stated in the harness header so nobody reads
+more into it: there is no browser. The hook's recovery, each deck resuming at
+its own position, and the "hold on" banner clearing itself are asserted in jsdom
+and by hand. That harness still needs writing and still needs a live Jellyfin,
+because it has to build a deck.
+
+Two supporting changes. `MATCHER_SNAPSHOT_FILE` makes the snapshot path
+configurable — required here so a harness cannot write over the rooms of
+whoever is running the app on that machine, and independently reasonable, since
+that file holds seat secrets at 0600 and an operator may want it off the volume
+that caches ratings. And this is a script rather than a vitest case: it boots
+Next, and G9 runs the suite once per mutation.

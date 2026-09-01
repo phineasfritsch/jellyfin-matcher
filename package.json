@@ -26,7 +26,8 @@
     "shots": "tsx scripts/screenshots.ts",
     "rulings": "tsx scripts/rulings.ts",
     "e2e:two": "tsx scripts/e2e-two-phones.ts",
-    "contrast": "tsx scripts/contrast.ts"
+    "contrast": "tsx scripts/contrast.ts",
+    "e2e:restart": "tsx scripts/e2e-restart.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

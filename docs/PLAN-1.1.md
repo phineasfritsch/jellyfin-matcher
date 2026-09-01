@@ -28,8 +28,14 @@ noted, but the reason to do it is the household.
    to a server somebody else started. There is no kill, no restart, no snapshot
    anywhere in it.
 
-   So the remaining work is **writing** a harness that owns the server process,
-   not running one that exists. What it must prove, beyond what the unit test
+   **Half of it is now written and passing (R181).** `npm run e2e:restart`
+   starts a real server, makes a room over real sockets, SIGKILLs the
+   process, starts another against the same snapshot, and watches the
+   clients reconnect and recover their seats — no Jellyfin needed, because
+   a lobby-phase room never builds a deck. It passed first run.
+
+   What is still missing is the browser half, and it needs a live Jellyfin
+   because it has to build a deck. What it must prove, beyond what the unit test
    already does: that socket.io reconnects on its own, that the stored seat
    secret survives in the phone's storage across the gap, that the deck resumes
    at each phone's own position, and that the "hold on" message clears itself

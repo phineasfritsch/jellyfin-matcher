@@ -37,7 +37,20 @@ export function defaultPersistenceConfig(
   overrides: Partial<PersistenceConfig> = {},
 ): PersistenceConfig {
   return {
-    file: path.join('.cache', 'rooms.json'),
+    /*
+      R181: where the snapshot lives is configurable, and it was not.
+
+      Two reasons, and the operational one came second. This file holds seat
+      secrets at 0600, so an operator may want it somewhere other than the
+      volume that also caches ratings -- a reasonable thing to want and there
+      was no way to ask for it.
+
+      The first reason is that nothing could TEST a real restart. A harness has
+      to start a real server, kill it and start another, and with a hardcoded
+      path that means writing over the rooms of whoever is running the app on
+      that machine.
+    */
+    file: process.env.MATCHER_SNAPSHOT_FILE ?? path.join('.cache', 'rooms.json'),
     now: () => Date.now(),
     ...overrides,
   };

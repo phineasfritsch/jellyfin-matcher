@@ -3,7 +3,7 @@
 [![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
 [![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-1151%20in%2055%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![tests](https://img.shields.io/badge/tests-1152%20in%2055%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
 [![pinned claims](https://img.shields.io/badge/pinned%20claims-190-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
 
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
@@ -189,6 +189,7 @@ Everything the app reads, and what happens if you leave it alone.
 | `MATCHER_AUTH` | `requests` | Which actions need a Jellyfin account: `off`, `requests`, `create`, `all`. See [Login](#login). |
 | `MATCHER_HISTORY_DAYS` | `30` | How long a film the room landed on stays out of the deck. `0` turns it off without discarding the record. |
 | `MDBLIST_REQUEST_BUDGET` | `40` | Most MDBList calls one deck build may spend. A free key is 1000 a day, and a build of 50 cards costs 5 — raise it for a big library, lower it to protect the quota. Titles past the budget arrive unrated rather than the build failing. |
+| `MATCHER_SNAPSHOT_FILE` | `.cache/rooms.json` | Where rooms in progress are saved, so a restart does not end the night. Written `0600` because it contains seat secrets — put it somewhere only the server user can read, and note it is a different kind of data from the ratings cache it sits beside by default. |
 | `MATCHER_ALLOWED_ORIGINS` | same-origin | Comma-separated origins allowed to open a socket. Only needed if you serve the front end from somewhere other than this process. |
 
 `MATCHER_URL` is not read by the server — it is what `npm run prod:read` points at, and
@@ -234,7 +235,7 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 1151 cases across 55 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 1152 cases across 55 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 

@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-175 rulings. 139 argued in a design document; the rest are
+175 rulings. 140 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -110,85 +110,85 @@ defined at their first citation.
 | **R97** | `docs/DIRECTION.md:750` | `server/settlement.ts:77` +2 |
 | **R98** | `docs/DIRECTION.md:784` | `src/ui/RoomClient.tsx:51` +5 |
 | **R99** | `docs/DIRECTION.md:816` | `server/handlers.ts:88` +5 |
-| **R100** | `docs/DIRECTION.md:849` | `server/roomView.ts:40` +11 |
-| **R101** | `docs/DIRECTION.md:876` | `src/ui/RoomClient.tsx:29` +3 |
-| **R102** | `docs/DIRECTION.md:904` | `src/ui/components/Listing.tsx:139` +2 |
-| **R103** | `docs/DIRECTION.md:936` | `scripts/screenshots.ts:286` +1 |
-| **R104** | `docs/DIRECTION.md:973` | `src/ui/components/VoteRow.tsx:68` +1 |
-| **R105** | `docs/DIRECTION.md:991` | `server/deckService.ts:75` +4 |
-| **R106** | `docs/DIRECTION.md:1031` | `server/history.ts:141` +1 |
-| **R107** | `docs/DIRECTION.md:1051` | `server/handlers.ts:303` +18 |
-| **R108** | `docs/DIRECTION.md:1085` | `server/handlers.ts:349` |
-| **R109** | `docs/DIRECTION.md:1101` | `server/history.ts:163` +1 |
+| **R100** | `docs/DIRECTION.md:849` | — |
+| **R101** | `docs/DIRECTION.md:876` | — |
+| **R102** | `docs/DIRECTION.md:904` | — |
+| **R103** | `docs/DIRECTION.md:936` | — |
+| **R104** | `docs/DIRECTION.md:973` | — |
+| **R105** | `docs/DIRECTION.md:991` | — |
+| **R106** | `docs/DIRECTION.md:1031` | — |
+| **R107** | `docs/DIRECTION.md:1051` | — |
+| **R108** | `docs/DIRECTION.md:1085` | — |
+| **R109** | `docs/DIRECTION.md:1101` | — |
 | **R110** | `docs/DIRECTION.md:1134` | — |
-| **R111** | `docs/DIRECTION.md:1192` | `server/index.ts:292` +11 |
-| **R112** | `docs/DIRECTION.md:1230` | `server/handlers.ts:53` +7 |
-| **R113** | `docs/DIRECTION.md:1261` | `src/ui/components/WinnerScreen.tsx:25` +3 |
+| **R111** | `docs/DIRECTION.md:1192` | — |
+| **R112** | `docs/DIRECTION.md:1230` | — |
+| **R113** | `docs/DIRECTION.md:1261` | — |
 | **R114** | `docs/DIRECTION.md:1283` | — |
 | **R115** | `docs/DIRECTION.md:1306` | — |
 | **R116** | `docs/DIRECTION.md:1359` | — |
 | **R117** | `docs/DIRECTION.md:1388` | — |
-| **R118** | `docs/DIRECTION.md:1421` | `scripts/screenshots.ts:233` +1 |
+| **R118** | `docs/DIRECTION.md:1421` | — |
 | **R119** | `docs/DIRECTION.md:1441` | — |
-| **R120** | `docs/DIRECTION.md:1457` | `scripts/screenshots.ts:230` |
+| **R120** | `docs/DIRECTION.md:1457` | — |
 | **R121** | `docs/DIRECTION.md:1479` | — |
 | **R122** | `docs/DIRECTION.md:1505` | — |
 | **R123** | `docs/DIRECTION.md:1530` | — |
 | **R124** | `docs/DIRECTION.md:1555` | — |
 | **R125** | `docs/DIRECTION.md:1594` | — |
-| **R126** | `docs/DIRECTION.md:1637` | `src/ui/components/Lobby.tsx:138` |
-| **R127** | `docs/DIRECTION.md:1654` | `scripts/gate.ts:192` |
-| **R129** | `docs/DIRECTION.md:1680` | `scripts/gate.ts:181` |
+| **R126** | `docs/DIRECTION.md:1637` | — |
+| **R127** | `docs/DIRECTION.md:1654` | — |
+| **R129** | `docs/DIRECTION.md:1680` | — |
 | **R130** | `docs/DIRECTION.md:1737` | — |
-| **R131** | `docs/DIRECTION.md:1783` | `server/exposure.ts:4` +1 |
-| **R132** | `docs/DIRECTION.md:1810` | `src/lib/deadline.ts:44` +1 |
-| **R133** | `docs/DIRECTION.md:1842` | `app/manifest.ts:11` +1 |
-| **R134** | `docs/DIRECTION.md:1866` | `src/ui/components/Knockout.tsx:224` +6 |
+| **R131** | `docs/DIRECTION.md:1783` | — |
+| **R132** | `docs/DIRECTION.md:1810` | — |
+| **R133** | `docs/DIRECTION.md:1842` | — |
+| **R134** | `docs/DIRECTION.md:1866` | — |
 | **R135** | `docs/DIRECTION.md:1909` | — |
-| **R136** | `docs/DIRECTION.md:1952` | `src/ui/components/Knockout.tsx:66` +6 |
-| **R137** | `docs/DIRECTION.md:1986` | `src/ui/RoomClient.tsx:77` +1 |
+| **R136** | `docs/DIRECTION.md:1952` | — |
+| **R137** | `docs/DIRECTION.md:1986` | — |
 | **R138** | `docs/DIRECTION.md:2034` | — |
-| **R139** | `docs/DIRECTION.md:2070` | `src/ui/HomeActions.tsx:60` +3 |
-| **R140** | `docs/DIRECTION.md:2105` | `src/css.d.ts:2` |
+| **R139** | `docs/DIRECTION.md:2070` | — |
+| **R140** | `docs/DIRECTION.md:2105` | — |
 | **R141** | `docs/DIRECTION.md:2145` | — |
 | **R142** | `docs/DIRECTION.md:2187` | — |
-| **R143** | `docs/DIRECTION.md:2229` | `src/lib/mdblist.ts:56` +2 |
-| **R144** | `docs/DIRECTION.md:2301` | `src/lib/jellyfin.ts:100` +1 |
-| **R145** | `docs/DIRECTION.md:2337` | `app/guide/page.tsx:24` +5 |
-| **R146** | `docs/DIRECTION.md:2384` | `app/guide/page.tsx:24` +3 |
-| **R147** | `docs/DIRECTION.md:2414` | `server/persistence.ts:7` +1 |
+| **R143** | `docs/DIRECTION.md:2229` | — |
+| **R144** | `docs/DIRECTION.md:2301` | — |
+| **R145** | `docs/DIRECTION.md:2337` | — |
+| **R146** | `docs/DIRECTION.md:2384` | — |
+| **R147** | `docs/DIRECTION.md:2414` | — |
 | **R148** | `docs/DIRECTION.md:2469` | — |
-| **R149** | `docs/DIRECTION.md:2482` | `server/index.ts:589` +8 |
-| **R150** | _at its citation_ | `src/ui/useRoom.ts:71` +1 |
-| **R151** | `docs/DIRECTION.md:2534` | `src/ui/components/SwipeDeck.tsx:150` +1 |
+| **R149** | `docs/DIRECTION.md:2482` | — |
+| **R151** | `docs/DIRECTION.md:2534` | — |
 | **R152** | `docs/DIRECTION.md:2558` | — |
 | **R153** | `docs/DIRECTION.md:2600` | — |
-| **R154** | `docs/DIRECTION.md:2635` | `src/ui/strings.ts:319` +2 |
-| **R155** | `docs/DIRECTION.md:2674` | `src/ui/strings.ts:557` +1 |
-| **R156** | `docs/DIRECTION.md:2713` | `src/ui/components/Knockout.tsx:59` +4 |
+| **R154** | `docs/DIRECTION.md:2635` | — |
+| **R155** | `docs/DIRECTION.md:2674` | — |
+| **R156** | `docs/DIRECTION.md:2713` | — |
 | **R157** | `docs/DIRECTION.md:2753` | — |
-| **R158** | `docs/DIRECTION.md:2784` | `src/ui/components/Sentence.tsx:5` +2 |
-| **R159** | `docs/DIRECTION.md:2818` | `src/ui/strings.ts:577` |
-| **R160** | `docs/DIRECTION.md:2872` | `server/index.ts:622` +1 |
-| **R161** | `docs/DIRECTION.md:2906` | `server/index.ts:160` +1 |
-| **R162** | `docs/DIRECTION.md:2936` | `server/index.ts:502` +1 |
-| **R163** | `docs/DIRECTION.md:2976` | `src/ui/components/SwipeDeck.tsx:54` +3 |
-| **R164** | `docs/DIRECTION.md:3004` | `src/ui/components/Knockout.tsx:27` +1 |
-| **R165** | `docs/DIRECTION.md:3027` | `src/lib/score.ts:25` |
+| **R158** | `docs/DIRECTION.md:2784` | — |
+| **R159** | `docs/DIRECTION.md:2818` | — |
+| **R160** | `docs/DIRECTION.md:2872` | — |
+| **R161** | `docs/DIRECTION.md:2906` | — |
+| **R162** | `docs/DIRECTION.md:2936` | — |
+| **R163** | `docs/DIRECTION.md:2976` | — |
+| **R164** | `docs/DIRECTION.md:3004` | — |
+| **R165** | `docs/DIRECTION.md:3027` | — |
 | **R166** | `docs/DIRECTION.md:3059` | — |
 | **R167** | `docs/DIRECTION.md:3093` | — |
-| **R168** | `docs/DIRECTION.md:3116` | `server/validate.ts:121` |
+| **R168** | `docs/DIRECTION.md:3116` | — |
 | **R169** | `docs/DIRECTION.md:3143` | — |
 | **R170** | `docs/DIRECTION.md:3168` | — |
 | **R171** | `docs/DIRECTION.md:3192` | — |
 | **R172** | `docs/DIRECTION.md:3220` | — |
 | **R173** | `docs/DIRECTION.md:3263` | — |
 | **R174** | `docs/DIRECTION.md:3297` | — |
-| **R175** | `docs/DIRECTION.md:3326` | `src/lib/knockout.ts:149` +1 |
-| **R176** | `docs/DIRECTION.md:3355` | `src/ui/strings.ts:611` |
+| **R175** | `docs/DIRECTION.md:3326` | — |
+| **R176** | `docs/DIRECTION.md:3355` | — |
 | **R177** | `docs/DIRECTION.md:3386` | — |
 | **R178** | `docs/DIRECTION.md:3424` | — |
 | **R179** | `docs/DIRECTION.md:3453` | — |
 | **R180** | `docs/DIRECTION.md:3482` | — |
+| **R181** | `docs/DIRECTION.md:3515` | — |
 
 No ruling is orphaned.
