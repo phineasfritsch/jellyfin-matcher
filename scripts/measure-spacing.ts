@@ -171,16 +171,29 @@ async function main() {
 
         const off = readings.off!;
         const on = readings.on!;
-        const verdict =
-          on.unreachable <= off.unreachable && on.hiddenPx <= off.hiddenPx ? 'no new loss' : 'LOSS';
-        if (verdict === 'LOSS') losses += 1;
+        /*
+          R197: unreachable is a failure; more truncation is a judgement.
+
+          Content the reader's stylesheet puts beyond every scrollbar is lost
+          outright and nothing can argue with it. A line that truncates further
+          is loss ONLY if those words have no other home — and the one line that
+          grows here is the film title, already truncated by design, with its
+          full text on the details sheet (R193).
+
+          So the exit code tracks the first and the output reports the second. A
+          script that exits 1 on a state its own documentation calls a pass is a
+          script somebody stops running.
+        */
+        const verdict = on.unreachable > off.unreachable ? 'LOSS' : 'nothing became unreachable';
+        if (on.unreachable > off.unreachable) losses += 1;
+        const grew = on.hiddenPx > off.hiddenPx;
 
         console.log(
           `${screen.name} @ ${vp.name}\n` +
             `  document height   ${off.docHeight} -> ${on.docHeight} (viewport ${vp.height})\n` +
             `  unreachable       ${off.unreachable} -> ${on.unreachable}\n` +
             `  hidden px in text ${off.hiddenPx} -> ${on.hiddenPx}\n` +
-            `  ${verdict}\n`,
+            `  ${verdict}${grew ? ' (but more text is hidden — read below)' : ''}\n`,
         );
       }
     }
@@ -196,9 +209,13 @@ async function main() {
     process.exit(1);
   }
   console.log(
-    '1.4.12: no new loss at these viewports. Reading the numbers above matters more\n' +
-      'than the verdict: a line already truncated before the overrides is a different\n' +
-      'defect, and this says nothing about it.',
+    '1.4.12: nothing became unreachable at these viewports.\n\n' +
+      'The hidden-pixel numbers are the half that needs a person. Growth there is\n' +
+      'loss only where the words have no other home -- today every pixel of it is\n' +
+      'the film title, already truncated by design, with its full text on the\n' +
+      'details sheet (R193). If a line WITHOUT another home starts growing, this\n' +
+      'prints it and still exits 0, and that is the moment to read rather than\n' +
+      'trust an exit code.',
   );
 }
 

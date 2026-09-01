@@ -3915,3 +3915,43 @@ The pattern for the day, said once: a rule gets stated well, applied to the file
 in front of somebody, and recorded as finished. R178 was the guard that did not
 follow the catalogue. R194 was the guard that did not follow the messages. This
 is the catalogue that did not follow its own rule.
+
+### R197 — Existing is not current, and a word is not an import
+
+Two more from the review, and both are checks that were satisfied by a shape
+rather than a fact.
+
+**The stylesheet was assumed fresh because it existed.** `stylesheet()` rebuilt
+only when `.next/static/css` was MISSING, so once any build had happened, every
+later run measured whatever was on disk. Edit a token, run `measure:spacing`,
+and the numbers describe the build from before the edit, under a confident
+heading. Both accessibility criteria settled this week were settled on compiled
+CSS.
+
+The first fix compared modification times and immediately refused against 23
+"stale" files including `app/globals.css`, which nothing had edited. The
+mutation audit rewrites real source files and restores them, bumping every mtime
+it touches — so an mtime check in THIS repository would refuse after every
+audit, and a check that cries wolf gets its escape hatch set permanently in
+somebody's shell. It hashes the sources instead and keeps the hash beside the
+build: same content, same hash, whatever the clock says.
+
+Running it against a genuinely fresh build produced identical numbers, which is
+worth recording — the staleness had not been distorting anything, and now it
+cannot.
+
+**And the framework-free guard matched a word.** `/^\s*import\s/m` requires
+whitespace after `import`, so `import{t}from'x'` — which a formatter or a
+hurried edit produces — slipped past it, along with `require(...)` and dynamic
+`import(...)`. The catalogue could have pulled React in while the guard counted
+zero and reported a data file. It looks for a module SPECIFIER now, in any shape
+a bundler honours.
+
+**The script also stopped adjudicating.** It exited 1 on a state its own
+documentation calls a pass, because more of an already-truncated title was
+hidden. Unreachable content is a failure nothing can argue with; a line that
+truncates further is loss only where those words have no other home, and that is
+a judgement for a person. The exit code tracks the first, the output reports the
+second and says plainly that a growing line WITHOUT another home would still
+exit 0. A script that fails on its own documented pass is a script somebody
+stops running, and then the measurement stops happening at all.

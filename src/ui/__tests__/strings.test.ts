@@ -646,11 +646,28 @@ describe('the catalogue can be read by the server (R176)', () => {
 
   it('is a file the server can import without pulling in the UI', () => {
     expect(source, 'the catalogue moved and this guard lost its subject').toBeTruthy();
-    const imports = (source!.code.match(/^\s*import\s/gm) ?? []).length;
+    /*
+      R197: look for a module REFERENCE, not for a line that starts with the
+      word import.
+
+      `/^\s*import\s/m` needs whitespace after `import`, so `import{t}from'x'`
+      slips past it — and so does a `require(...)`, a dynamic `import(...)`, and
+      any import written across two lines with the first word alone. Every one
+      of those brings the dependency this guard exists to keep out, and the
+      count stays at zero.
+
+      A data file references nothing. So the assertion is that no module
+      specifier appears at all, in any of the shapes a bundler would honour.
+    */
+    const refs = [
+      ...(source!.code.match(/\bfrom\s*['"]/g) ?? []),
+      ...(source!.code.match(/\brequire\s*\(/g) ?? []),
+      ...(source!.code.match(/\bimport\s*[('"{]/g) ?? []),
+    ];
     expect(
-      imports,
-      'the catalogue imports something; server/handlers.ts imports the catalogue',
-    ).toBe(0);
+      refs,
+      'the catalogue references a module; server/handlers.ts and server/auth.ts import the catalogue',
+    ).toEqual([]);
   });
 
   it('says nothing about a browser', () => {

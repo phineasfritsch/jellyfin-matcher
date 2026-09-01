@@ -923,6 +923,18 @@
         "server/__tests__/validate.test.ts"
       ],
       "note": "The translator's mistake, not the programmer's: two shutdown notices blurred into one message. Both are still SENT, so any check on the wiring passes -- but a household whose room is genuinely gone is told to wait for it, and waits. R149 made the optimistic one true, which is exactly what makes the pessimistic one necessary."
+    },
+    {
+      "id": "R197-catalogue-imports-without-a-space",
+      "ruling": "R197",
+      "claim": "the catalogue references no module, however the import is written",
+      "file": "src/ui/strings.ts",
+      "find": "export type Segment = { text: string } | { slot: string };",
+      "replace": "import{ReactNode}from'react';\nexport type Segment = { text: string } | { slot: string; node?: ReactNode };",
+      "expect": [
+        "src/ui/__tests__/strings.test.ts"
+      ],
+      "note": "The same dependency R176 guards against, written without a space after `import` -- which a formatter or a hurried edit produces. The old check matched /^\\s*import\\s/ and counted zero, so the guard reported a framework-free file while React sat at the top of it. server/handlers.ts and server/auth.ts both import this file."
     }
   ]
 }
