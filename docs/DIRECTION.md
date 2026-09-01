@@ -3552,3 +3552,41 @@ whoever is running the app on that machine, and independently reasonable, since
 that file holds seat secrets at 0600 and an operator may want it off the volume
 that caches ratings. And this is a script rather than a vitest case: it boots
 Next, and G9 runs the suite once per mutation.
+
+### R182 — A confirmation nobody can run
+
+U3 is the biggest open gate on the upstream bar and `docs/TRUST.md` is the best
+document in this repository: it states the hypothesis, enumerates what the fix
+costs, names the part that will get skipped, and says why it is not being done
+yet. It ends "Filed in QUEUE.md with the confirmation step first."
+
+It was not filed. There is no trust item in the queue, no parental-control item,
+nothing.
+
+So the most serious claim in the trust model — that this app reads the library
+with a server key and would therefore show a room titles a child's own account
+is forbidden — sat behind a confirmation step that existed only as a sentence.
+**A confirmation nobody can run is indistinguishable from one nobody did**, and
+both look exactly like a blocked item on a status list.
+
+This is R180's shape again, one document over, and the third time today: a
+blocker that sounded like a hardware constraint and was partly a missing thing.
+The pattern is specific enough now to state — **when an item has been open a
+long time, check that the next step exists, not merely that it is described.**
+
+`npm run probe:userscope` is that step, made runnable. It takes a minute, it is
+read-only, and it spells out what each outcome means — including the outcome
+where nothing is learned, because an error is not a pass and equal counts refute
+the hypothesis rather than excusing the over-privilege.
+
+**What it does not do is decide anything.** U3 also needs a household's decision
+about guests, which is not an implementer's to make, and TRUST.md is right about
+that. This removes the half that was accidentally blocked, not the half that is
+deliberately somebody else's.
+
+A smaller thing found on the way: `AuthenticateByName` returns an `AccessToken`,
+and `server/auth.ts` calls that endpoint today and reads only `User`. The
+credential U3 needs is already in a response this app already receives, one
+field away — which TRUST.md knew and is worth having the probe report, because
+a design step that turns out to be already half done changes what "not
+enormous" means.
