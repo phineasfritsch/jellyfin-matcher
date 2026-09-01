@@ -1,3 +1,13 @@
+# R147: pin the project name.
+#
+# Compose derives it from the DIRECTORY otherwise, and prefixes the volume with
+# it -- so moving this file from ~/matcher to /opt/jellyfin-matcher renames
+# `matcher_matcher-cache` to `jellyfin-matcher_matcher-cache`. Docker then
+# creates the new one empty and the old one sits there, full, unreferenced. The
+# household silently loses its watch history and re-fetches every rating against
+# a metered key, and nothing looks broken (R109, R143).
+name: jellyfin-matcher
+
 services:
   jellyfin-matcher:
     # :latest so a first run works with no editing. Pin a version once you are
@@ -45,3 +55,6 @@ services:
 
 volumes:
   matcher-cache:
+    # Named explicitly for the same reason: this is the volume's real name, not
+    # a prefixed derivation of wherever the file happens to live.
+    name: jellyfin-matcher-cache

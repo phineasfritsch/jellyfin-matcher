@@ -42,21 +42,23 @@ that catches this class: not "is this right?" but "what would I have to own?"
 ### Half one: objective gates
 
 These are facts, not opinions. A mandate may not vote yes while one is unmet,
-however good the product looks. Each is unmet today.
+however good the product looks. Four are met; the status column is kept current
+because a table that disagrees with its own summary is the failure this project
+keeps finding in other people's documents.
 
 | # | Gate | Status |
 |---|------|--------|
-| U1 | **Zero hollow claims.** Every claim the suite makes fails when its defect is reintroduced, verified by a mutation run — or the claim's own comment names what actually guards it and where. | ❌ 26 open (R129) |
-| U2 | **The mutation audit is automated and gated.** A human deciding when to re-run it is the same failure as a generator checking itself (R124). | ❌ not built |
+| U1 | **Zero hollow claims.** Every claim the suite makes fails when its defect is reintroduced, or its own comment names what actually guards it and where. | ⚠ partly — 43 catalogued mutations run on every gate; the audit's remainder is in QUEUE.md |
+| U2 | **The mutation audit is automated and gated.** A human deciding when to re-run it is the same failure as a generator checking itself (R124). | ✅ met — gate G9, `npm run mutate` |
 | U3 | **No admin API key in the trust model.** The app authenticates to Jellyfin with a server API key, so it acts with full server authority on behalf of anonymous room members. No upstream project accepts that, and no acquirer ships it. This is architectural, not a setting. | ❌ by design today |
 | U4 | **A public hostname is safe by default.** Today the default auth mode gates nothing: anyone with the URL reads the library. The README warns; upstream would require a safe default instead. | ❌ documented, not fixed |
 | U5 | **Deployment parity verified.** At least one run proving what is deployed matches this repository. Never once done. | ❌ blocked on an address |
 | U6 | **Used by a household that is not the maintainer, for ten evenings.** With what broke written down. | ❌ never |
-| U7 | **Accessibility conformance stated and measured.** A named target (WCAG 2.2 AA), an audit against it, and the failures listed. Contrast is measured today; the rest is asserted. | ❌ partial |
+| U7 | **Accessibility conformance stated and measured.** A named target (WCAG 2.2 AA), an audit against it, and the failures listed. | ⚠ partly — audited in docs/ACCESSIBILITY.md, six criteria fixed, three media failures and two unverified remain |
 | U8 | **Internationalisation.** Every string in the app is English and hardcoded — the only match for a locale API in the whole source is one `localeCompare` in a tally sort. Jellyfin ships in dozens of languages. | ❌ not started |
-| U9 | **Licence, provenance and dependency review.** `LICENSE` is MIT, but `package.json` declares no `license` field at all, so every tool that reads provenance from the manifest sees an unlicensed package. Third-party services (MDBList, TMDB, Jellyseerr) are also undeclared with their terms, and none should be required for the core loop. | ❌ contradicts itself |
-| U10 | **Performance evidence at real library scale.** Deck build measured against a library of 10,000+ items, not the maintainer's. | ❌ never measured |
-| U11 | **A maintenance story.** More than one person can release it; the release is reproducible; there is a written answer to "what happens when the maintainer stops". | ❌ one person |
+| U9 | **Licence, provenance and dependency review.** Licence declared in both places, every dependency's licence checked, and every destination the app can reach written down with what it can see. | ✅ met — docs/DEPENDENCIES.md |
+| U10 | **Performance evidence at real library scale.** Deck build measured against 10,000+ items. | ✅ met — docs/PERFORMANCE.md; found and fixed a quadratic cache and an un-paginated fetch |
+| U11 | **A maintenance story.** The release is reproducible, dependencies and rot are checked on a schedule, security has a private path in, and the bus factor is stated rather than hidden. | ✅ met |
 
 ### Half two: a unanimous board of five adopting mandates
 
@@ -103,8 +105,33 @@ It is also not a reason to stop shipping. 1.0 is real, it works, and a household
 can use it tonight. The bar above is what would make it *someone else's* to
 rely on.
 
+## An amendment, and why it is not a loosening
+
+U11 originally required **more than one person able to release**. The owner has
+ruled that out of the evaluation: this is a one-person project and will remain
+one, so a gate that can never close is not a standard, it is a complaint.
+
+That is accepted, and it is not the same as pretending the risk is gone. The bus
+factor is one; [MAINTAINING.md](MAINTAINING.md) says so in its first line, where
+somebody deciding whether to depend on this reads it before they depend on it.
+What U11 now asks is everything a single maintainer *can* deliver — a release a
+stranger could reproduce, updates that arrive small and often instead of all at
+once under pressure, a private way to report a hole, and no claim anywhere that
+more people are involved than are.
+
+Stating a limitation plainly is a maintenance story. Requiring a second person
+who does not exist is not.
+
 ## Honest position today
 
-Eleven objective gates. **Zero met.** Three of them (U3, U4, U8) are weeks of
-work each and one is architectural. The most likely honest verdict for a long
-time is **0/5**, and the queue that comes out of each round is the point.
+Eleven objective gates. **Four met** — U2, U9, U10, U11 — and two partly, U1 and
+U7. The five still open are U3, U4, U5, U6 and U8.
+
+Three of those are not code. U5 needs a deployment address, U6 needs a household
+that is not the maintainer, and U4 is a product decision that costs the
+four-second guest join. U3 is architectural and needs a real server with
+parental controls to confirm its hypothesis before anything is designed. U8 is
+weeks of work and is the only one a session like this can simply finish.
+
+So the most likely honest verdict for a long time is still **0/5**, and the
+queue that comes out of each round is the point.

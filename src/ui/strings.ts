@@ -57,6 +57,21 @@ export const en = {
   },
   'knockout.voteOut': 'Vote one out',
 
+  'lobby.scopeLocal': 'Jellyfin only',
+  'lobby.scopeLocalCost': {
+    text: 'On the server now. Plays tonight, costs nothing.',
+    why: 'Half of a pair. This option and the one below are the room deciding whether tonight can spend the host disk, and the two lines are read against each other -- so they must stay parallel in tone as well as accurate. "Costs nothing" is the literal claim: nothing is fetched, nothing is downloaded (R42).',
+  },
+  'lobby.scopeWide': 'Any movie',
+  'lobby.scopeWideCost': {
+    text: 'Winner gets requested — a film you do not own is downloaded to the server.',
+    why: 'The sentence that tells a room this choice spends somebody disk, stated before the choice rather than after it. It must NOT soften into "may be added" or "can be requested": the download is the point, and burying it is how a household finds out from a full disk (R42, R107).',
+  },
+  'lobby.scopeWideLocked': {
+    text: 'Sign in to use. Adds films you do not own.',
+    why: 'Shown instead of the line above when an account is required. Tapping raises the login rather than switching the setting, so this must read as a requirement and not as a description of what will happen (R111).',
+  },
+
   'deck.notOnServer': {
     text: 'Not on your server — voting yes can download it.',
     why: 'The one chip that means money. It marks a card whose yes can spend the host’s disk.',
@@ -65,6 +80,10 @@ export const en = {
     text: 'Nothing is fetched from this screen. If it wins, someone still has to ask — and whether that starts a download straight away depends on your Jellyseerr settings.',
     why: 'Every clause is a ruling. It must NOT promise the host approves first: Matcher requests with an admin key and Jellyseerr auto-approves those by default, so an approval gate is not a promise this app can keep (R107, R111). It must NOT state a size: no size datum reaches this app, and the real figure is not settled until the host’s server picks a release (R91). A translation that adds either is worse than no translation.',
   },
+  'deck.waitingDone': {
+    text: 'Waiting for the others to finish — then the points decide.',
+    why: 'A COUNT-shaped wait, and deliberately not even that: the count is already on screen above this. It must never name anybody (R46, R61). It said "Waiting for Ade, Bex to finish" until R151 -- which named people who had already finished, and named people who had closed their phone, when settlement does not wait for a disconnected member at all.',
+  },
   'deck.undo': {
     text: 'Puts the card back and clears your vote.',
     why: 'The deck is the one place a slip costs a film you cannot get back -- a tremor, a nudge, a thumb put down to steady the phone (R48).',
@@ -72,6 +91,58 @@ export const en = {
   'deck.othersFinished': {
     text: '{done} of {total} others finished',
     why: 'A COUNT, never a name. Ade could see the room watching him be the slow one; the server never sends who, and this sentence must never invite it (R46, R61).',
+  },
+
+  /*
+    The details sheet, in part.
+
+    Six of its strings are here. The rest are still hardcoded in
+    MovieDetails.tsx, and each one is blocked by something that is not mine to
+    move, so the reasons are written down rather than left to be rediscovered
+    by whoever tries next:
+
+      - `aria-label="Close details"` is pin A12, which searches the haystack
+        for that exact attribute text. Catalogued, the haystack would hold
+        `'Close details'` instead and A12 would go red for a property that
+        never left the app. The pin has to change first.
+      - `Ratings` (the heading) and `Close` (the icon button) are substrings of
+        `card.allRatings` and `onClose` in that same file. The duplication
+        guard below matches text, not tokens, so it cannot tell a catalogued
+        message from an identifier and would report both as duplicated. Same
+        class of collision as "Jellyfin only" against server/diagnose.ts,
+        described in strings.test.ts.
+      - `Year unknown` and `No ratings found for this one.` are also hardcoded
+        in SwipeCard.tsx, and `Year unknown` in WinnerScreen.tsx too.
+        Cataloguing one copy while two others stay is the R146 defect exactly.
+      - SOURCE_LABELS is a table of brand names, which a translator must not
+        translate anyway; `tomatoes: 'RT Critics'` is additionally pin S15, and
+        IMDb and Letterboxd are printed by SwipeCard.tsx as well.
+      - The ` · {n} min` fragment is a unit abbreviation glued into a
+        punctuation chain with the year and the genre list. Extracting the
+        abbreviation alone gives a translator a piece they cannot correctly
+        place; the whole line has to move at once, and half of it is somebody
+        else's file.
+
+    A partial migration is fine (R146). Cataloguing a sentence whose other copy
+    lives in a file this change does not own is not.
+  */
+  'details.dialog': '{title} details',
+  'details.hybrid': {
+    text: 'Tagged both genres',
+    why: 'A fact about why this film is in the deck at all -- deck.ts ranks films carrying both surviving genres in the top tier -- and deliberately NOT a cost. It was cut from the card face so that the one chip a card wears means money and nothing else, so a translation must not reach for warning words (download, disk, request, server): that voice belongs to the film nobody owns, which this may not be (R42).',
+  },
+  'details.trailerFrame': '{title} trailer',
+  'details.playTrailer': {
+    text: 'Play trailer',
+    why: 'R29 names this button by name: the sheet opens with zero network, and the trailer mounts only when this is tapped. The label has to read as an action not yet taken. A bare "Trailer" reads as a heading over something already loaded, and on a LAN with no route out that difference is a dead grey rectangle where the synopsis should be.',
+  },
+  'details.watchTrailer': {
+    text: 'Watch trailer',
+    why: 'The other half of that pair, and it must not collapse into the same word. This one is a link that leaves the app for YouTube, shown when the URL will not embed; the one above mounts the trailer in place. One verb for both stops telling anyone which of the two is about to happen (R29).',
+  },
+  'details.deckScore': {
+    text: 'Deck score {score} (35% Letterboxd, 35% IMDb, 30% RT)',
+    why: 'R12: a statistic never appears without naming what it covers. The three sources and the three numbers ARE the composite formula in src/lib/score.ts -- if WEIGHTS changes, this sentence changes in the same commit. Reordering and re-punctuating are fine; altering a number, dropping a source, or losing {score} is not, and leaves a bare figure with no stated authority.',
   },
 } as const satisfies Record<string, Message>;
 

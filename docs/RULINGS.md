@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-141 rulings. 106 argued in a design document; the rest are
+146 rulings. 111 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -26,7 +26,7 @@ defined at their first citation.
 | **R09** | `docs/REDESIGN.md:120` | — |
 | **R10** | `docs/REDESIGN.md:122` | — |
 | **R11** | `docs/REDESIGN.md:124` | — |
-| **R12** | `docs/REDESIGN.md:126` | `src/ui/components/SwipeCard.tsx:24` |
+| **R12** | `docs/REDESIGN.md:126` | `src/ui/components/SwipeCard.tsx:24` +1 |
 | **R13** | `docs/REDESIGN.md:128` | `src/ui/components/EmptyState.tsx:6` |
 | **R14** | `docs/REDESIGN.md:133` | — |
 | **R15** | `docs/REDESIGN.md:135` | — |
@@ -43,9 +43,9 @@ defined at their first citation.
 | **R26** | `docs/DIRECTION.md:118` | `src/ui/components/SwipeCard.tsx:145` |
 | **R27** | `docs/DIRECTION.md:119` | — |
 | **R28** | `docs/DIRECTION.md:120` | — |
-| **R29** | `docs/DIRECTION.md:124` | `src/ui/components/MovieDetails.tsx:178` |
+| **R29** | `docs/DIRECTION.md:124` | `src/ui/components/MovieDetails.tsx:189` +2 |
 | **R30** | `docs/DIRECTION.md:125` | — |
-| **R31** | `docs/DIRECTION.md:126` | `src/ui/components/MovieDetails.tsx:75` +5 |
+| **R31** | `docs/DIRECTION.md:126` | `src/ui/components/MovieDetails.tsx:86` +5 |
 | **R32** | `docs/DIRECTION.md:130` | — |
 | **R33** | `docs/DIRECTION.md:131` | — |
 | **R34** | `docs/DIRECTION.md:135` | — |
@@ -56,11 +56,11 @@ defined at their first citation.
 | **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:99` +3 |
 | **R40** | _at its citation_ | `src/ui/components/Listing.tsx:16` +3 |
 | **R41** | _at its citation_ | `src/ui/components/Listing.tsx:19` +2 |
-| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:230` +1 |
-| **R43** | _at its citation_ | `src/ui/components/Lobby.tsx:19` +1 |
+| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:230` +4 |
+| **R43** | _at its citation_ | `src/ui/components/Lobby.tsx:20` +1 |
 | **R44** | _at its citation_ | `server/store.ts:17` |
-| **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:77` |
-| **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:228` +4 |
+| **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:78` |
+| **R46** | _at its citation_ | `src/ui/components/Lobby.tsx:229` +6 |
 | **R47** | _at its citation_ | `src/lib/knockout.ts:18` +4 |
 | **R48** | _at its citation_ | `server/handlers.ts:232` +3 |
 | **R49** | _at its citation_ | `src/ui/components/SwipeCard.tsx:8` +1 |
@@ -73,30 +73,30 @@ defined at their first citation.
 | **R58** | `docs/DIRECTION.md:221` | `src/ui/components/SwipeCard.tsx:189` |
 | **R59** | `docs/DIRECTION.md:247` | `src/ui/components/SwipeCard.tsx:182` |
 | **R60** | _at its citation_ | `src/ui/components/SwipeCard.tsx:131` +4 |
-| **R61** | _at its citation_ | `server/handlers.ts:68` +6 |
+| **R61** | _at its citation_ | `server/handlers.ts:68` +9 |
 | **R62** | _at its citation_ | `server/validate.ts:73` +2 |
 | **R63** | _at its citation_ | `server/settlement.ts:65` +3 |
 | **R65** | _at its citation_ | `src/lib/deadline.ts:8` |
-| **R66** | _at its citation_ | `src/ui/useRoom.ts:78` |
-| **R67** | _at its citation_ | `server/index.ts:146` |
-| **R68** | _at its citation_ | `server/index.ts:80` +1 |
+| **R66** | _at its citation_ | `src/ui/useRoom.ts:126` |
+| **R67** | _at its citation_ | `server/index.ts:147` |
+| **R68** | _at its citation_ | `server/index.ts:81` +1 |
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:176` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:152` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:150` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
-| **R76** | _at its citation_ | `server/index.ts:548` |
+| **R76** | _at its citation_ | `server/index.ts:575` |
 | **R77** | _at its citation_ | `server/handlers.ts:110` +3 |
 | **R78** | _at its citation_ | `server/history.ts:80` +1 |
 | **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:88` +1 |
-| **R80** | `docs/DIRECTION.md:262` | `src/ui/components/MovieDetails.tsx:46` +2 |
-| **R81** | `docs/DIRECTION.md:281` | `src/ui/components/MovieDetails.tsx:37` +1 |
+| **R80** | `docs/DIRECTION.md:262` | `src/ui/components/MovieDetails.tsx:57` +2 |
+| **R81** | `docs/DIRECTION.md:281` | `src/ui/components/MovieDetails.tsx:48` +1 |
 | **R82** | `docs/DIRECTION.md:297` | `scripts/gate.ts:134` +1 |
-| **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:53` |
+| **R83** | `docs/DIRECTION.md:327` | `src/ui/components/MovieDetails.tsx:64` |
 | **R84** | `docs/DIRECTION.md:358` | `src/ui/components/SwipeCard.tsx:178` +1 |
 | **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:80` +3 |
-| **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:123` +11 |
+| **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:123` +13 |
 | **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:326` +11 |
 | **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:91` +2 |
 | **R89** | `docs/DIRECTION.md:509` | `app/globals.css:37` |
@@ -156,5 +156,10 @@ defined at their first citation.
 | **R144** | `docs/DIRECTION.md:2301` | — |
 | **R145** | `docs/DIRECTION.md:2337` | — |
 | **R146** | `docs/DIRECTION.md:2384` | — |
+| **R147** | `docs/DIRECTION.md:2414` | — |
+| **R148** | `docs/DIRECTION.md:2469` | — |
+| **R149** | `docs/DIRECTION.md:2482` | — |
+| **R151** | `docs/DIRECTION.md:2534` | — |
+| **R152** | `docs/DIRECTION.md:2558` | — |
 
 No ruling is orphaned.

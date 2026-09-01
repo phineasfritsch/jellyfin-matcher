@@ -5,8 +5,19 @@ import { ExternalLink, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { MovieCandidate } from '../../lib/types';
+import { t } from '../strings';
 
-/** Human labels for MDBList rating sources. */
+/**
+ * Human labels for MDBList rating sources.
+ *
+ * R145: these deliberately stay here rather than moving to the catalogue. They
+ * are brand names, which a translator must not translate; `tomatoes: 'RT
+ * Critics'` is pin S15; and IMDb and Letterboxd are printed by SwipeCard.tsx as
+ * well, so cataloguing them would leave two copies of each. Four other strings
+ * in this file are stuck for their own reasons -- the comment above the
+ * `details.*` block in src/ui/strings.ts names every one of them and what has
+ * to move first.
+ */
 const SOURCE_LABELS: Record<string, string> = {
   imdb: 'IMDb',
   letterboxd: 'Letterboxd',
@@ -115,7 +126,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-40 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={`${card.title} details`}>
+    <div className="fixed inset-0 z-40 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={t('details.dialog', { title: card.title })}>
       <button
         type="button"
         aria-label="Close details"
@@ -144,7 +155,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
                 one chip that means money. */}
             {card.isHybrid && (
               <p className="mt-1.5 inline-block rounded-full bg-maybe/12 px-2.5 py-1 text-caption font-semibold text-maybe">
-                Tagged both genres
+                {t('details.hybrid')}
               </p>
             )}
           </div>
@@ -167,7 +178,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
             <div className="mb-4 overflow-hidden rounded-[var(--radius-card)] ring-1 ring-[var(--color-hairline)]">
               <iframe
                 src={embed}
-                title={`${card.title} trailer`}
+                title={t('details.trailerFrame', { title: card.title })}
                 className="aspect-video w-full"
                 allow="accelerometer; encrypted-media; picture-in-picture"
                 allowFullScreen
@@ -185,7 +196,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
               onClick={() => setPlayTrailer(true)}
               className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-body font-semibold ring-1 ring-white/15"
             >
-              <ExternalLink aria-hidden className="size-4" /> Play trailer
+              <ExternalLink aria-hidden className="size-4" /> {t('details.playTrailer')}
             </button>
           )
         ) : (
@@ -196,7 +207,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
               rel="noreferrer"
               className="mb-4 flex h-12 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white/[0.08] text-body font-semibold ring-1 ring-white/15"
             >
-              <ExternalLink aria-hidden className="size-4" /> Watch trailer
+              <ExternalLink aria-hidden className="size-4" /> {t('details.watchTrailer')}
             </a>
           )
         )}
@@ -220,7 +231,7 @@ export function MovieDetails({ card, onClose }: { card: MovieCandidate; onClose:
 
         {card.scores.composite != null && (
           <p className="tabular mt-3 text-center text-sm text-muted-fg">
-            Deck score {card.scores.composite.toFixed(1)} (35% Letterboxd, 35% IMDb, 30% RT)
+            {t('details.deckScore', { score: card.scores.composite.toFixed(1) })}
           </p>
         )}
       </motion.div>

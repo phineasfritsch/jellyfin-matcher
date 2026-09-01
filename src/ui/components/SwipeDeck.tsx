@@ -135,7 +135,21 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
 
       {done ? (
         <EmptyState title="Deck finished">
-          Waiting for {others.map((u) => u.name).join(', ')} to finish — then the points decide.
+          {/*
+            R151: a count, never a name.
+
+            This read `Waiting for {others.map((u) => u.name).join(', ')}`, which
+            is the one thing R46 and R61 forbid -- and it was worse than a
+            generic naming bug. It named members who had ALREADY finished, and
+            it named members who had closed their phone, while
+            server/settlement.ts explicitly stops waiting for a disconnected
+            member. So the screen somebody stares at while the evening stalls
+            said "Waiting for Ade" when Ade had left and the room was waiting on
+            nobody.
+
+            The number is already on screen, above this, from `othersFinished`.
+          */}
+          {t('deck.waitingDone')}
         </EmptyState>
       ) : (
         <>

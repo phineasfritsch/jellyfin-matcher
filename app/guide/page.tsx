@@ -1,8 +1,34 @@
+import type { Metadata } from 'next';
 import { Clapperboard, Laptop, Search, Smartphone, Tv } from 'lucide-react';
 
 // Embedded in Jellyfin via the Custom Tabs plugin (an iframe pointing here),
 // so it renders standalone with no login gate.
 export const dynamic = 'force-dynamic';
+
+/*
+  One string, used as the page's <h1> and as its <title>.
+
+  WCAG 2.2 A 2.4.2 wants a title that describes the page, and A 1.3.1 wants a
+  heading that does the same; this page had a good heading and inherited the
+  app's name as its title, so the two disagreed about what the page was. Written
+  once rather than twice because they are the same claim, and two copies of a
+  claim is how the disagreement happened in the first place.
+
+  What the test on this can and cannot see: `routes.test.ts` catches the heading
+  or the metadata going missing, and catches the <h1> becoming an <h2>. It
+  cannot catch the two drifting apart, because a single const makes that
+  impossible rather than merely tested.
+
+  Not in `src/ui/strings.ts` (R145/R146): the catalogue holds what the UI says
+  to a room, and nothing under `app/` has been migrated yet. When it is, this
+  moves with the rest — the duplication guard already scans `app/`, so it will
+  notice if a copy is left behind.
+*/
+const HEADING = 'How to use the server';
+
+export const metadata: Metadata = {
+  title: HEADING,
+};
 
 function host(url: string | undefined, fallback: string): string {
   if (!url) return fallback;
@@ -22,7 +48,7 @@ export default function GuidePage() {
   return (
     <main className="mx-auto w-full max-w-3xl px-5 py-8 sm:px-8">
       <header className="mb-10 flex flex-col gap-3">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">How to use the server</h1>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{HEADING}</h1>
         <p className="max-w-2xl text-base leading-relaxed text-muted-fg">
           Everything you need to start watching on {jellyfinHost}: which apps to install on your TV,
           phone, and laptop, how to request something we don&apos;t have yet, and how to settle

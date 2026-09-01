@@ -1,0 +1,18 @@
+[Unit]
+Description=Check for a new Jellyfin Matcher image every 10 minutes
+Documentation=https://github.com/phineasfritsch/jellyfin-matcher/blob/main/scripts/deploy/README.md
+
+[Timer]
+# Ten minutes is a compromise, not a default. Faster means a push reaches the
+# living room sooner; slower means fewer registry round trips. Either way the
+# script defers while anybody is playing, so the interval decides latency and
+# never whether a night gets interrupted.
+OnBootSec=5min
+OnUnitActiveSec=10min
+# Spread across the minute so a host running several timers does not fire them
+# together.
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -21,9 +21,15 @@ on:
     - cron: '0 7 * * 1'
   workflow_dispatch:
 
+# R148: read-only by default, and the write scoped to the one job that needs it.
+#
+# `packages: write` was granted workflow-wide, which handed it to the GATE job
+# too -- and the gate runs `npm ci`, which executes install scripts from every
+# dependency in the tree. Any one of them, or anything that ever compromises
+# one, could have published the image a household pulls onto its own machine.
+# The publishing job is the only one that needs to publish.
 permissions:
   contents: read
-  packages: write
 
 # R141: one slot PER REF, and a deploy is never the thing cancelled.
 #
@@ -69,6 +75,9 @@ jobs:
     needs: gate
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v5
 

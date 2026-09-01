@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { isLoggedIn, LoginScreen, useAuthConfig } from '../AuthGate';
+import { t } from '../strings';
 import type { RoomHook } from '../useRoom';
 import { Bar, BigButton, Dock, Group, Row, RowButton } from './Listing';
 
@@ -93,8 +94,8 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
           <RowButton
             label="SRC"
             tone={wide ? 'plain' : 'mine'}
-            title="Jellyfin only"
-            detail="On the server now. Plays tonight, costs nothing."
+            title={t('lobby.scopeLocal')}
+            detail={t('lobby.scopeLocalCost')}
             pill={wide ? undefined : 'SELECTED · ON'}
             pillTone="mine"
             pressed={!wide}
@@ -103,11 +104,11 @@ export function Lobby({ roomHook }: { roomHook: RoomHook }) {
           <RowButton
             label="ALT"
             tone={wide ? 'stop' : 'plain'}
-            title="Any movie"
+            title={t('lobby.scopeWide')}
             detail={
               wideLocked
-                ? 'Sign in to use. Adds films you do not own.'
-                : 'Winner gets requested — a film you do not own is downloaded to the server.'
+                ? t('lobby.scopeWideLocked')
+                : t('lobby.scopeWideCost')
             }
             pill={wide ? 'SELECTED · DOWNLOADS' : 'OFF'}
             pillTone={wide ? 'stop' : 'plain'}

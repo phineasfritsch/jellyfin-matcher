@@ -313,78 +313,116 @@ function RequestControl({
     }
   }
 
-  if (state === 'done' || alreadyAsked) {
-    return (
-      <p
-        role="status"
-        className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-body font-medium text-accent ring-1 ring-accent/35"
-      >
-        <Check aria-hidden className="size-4" />{' '}
-        {/*
-          R107: say which of the two actually happened, rather than asserting a
-          gate this app does not control. Jellyseerr auto-approves a request
-          made with an admin key unless the host has configured otherwise, so
-          the old copy -- "once the host approves it" -- described an approval
-          step that usually is not there.
-        */}
-        {alreadyAsked?.approved
-          ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}, and your server accepted it. It appears in Jellyfin once it finishes downloading.`
-          : alreadyAsked
-            ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}. Your Jellyseerr is holding it for approval.`
-            : 'Asked. It appears in Jellyfin once your server has it.'}
-      </p>
-    );
-  }
+  const settled = state === 'done' || alreadyAsked !== null;
 
-  if (state === 'confirm' || state === 'busy') {
-    return (
-      <div
-        ref={confirmPanel}
-        tabIndex={-1}
-        data-app-focus
-        role="group"
-        aria-label="Confirm asking for this film"
-        className="flex flex-col gap-2 outline-none"
-      >
-        <p
-          id="request-cost"
-          className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
-        >
-          Sends {title}
-          {runtime != null && ` (${runtime} min)`} to Jellyseerr. Depending on your host&rsquo;s
-          settings that may start the download straight away. How much disk it uses is not
-          known until their server picks a release, and you will not see it tonight.
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          <BigButton onClick={send} tone="commit" disabled={state === 'busy'} ariaDescribedBy="request-cost">
-            {state === 'busy' ? (
-              <>
-                {/* The spinner is decorative; without this the button has no
-                    accessible name at all while it is sending (R113). */}
-                <Loader2 aria-hidden className="mx-auto size-5 animate-spin" />
-                <span className="sr-only">Sending the request…</span>
-              </>
-            ) : (
-              'Yes, ask'
-            )}
-          </BigButton>
-          <BigButton onClick={() => setState('idle')} tone="ghost">
-            Cancel
-          </BigButton>
-        </div>
-      </div>
-    );
-  }
+  /*
+    R107: say which of the two actually happened, rather than asserting a
+    gate this app does not control. Jellyseerr auto-approves a request made
+    with an admin key unless the host has configured otherwise, so the old
+    copy -- "once the host approves it" -- described an approval step that
+    usually is not there.
+
+    Computed here rather than inside the JSX because the region below has to
+    exist whether or not there is a sentence for it, so the sentence has to be
+    a value the region reads, not a branch that produces the region.
+  */
+  const result = !settled
+    ? null
+    : alreadyAsked?.approved
+      ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}, and your server accepted it. It appears in Jellyfin once it finishes downloading.`
+      : alreadyAsked
+        ? `${alreadyAsked.by === 'Someone' ? 'Asked' : `${alreadyAsked.by} asked`}. Your Jellyseerr is holding it for approval.`
+        : 'Asked. It appears in Jellyfin once your server has it.';
 
   return (
     <>
-      <BigButton onClick={() => setState('confirm')} tone="commit">
-        Request via Jellyseerr
-      </BigButton>
-      {state === 'error' && message && (
-        <p role="alert" className="px-1 py-1 text-center text-body text-destructive">
-          {message}
-        </p>
+      {/*
+        B2 / SC 4.1.3, the fourth item R136 left open: the region is mounted
+        before it has anything to say.
+
+        This paragraph used to be returned from a branch, so the live region and
+        its text arrived in the same mutation -- the region was inserted already
+        full. Screen readers handle that inconsistently: `role="alert"` survives
+        insertion, `role="status"` often does not. On the one control in the app
+        that spends the host's disk, the sentence saying the request went
+        through could simply never be spoken. Now the region is always here and
+        only its text changes, which is the shape the deck's card announcement
+        already uses.
+
+        `sr-only` while empty rather than the chip drawn blank: an empty accent
+        box in the dock would say nothing loudly, and sr-only is out of flow, so
+        the dock's `gap-2` does not open around it either. It stays rendered and
+        unhidden, which is what the announcement needs -- `display: none` or
+        `visibility: hidden` would take it back out of the tree.
+
+        What this does not fix, and is not meant to: a phone that LOADS this
+        screen with the request already made paints the text in its first
+        render, and nothing is announced. That is right -- it is not news, it
+        was true before the reader arrived. The announcements this makes
+        reliable are the two that happen while somebody is looking: this phone
+        finishing its own request, and the room being told another phone asked.
+      */}
+      <p
+        role="status"
+        className={
+          result
+            ? 'flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-accent/12 px-4 py-3.5 text-body font-medium text-accent ring-1 ring-accent/35'
+            : 'sr-only'
+        }
+      >
+        {result ? (
+          <>
+            <Check aria-hidden className="size-4" /> {result}
+          </>
+        ) : null}
+      </p>
+      {settled ? null : state === 'confirm' || state === 'busy' ? (
+        <div
+          ref={confirmPanel}
+          tabIndex={-1}
+          data-app-focus
+          role="group"
+          aria-label="Confirm asking for this film"
+          className="flex flex-col gap-2 outline-none"
+        >
+          <p
+            id="request-cost"
+            className="rounded-[var(--radius-control)] bg-destructive/[0.14] px-3.5 py-2.5 text-label font-medium leading-relaxed text-destructive ring-1 ring-destructive/35"
+          >
+            Sends {title}
+            {runtime != null && ` (${runtime} min)`} to Jellyseerr. Depending on your host&rsquo;s
+            settings that may start the download straight away. How much disk it uses is not
+            known until their server picks a release, and you will not see it tonight.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <BigButton onClick={send} tone="commit" disabled={state === 'busy'} ariaDescribedBy="request-cost">
+              {state === 'busy' ? (
+                <>
+                  {/* The spinner is decorative; without this the button has no
+                      accessible name at all while it is sending (R113). */}
+                  <Loader2 aria-hidden className="mx-auto size-5 animate-spin" />
+                  <span className="sr-only">Sending the request…</span>
+                </>
+              ) : (
+                'Yes, ask'
+              )}
+            </BigButton>
+            <BigButton onClick={() => setState('idle')} tone="ghost">
+              Cancel
+            </BigButton>
+          </div>
+        </div>
+      ) : (
+        <>
+          <BigButton onClick={() => setState('confirm')} tone="commit">
+            Request via Jellyseerr
+          </BigButton>
+          {state === 'error' && message && (
+            <p role="alert" className="px-1 py-1 text-center text-body text-destructive">
+              {message}
+            </p>
+          )}
+        </>
       )}
     </>
   );

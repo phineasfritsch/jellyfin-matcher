@@ -46,6 +46,7 @@ import {
 import { buildDeckForRoom, genresForScope } from './deckService';
 import { cacheWritable, historyHealth, recordWatched } from './history';
 import { assertSafeForDeclaredExposure, describeExposure, exposureBanner } from './exposure';
+import { loadSnapshot, saveSnapshot } from './persistence';
 import { RoomStore, type Room, type RoomSettings } from './store';
 import * as handlers from './handlers';
 import type { Ctx } from './handlers';
@@ -537,7 +538,33 @@ setInterval(() => void probeAll(), 2 * 60 * 1000).unref();
 const exposure = describeExposure();
 assertSafeForDeclaredExposure(exposure);
 
-void nextApp.prepare().then(() => {
+/*
+  R149: put last night back before taking connections.
+
+  Restoring after the listener is open would race a phone reconnecting into a
+  room that does not exist yet -- it would be told the room is gone, which is
+  the message this change exists to stop being true.
+*/
+async function restoreRooms(): Promise<void> {
+  const snap = await loadSnapshot();
+  if (!snap) return;
+  const { restored, expired } = store.restore(snap);
+  if (restored || expired) {
+    console.log(`  restored ${restored} room(s); ${expired} had passed the idle TTL`);
+  }
+}
+
+/*
+  A crash does not send SIGTERM. Saving only on shutdown would cover the polite
+  case -- a deploy -- and miss the one this is really for, which is the process
+  dying at 9pm. Cheap: a room is small, and this writes only when one exists.
+*/
+const SNAPSHOT_INTERVAL_MS = 30_000;
+setInterval(() => {
+  if (store.roomCount() > 0) void saveSnapshot(store.snapshot());
+}, SNAPSHOT_INTERVAL_MS).unref();
+
+void restoreRooms().then(() => nextApp.prepare()).then(() => {
   httpServer.listen(PORT, () => {
     console.log(`jellyfin-matcher server listening on :${PORT}`);
     for (const line of exposureBanner(exposure)) console.log(`  ${line}`);
@@ -562,10 +589,23 @@ let shuttingDown = false;
 function shutdown(signal: string): void {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log(`${signal} received, closing ${store.roomCount()} room(s)`);
+  const rooms = store.roomCount();
+  console.log(`${signal} received, saving ${rooms} room(s)`);
 
-  io.emit('room:error', {
-    message: 'The server is restarting. This room is gone — start a new one.',
+  /*
+    R149: tell the phones what is actually true.
+
+    This used to say "This room is gone — start a new one", which was correct
+    when a restart destroyed everything. Now it depends on whether the snapshot
+    was written, so the app never promises a recovery it has not got. If the
+    save fails the old sentence is still the honest one.
+  */
+  void saveSnapshot(store.snapshot()).then((saved) => {
+    io.emit('room:error', {
+      message: saved
+        ? 'The server is restarting. Hold on — your room will come back in a moment.'
+        : 'The server is restarting. This room is gone — start a new one.',
+    });
   });
 
   // Give the message a moment to reach the phones, then stop accepting work.

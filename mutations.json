@@ -527,6 +527,54 @@
         "src/ui/__tests__/strings.test.ts"
       ],
       "note": "Two copies of a load-bearing sentence is worse than the one it started as: the rendering tests assert the SCREEN, so the component copy is what ships and the catalogue copy is what a translator edits. They drift silently. This was the actual state after the knockout migration."
+    },
+    {
+      "id": "R149-restore-drops-secrets",
+      "ruling": "R149",
+      "claim": "a restored room brings its seat secrets, or nobody can rejoin it",
+      "file": "server/store.ts",
+      "find": "      secrets: Object.fromEntries(this.secrets),",
+      "replace": "      secrets: {},",
+      "expect": [
+        "server/__tests__/persistence.test.ts"
+      ],
+      "note": "R86 checks a rejoin against the seat secret, so a restore without them hands back a room every member is a stranger to. The restore would LOOK like it worked and every phone would be told \"That seat is not yours to take\" -- which is what this mutation actually prints."
+    },
+    {
+      "id": "R149-restore-ignores-ttl",
+      "ruling": "R149",
+      "claim": "a night the idle TTL already reaped does not come back",
+      "file": "server/store.ts",
+      "find": "      if (now - room.lastActivity > ROOM_TTL_MS) {",
+      "replace": "      if (false) {",
+      "expect": [
+        "server/__tests__/persistence.test.ts"
+      ],
+      "note": "A room from three days ago must not return because the server happened to restart. Same TTL the sweeper uses, so the two cannot disagree."
+    },
+    {
+      "id": "R149-restore-ghost-members",
+      "ruling": "R149",
+      "claim": "everybody comes back disconnected until they prove otherwise",
+      "file": "server/store.ts",
+      "find": "      for (const user of Object.values(room.users)) user.connected = false;",
+      "replace": "      void room;",
+      "expect": [
+        "server/__tests__/persistence.test.ts"
+      ],
+      "note": "Their sockets died with the process. A member marked connected with no socket behind them is the stall R112 is about: connectedness is the sole test of who can hold a room up, so a ghost makes the room wait for somebody who cannot answer."
+    },
+    {
+      "id": "R151-deck-wait-names-people",
+      "ruling": "R151",
+      "claim": "the deck-finished wait is a count and never names anybody",
+      "file": "src/ui/components/SwipeDeck.tsx",
+      "find": "          {t('deck.waitingDone')}",
+      "replace": "          Waiting for {others.map((u) => u.name).join(', ')} to finish — then the points decide.",
+      "expect": [
+        "src/ui/__tests__/deck.render.test.tsx"
+      ],
+      "note": "R46/R61. Shipped for months because the naming test rendered the NOT-done state and the done-state test asserted two phrases that could not see a name -- R129 shape, a fixture that renders one branch. Found by a focus-group persona reading the screen he stares at while the evening stalls, not by the audit."
     }
   ]
 }

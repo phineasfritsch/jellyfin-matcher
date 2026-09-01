@@ -112,6 +112,16 @@ function sameSecret(expected: string, given: string): boolean {
   return timingSafeEqual(a, b);
 }
 
+/** Everything a restart must carry across (R149). */
+export interface StoreSnapshot {
+  version: 1;
+  savedAt: number;
+  userSeq: number;
+  rooms: Record<string, Room>;
+  /** Seat secrets, keyed exactly as in memory. Never merged into a Room. */
+  secrets: Record<string, string>;
+}
+
 export class RoomStore {
   private rooms = new Map<string, Room>();
   private userSeq = 0;
@@ -153,6 +163,79 @@ export class RoomStore {
   private seatSockets = new Map<string, string>();
 
   constructor(private now: () => number = Date.now) {}
+
+  /**
+   * R149: everything a restart must not lose.
+   *
+   * Room state is a Map, so replacing the process ends every night in progress
+   * -- five phones mid-deck, no reconnect that survives it. That is why
+   * auto-deploy has to refuse while anybody is playing (R147), and why a crash
+   * at 9pm costs the evening rather than thirty seconds.
+   *
+   * The seat secrets come with it, deliberately and carefully. Without them a
+   * restored room is a room nobody can rejoin: a rejoin is checked against the
+   * secret (R86), so dropping them would turn every member into a stranger and
+   * the restore would be theatre. They stay in their own map here exactly as
+   * they do in memory -- `viewFor` spreads the room, so a secret on the room
+   * object is a secret on every phone in it (R61).
+   *
+   * `seatSockets` is NOT included. Every socket id in it names a connection
+   * that died with the process; restoring them would let a dead socket appear
+   * to own a live seat, which is R112 pointing the wrong way.
+   */
+  snapshot(): StoreSnapshot {
+    return {
+      version: 1,
+      savedAt: this.now(),
+      userSeq: this.userSeq,
+      rooms: Object.fromEntries(this.rooms),
+      secrets: Object.fromEntries(this.secrets),
+    };
+  }
+
+  /**
+   * Put a snapshot back, dropping anything the TTL would already have reaped.
+   *
+   * Returns how many rooms were restored, and how many were dropped as stale,
+   * because "restored 0 of 4" and "restored 0 of 0" are different mornings and
+   * a boot log that cannot tell them apart is not worth printing.
+   */
+  restore(snap: StoreSnapshot): { restored: number; expired: number } {
+    if (!snap || snap.version !== 1) return { restored: 0, expired: 0 };
+    const now = this.now();
+    let restored = 0;
+    let expired = 0;
+
+    for (const [code, room] of Object.entries(snap.rooms ?? {})) {
+      // The same TTL the sweeper uses. A night that ended three days ago must
+      // not come back because the server happened to restart.
+      if (now - room.lastActivity > ROOM_TTL_MS) {
+        expired += 1;
+        continue;
+      }
+      /*
+        Everyone is disconnected until they prove otherwise. Their sockets died
+        with the process, and a member marked connected with no socket behind
+        them is exactly the stall R112 is about: the room would wait for
+        somebody who cannot answer.
+      */
+      for (const user of Object.values(room.users)) user.connected = false;
+      this.rooms.set(code, room);
+      restored += 1;
+    }
+
+    for (const [key, secret] of Object.entries(snap.secrets ?? {})) {
+      // Only for rooms that actually came back; a secret for a reaped room is
+      // a credential with nothing to open.
+      const code = key.split(':')[0];
+      if (code && this.rooms.has(code)) this.secrets.set(key, secret);
+    }
+
+    // Ids are a global counter and a collision would hand a returning member
+    // somebody else's seat.
+    this.userSeq = Math.max(this.userSeq, snap.userSeq ?? 0);
+    return { restored, expired };
+  }
 
   /** Live room count, for /healthz. Read-only; safe to poll from anywhere. */
   roomCount(): number {

@@ -219,5 +219,24 @@ describe('what the room can see of each other', () => {
     const { container } = render(<SwipeDeck roomHook={hook(done)} />);
     expect(container.textContent).toMatch(/deck finished/i);
     expect(container.textContent).toMatch(/then the points decide/i);
+    /*
+      R151, and the reason this screen shipped naming people for months.
+
+      The "counts who has finished without naming them" case above renders the
+      NOT-done state. This one rendered the done state and asserted two phrases,
+      neither of which could see a name — so R46 was guarded on one branch and
+      violated on the other, which is R129's own shape: a fixture that renders
+      one branch.
+
+      Derived from the fixture rather than a literal, so a member added to the
+      room is checked without anybody remembering to add them here.
+    */
+    for (const u of Object.values(done.users)) {
+      if (u.id === 'u_1') continue;
+      expect(
+        container.textContent,
+        `the wait names ${u.name}, who may have finished or gone home`,
+      ).not.toContain(u.name);
+    }
   });
 });

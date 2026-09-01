@@ -279,3 +279,123 @@ describe('dependency groups do not smuggle a major', () => {
     }
   });
 });
+
+/**
+ * R147: auto-deploy refuses while a room is live, and the thing it asks must
+ * keep answering.
+ *
+ * Room state is a Map in memory, so replacing the container ends every room in
+ * progress -- five phones mid-deck lose the night, with no reconnect that
+ * survives it. `scripts/deploy/autodeploy.sh` therefore reads `rooms` from
+ * /healthz and defers while anybody is playing.
+ *
+ * That makes a field in a JSON payload load-bearing for something outside this
+ * repository's tests. Delete it and the script does not fail -- `rooms` parses
+ * as empty, which it treats as "nothing is being served" and deploys. The
+ * failure mode of removing this field is a container replacement during a
+ * movie night, months later, with nothing to connect it to.
+ */
+describe('the deploy script can still ask whether anybody is playing', () => {
+  const server = readDoc('server/index.ts');
+  const script = readDoc('scripts/deploy/autodeploy.sh');
+
+  it('reports a room count from /healthz', () => {
+    expect(server, '/healthz no longer reports rooms').toMatch(/rooms:\s*store\.roomCount\(\)/);
+  });
+
+  it('reads that exact field, so the two cannot drift apart quietly', () => {
+    // The script greps the raw JSON rather than parsing it, because the host
+    // may not have `jq`. That makes the key name the contract.
+    expect(script).toContain('"rooms"');
+  });
+
+  it('compares the container against the tag, not against itself', () => {
+    /*
+      R147, the defect an adversarial review found before this ever ran. The
+      first version compared `docker compose images -q` either side of a pull --
+      but that reports the CREATED CONTAINER's image, which a pull does not
+      touch. So the two were always equal, the script exited "already on the
+      newest image" for ever, and it never deployed again after install. It
+      logged the line the README documents as healthy, so a dead auto-deploy was
+      indistinguishable from a working one.
+    */
+    expect(script, 'staleness is judged by comparing a command to itself').not.toMatch(
+      /before=.*compose images[\s\S]*after=.*compose images/,
+    );
+    expect(script).toMatch(/docker inspect -f '\{\{\.Image\}\}'/);
+    expect(script).toMatch(/compose config --images/);
+  });
+
+  it('refuses when the app is up but cannot say how many rooms are live', () => {
+    // "Not running" and "did not answer" are different, and only the first is
+    // safe to deploy over. Treating a timeout as "empty" would do the exact
+    // thing this script exists to prevent.
+    expect(script).toMatch(/REFUSING/);
+    expect(script, 'any 200 is accepted as this app answering').toMatch(/"ok":true/);
+  });
+
+  it('does not create a container somebody deliberately removed', () => {
+    expect(script).toMatch(/not creating one/);
+  });
+
+  it('defers rather than deploying when a room is live', () => {
+    expect(script).toMatch(/deferring/);
+    expect(script, 'the script does not branch on the room count at all').toMatch(
+      /rooms.*-gt.*0|"\$rooms".*-gt/,
+    );
+  });
+
+  it('never takes the volume down with the container', () => {
+    /*
+      `docker compose down -v` deletes the named volume holding the ratings
+      cache and the watch history (R109, R143). An unattended script is exactly
+      where that would be written once and discovered a season later.
+    */
+    /*
+      Executable lines only. The first version of this matched the COMMENT above
+      the `up -d` call — the one that exists to say why `down -v` is not used.
+      A guard that fails on the explanation of the thing it guards teaches the
+      next reader to delete the explanation.
+    */
+    const commands = script
+      .split(/\r?\n/)
+      .filter((line) => !line.trim().startsWith('#'))
+      .join('\n');
+    expect(commands).not.toMatch(/down\s+.*-v\b/);
+    expect(commands).not.toMatch(/--volumes\b/);
+  });
+
+  it('leaves the running container alone when the pull fails', () => {
+    // A registry hiccup must not take the app down. The failure mode of a
+    // half-applied deploy is worse than not deploying.
+    expect(script).toMatch(/pull failed; leaving the running container alone/);
+  });
+});
+
+/**
+ * R148: publish rights belong to the job that publishes.
+ *
+ * `packages: write` was granted at workflow level, which handed it to the GATE
+ * job as well -- and the gate runs `npm ci`, which executes install scripts
+ * from every dependency in the tree. Any one of them, or anything that ever
+ * compromises one, could have published the image a household pulls onto its
+ * own machine and points at its Jellyfin.
+ *
+ * Found by an adversarial review of the auto-deploy design, which had no reason
+ * to look at CI permissions and looked anyway.
+ */
+describe('CI grants publish rights narrowly', () => {
+  const workflow = readDoc('.github/workflows/docker.yml');
+
+  it('is read-only by default', () => {
+    const top = workflow.slice(0, workflow.indexOf('jobs:'));
+    expect(top, 'the whole workflow can publish, including the gate').not.toMatch(
+      /^permissions:[\s\S]*?packages:\s*write/m,
+    );
+  });
+
+  it('gives the write to the publishing job only', () => {
+    const docker = workflow.slice(workflow.indexOf('  docker:'));
+    expect(docker).toMatch(/permissions:[\s\S]*?packages:\s*write/);
+  });
+});

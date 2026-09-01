@@ -19,7 +19,30 @@ const plexMono = IBM_Plex_Mono({
 
 
 export const metadata: Metadata = {
-  title: 'Jellyfin Matcher',
+  /*
+    WCAG 2.2 A 2.4.2 Page Titled — the F9 half of B1 in docs/PLAN-1.1.md.
+
+    This was the bare string 'Jellyfin Matcher', and neither the guide nor a
+    room exported metadata of its own, so all three routes wore it. The guide is
+    the case that shows why that is a defect rather than a tidiness complaint:
+    its own visible heading says "How to use the server" and its tab said
+    something else entirely. And on a phone that has the room, the guide and a
+    second home screen open, the tab list is the only thing distinguishing them,
+    which is exactly the situation the criterion was written for.
+
+    `default` is the home screen's own title. It is not repeated in
+    `app/page.tsx`: that screen's heading and its tab must say the same thing,
+    and one of them saying it is enough — a second copy is just somewhere for it
+    to drift.
+
+    `template` is what every other segment wears. The distinguishing half goes
+    FIRST because a tab strip truncates from the right, and a column of tabs all
+    reading "Jellyf…" is the defect again under a different name.
+  */
+  title: {
+    default: 'Jellyfin Matcher',
+    template: '%s · Jellyfin Matcher',
+  },
   description: 'Swipe together. Watch tonight. Zero stalemates.',
   applicationName: 'Jellyfin Matcher',
 };

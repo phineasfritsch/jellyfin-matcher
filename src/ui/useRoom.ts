@@ -52,15 +52,47 @@ export function useRoom(roomId: string): RoomHook {
     socket.on('match:declared', onMatch);
     socket.on('room:error', onRoomError);
 
+    /*
+      R150: what a refused rejoin means, in one place.
+
+      R101 gave the reconnect path below a proper ending -- clear the seat, hand
+      the phone back to the door, say why. The MOUNT path never got it: its
+      catch cleared the stored session and stopped, so a fresh page load with a
+      session the server refuses dropped somebody at the join gate with no
+      explanation at all. That is R101's own symptom ("reappearing mid-evening
+      with no explanation is indistinguishable from the app losing the room") in
+      the path that was not looked at, and it survived because nothing had ever
+      executed this hook.
+
+      R149 also changed what a refusal MEANS. Rooms survive a restart now, so a
+      room that is genuinely not found was reaped by the idle TTL or never had
+      its snapshot written -- not "the server restarted", which is what this
+      used to say and is now the wrong cause to hand somebody.
+    */
+    const rejoinRefused = (err: unknown) => {
+      clearSession(roomId);
+      const gone = err instanceof Error && /not found/i.test(err.message);
+      setUserId(null);
+      setRoom(null);
+      setError(
+        gone
+          ? 'That room has ended. Start a new one.'
+          : 'Your seat went while you were away. Join the room again.',
+      );
+      setConnecting(false);
+    };
+
     // Auto-reconnect with a stored identity (survives refresh / phone lock).
     if (!attempted.current) {
       attempted.current = true;
       const session = loadSession(roomId);
       if (session) {
         emitAck('room:join', { roomId, userId: session.userId, secret: session.secret })
-          .then(() => setUserId(session.userId))
-          .catch(() => clearSession(roomId))
-          .finally(() => setConnecting(false));
+          .then(() => {
+            setUserId(session.userId);
+            setConnecting(false);
+          })
+          .catch(rejoinRefused);
       } else {
         setConnecting(false);
       }
@@ -73,44 +105,41 @@ export function useRoom(roomId: string): RoomHook {
     const onConnect = () => {
       const session = loadSession(roomId);
       if (!session) return;
-      emitAck('room:join', { roomId, userId: session.userId, secret: session.secret }).catch((err) => {
+      emitAck('room:join', { roomId, userId: session.userId, secret: session.secret })
+        .then(() => {
+          /*
+            R149: the room came back, so stop saying it did not.
+
+            The server's parting message is now "hold on -- your room will come
+            back", and it is true: rooms survive a restart and this rejoin
+            succeeds. But `setError` was only ever cleared by somebody typing
+            their name at the gate, so the phone recovered completely and then
+            sat there showing "The server is restarting" over a working deck.
+
+            A banner that outlives the thing it describes is worse than no
+            banner: the next real error looks like the stale one.
+          */
+          setError(null);
+        })
+        .catch((err) => {
         /*
           R66: a rejoin that fails is the end of the session, and it used to be
-          swallowed. Pushing main restarts the server and rooms live in memory,
-          so a deploy mid-night makes every phone in the house fail this call --
-          and each one then sat on a deck the server had forgotten, still
-          rendering cards, still accepting votes, never receiving another
-          broadcast. Silence looked exactly like a room where nobody had voted
-          yet.
-        */
-        clearSession(roomId);
+          swallowed.
 
+          R149 changed how often this happens, not whether it matters. Rooms now
+          survive a restart, so the common case -- a deploy mid-night -- recovers
+          instead of landing here. What still lands here is a room past its idle
+          TTL, a snapshot that failed to write, or a seat somebody else took.
+          Each one is still the end of the session, and each one used to leave a
+          phone sitting on a deck the server had forgotten: still rendering
+          cards, still accepting votes, never receiving another broadcast.
+          Silence looked exactly like a room where nobody had voted yet.
+        */
         /*
-          R101: hand the phone back to the join gate, do not leave it holding a
-          room it can no longer hear.
-
-          This cleared the stored session and set an error, and stopped. userId
-          stayed set, so RoomClient's `!userId` gate never fired and the phone
-          kept rendering the last room state it had -- receiving no broadcasts,
-          since joinChannel only runs on a successful join, and offering
-          controls whose acks would be refused. The copy said "Start a new one"
-          while the server's own message said to join this one again, and
-          neither was reachable from the screen it was printed on.
-
-          Dropping out of the LOBBY is the common way in: a member who leaves
-          before the room starts is deleted outright, by design, so their seat
-          is genuinely gone while the room is fine. That is a rejoin, not a
-          bereavement.
+          R150: the same ending the mount path now uses. This logic existed
+          only here, which is exactly why the other path silently lacked it.
         */
-        const gone = err instanceof Error && /not found/i.test(err.message);
-        setUserId(null);
-        setRoom(null);
-        setError(
-          gone
-            ? 'This room is gone — the server restarted. Start a new one.'
-            : 'Your seat went while you were away. Join the room again.',
-        );
-        setConnecting(false);
+        rejoinRefused(err);
       });
     };
     socket.on('connect', onConnect);

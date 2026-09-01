@@ -1,9 +1,24 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WinnerScreen } from '../components/WinnerScreen';
 import type { ClientRoom } from '../types';
 import type { RoomHook } from '../useRoom';
+
+/*
+  The socket, and only the socket. `emitAck` is the single thing this screen
+  imports from it, and the one case below that presses "Yes, ask" has to reach
+  the resolved state without a server -- and, more to the point, without the
+  real module opening a connection from a test run. Nothing else in this file
+  touches the socket, so the stub is inert for every other case.
+
+  It resolves rather than rejecting: the request FLOW is not what is under test
+  here and is not changed by anything in this file. What is under test is where
+  the resulting sentence is put.
+*/
+vi.mock('../socket', () => ({
+  emitAck: async () => ({}),
+}));
 
 /**
  * R115: the first test in this repository that renders a component.
@@ -238,5 +253,86 @@ describe('the winner screen, rendered', () => {
     // The numbers that make the ranking an explanation rather than a list.
     expect(container.textContent).toMatch(/6\.4 points/);
     expect(container.textContent).toMatch(/from the room/);
+  });
+});
+
+/**
+ * B2 / SC 4.1.3: the request result is announced, not merely displayed.
+ *
+ * The screen carried a `role="status"` that was RETURNED FROM A BRANCH — it did
+ * not exist until there was a result, so the live region and its text landed in
+ * the DOM in the same mutation. A polite region inserted already full is
+ * announced inconsistently across screen readers, so the sentence saying a
+ * request went through could go unspoken on the one control that spends the
+ * host's disk. The reliable shape is a region that is already there and whose
+ * text changes.
+ *
+ * What these cases check is the SHAPE, which is all a DOM can show: that the
+ * element exists before there is anything to say, and that the element holding
+ * the sentence afterwards is the same node. Whether JAWS or VoiceOver then
+ * speaks it is not observable from jsdom and is not claimed here.
+ */
+describe('the request result announces itself (B2)', () => {
+  it('has the region on screen before there is anything to put in it', () => {
+    const { container } = render(<WinnerScreen roomHook={hookWith(roomWith())} match={null} />);
+    const region = container.querySelector('[role="status"]');
+    expect(region, 'no live region exists until a result creates one').toBeTruthy();
+    expect(region?.textContent, 'the empty region should say nothing yet').toBe('');
+    /*
+      And it must not be the accent chip drawn blank: an empty box in the dock
+      would be a visible thing saying nothing, and a flex item would open the
+      dock's gap around it. This asserts the class that hides it, which is the
+      cause; jsdom has no layout, so nothing here measures a pixel or proves the
+      element is off screen (R125).
+    */
+    expect(region?.className).toContain('sr-only');
+  });
+
+  it('fills the region that was already there when the room is told somebody asked', () => {
+    /*
+      R99: the request belongs to the ROOM, so this arrives over the socket on
+      every phone but the one that pressed the button — a change under a reader
+      whose focus is nowhere near it, which is the case 4.1.3 exists for.
+
+      The identity assertion is the whole point. `toBeTruthy` on a region that
+      holds the text passes just as well when React unmounted the old node and
+      inserted a new one carrying the sentence, which is the defect.
+    */
+    const { container, rerender } = render(
+      <WinnerScreen roomHook={hookWith(roomWith())} match={null} />,
+    );
+    const before = container.querySelector('[role="status"]');
+    expect(before?.textContent).toBe('');
+
+    rerender(
+      <WinnerScreen
+        roomHook={hookWith(roomWith({ winnerRequest: { by: 'ada', title: 'The Odyssey', approved: true } }))}
+        match={null}
+      />,
+    );
+
+    const after = container.querySelector('[role="status"]');
+    expect(after, 'the region that speaks the result is a different element').toBe(before);
+    expect(after?.textContent).toMatch(/ada asked/i);
+  });
+
+  it('puts this phone own result into that same region, not a fresh one', async () => {
+    /*
+      The other half: the confirm panel replaces itself with the result, so the
+      region has to survive that swap too. Both presses are the real flow — the
+      trigger, then the confirm R37 requires — and only the socket is stubbed.
+    */
+    const { container } = render(<WinnerScreen roomHook={hookWith(roomWith())} match={null} />);
+    const before = container.querySelector('[role="status"]');
+    expect(before?.textContent).toBe('');
+
+    fireEvent.click(screen.getByRole('button', { name: /request via jellyseerr/i }));
+    fireEvent.click(screen.getByRole('button', { name: /yes, ask/i }));
+    await screen.findByText(/appears in jellyfin once your server has it/i);
+
+    const after = container.querySelector('[role="status"]');
+    expect(after, 'the result was announced from a region that did not exist a moment ago').toBe(
+      before,
+    );
   });
 });

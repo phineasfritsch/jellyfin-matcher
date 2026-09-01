@@ -1,0 +1,14 @@
+[Unit]
+Description=Pull a new Jellyfin Matcher image and restart, if no room is live
+Documentation=https://github.com/phineasfritsch/jellyfin-matcher/blob/main/scripts/deploy/README.md
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/jellyfin-matcher
+ExecStart=/usr/local/bin/matcher-autodeploy
+# The script refuses while a room is live, so a long deferral is normal and not
+# a hang. This ceiling is only here to stop a wedged docker command running for
+# ever.
+TimeoutStartSec=600

@@ -2410,3 +2410,189 @@ Copy from source, then check the copy.
 
 The duplication guard makes the rest of the migration safe to do
 incrementally — which is the only way it is going to get done.
+
+### R147 — Auto-deploy, and the review that found it never deployed
+
+Pushing `main` already publishes to GHCR. The host is behind a tunnel with no
+inbound route, so it polls: a systemd timer, a shell script, no port opened, no
+host key in somebody else's secret store, and no Docker socket handed to a
+third-party container.
+
+The part that matters is the refusal. Room state is a `Map` in memory, so a
+container replacement ends every room in progress — five phones mid-deck lose
+the night, with no reconnect that survives it. `/healthz` already reports
+`rooms`, so the script asks and defers. That is the whole reason this is a
+script and not a cron line.
+
+**Then four agents attacked it, and the first version did not work at all.**
+
+`docker compose images -q` reports the image of the *created container*, not
+what the tag resolves to. Comparing it either side of a pull compares the
+container to itself, so it is equal on every run once a container exists. The
+script would have exited "already on the newest image" for ever and never
+deployed again after install — and that line is the one the README documents as
+the healthy case, so a dead auto-deploy would have been indistinguishable from a
+working one. The deferral clock was cleared on that same always-taken path, so
+the 24-hour ceiling was unreachable dead code: silence, in exactly the case the
+comment said silence would be wrong.
+
+Fifteen findings confirmed out of twenty-seven claimed, across four lenses.
+Several were the same shape — **a guard that cannot tell two states apart**:
+
+- An unanswered `/healthz` was read as "nobody is playing". A stopped container
+  is hosting nobody; a *running* one that times out may be mid-deck with five
+  phones on it. Only the first is safe to deploy over, and the script now asks
+  Docker which it is rather than inferring from a timeout.
+- Any HTTP 200 was read as this app answering. A proxy error page or a login
+  portal on that URL would have been "zero rooms". The payload must now contain
+  `"ok":true` before its room count is believed.
+- A container that failed its health check sat on the newest image, so every
+  later run reported success while the app stayed down.
+- `flock` failing because it is not installed reported as "another run holds the
+  lock" — a permanently broken timer looking like a busy one.
+
+Two more were mine to have caught. The install instructions never put a compose
+file in the directory the root timer runs `docker compose` in. And pinning the
+project name — correct, because compose otherwise derives the volume name from
+the *directory*, so moving the file renames the volume and orphans the watch
+history — does that rename once, to the person installing it. That is now a
+migration step at the top of the README rather than something they discover from
+a household that has forgotten what it watched.
+
+**What this says about adversarial review.** The script was written carefully,
+with the failure modes I could think of already handled — the pull failure, the
+lock, `down -v`, the room check. Every one of those held up. What did not hold
+up was a Docker command behaving differently from how I assumed, which is
+exactly the class of thing that reading your own work does not find. It cost one
+workflow and would have cost a household a silently stale server.
+
+### R148 — The gate job could publish the image
+
+Found by the same review, looking somewhere it had no reason to look.
+
+`packages: write` was granted at workflow level, so every job had it — including
+the gate, which runs `npm ci` and therefore executes install scripts from every
+dependency in the tree. Any one of them, or anything that ever compromised one,
+could have published the image a household pulls onto its own machine and points
+at its Jellyfin.
+
+The publishing job is the only one that needs to publish. The default is
+`contents: read` now, and the write is declared on the `docker` job alone.
+
+### R149 — A night survives the process it started in
+
+Room state was a `Map` in `server/store.ts`. Replacing the container ended every
+room in progress: five phones mid-deck, no reconnect that survives it, and the
+server's own parting message said so — *"This room is gone — start a new one."*
+
+Three separate things were downstream of that one fact, which is unusual enough
+to be worth listing:
+
+- **A crash at 9pm cost the evening**, not thirty seconds.
+- **Auto-deploy had to refuse while anybody was playing** (R147). The careful
+  deferral, the room count on `/healthz`, the whole shape of that script exists
+  because a restart was destructive.
+- **It only gets harder later**, because everything else assumes the map.
+
+The snapshot goes in `.cache`, beside the watch history — the volume a
+deployment is already told to keep (R109), already holding data a household
+would miss.
+
+**The seat secrets go with it, and that is the decision worth defending.**
+A rejoin is checked against the seat secret (R86), so a restore without them
+hands back a room every member is a stranger to. It would look like it worked
+and every phone would be refused — the mutation for this prints the exact
+sentence a returning member would see: *"That seat is not yours to take."*
+
+But that makes this file credentials at rest, which the ratings cache beside it
+is not. So it is written `0600`, through a temp file and a rename, and the
+secrets stay in their own map inside the snapshot exactly as they do in memory.
+`viewFor` builds a member's view by spreading the room (R61), so a secret on the
+room object is a secret on every phone in the room — and a test asserts the
+written *file*, because the file is the artefact somebody could read.
+
+Three things deliberately do not come back:
+
+- **`seatSockets`.** Every id in it names a connection that died with the
+  process. Restoring them would let a dead socket appear to own a live seat,
+  which is R112 pointing the wrong way.
+- **Anybody's `connected` flag.** Everyone returns disconnected until they say
+  otherwise, because connectedness is the sole test of who can stall a room —
+  a ghost makes it wait for somebody who cannot answer.
+- **A room the idle TTL already reaped.** Same `ROOM_TTL_MS` the sweeper uses,
+  so the two cannot disagree about what is stale.
+
+**And the shutdown message now depends on whether the save worked.** It used to
+be unconditionally "this room is gone", which was true. Promoting it to
+unconditionally "your room will come back" would just be the same mistake
+pointing the other way — so the handler saves first and tells the phones what
+actually happened. If the write fails, the old sentence is still the honest one.
+
+A periodic save covers the case the shutdown handler cannot: a crash sends no
+SIGTERM, and that is the failure this is really for.
+
+### R151 — The deck named the people it was waiting for
+
+`SwipeDeck`'s deck-finished state read **"Waiting for Ade, Bex to finish — then
+the points decide."** R46 and R61 exist to forbid exactly that, and this was
+worse than a generic naming bug in two ways:
+
+- It named members who had **already finished**. `others` is every member except
+  you, not the ones still swiping.
+- It named members who had **closed their phone**, while `server/settlement.ts`
+  explicitly stops waiting for a disconnected member. So the screen somebody
+  stares at while the evening stalls said "Waiting for Ade" when Ade had gone to
+  bed and the room was waiting on nobody at all.
+
+**Why it survived everything.** The deck's own R46 test is called "counts who
+has finished without naming them" — and it renders the NOT-done state. The
+done-state test rendered the right branch and asserted two phrases, neither of
+which could see a name. So the guarantee was checked on one branch and violated
+on the other: R129's shape exactly, a fixture that renders one branch, in a file
+that had already been through the audit.
+
+It was not found by the audit, by the mutation catalogue, or by me migrating
+this component's strings twice in one session. It was found by somebody being
+asked what they look at while the evening stalls.
+
+### R152 — The focus group said do not build it, 5 of 5
+
+The plan proposed F2: any member may propose watching the current leader and end
+the swiping early. QUEUE.md had held it open as a real question. Five personas —
+the host, the anxious member, the slow swiper, a guest, a parent — answered
+independently and every one said **do not build**, each citing the code.
+
+The argument that settles it: **any card every connected member liked has
+already ended the room.** That is what `isInstantMatch` does. So by construction
+the mid-deck "leader" is something the room has *not* agreed on — and since
+`rankFallback` is composite plus vote points, where a composite is 0–100 and
+three people can move a card by at most ±9, and `buildDeck` already orders
+composite-desc within its tiers, at card 8 of 50 the leader is usually just the
+app's own top-rated pick. **A button labelled "let's just watch that one" would
+offer the algorithm's recommendation dressed as the room's choice**, which is
+the precise thing this app exists to replace.
+
+Three more, each independently reached:
+
+- A live leader restores the standings `roomView` strips on purpose (R61), on
+  the one screen where a slip costs a film (R48).
+- "2 of 3" anonymises *finishing*, which is inevitable, but not *declining*,
+  which is a choice. In a household-sized room the count names the holdout by
+  subtraction — worse than what R46 protects against, because being slow at
+  least ends on its own.
+- "Any member may propose" is symmetric in permission and not in power: only
+  whoever is furthest ahead has run out of things to do, which hands R63's host
+  role to the fastest thumb.
+
+**F2 is removed from 1.1.** Not deferred — answered.
+
+One correction to the record, because two personas raised it and it is not true:
+an early settle would rank cards nobody had reached. `canSettle` returns null
+unless `deckExhausted`, which requires every *active* member to have finished, so
+the existing fallback cannot rank an unseen card. Checked rather than assumed;
+their point was correctly about F2's proposal and not about what ships.
+
+The plan is better for having asked. A feature that had been open for weeks is
+closed for reasons anybody can check, and the hour that would have started it
+went into R151 instead — which is on the same screen, and which the host said
+"removes most of the pressure that made F2 look necessary."

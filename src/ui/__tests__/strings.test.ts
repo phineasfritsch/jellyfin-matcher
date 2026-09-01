@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { appSources } from '../../../scripts/lib/source-scan';
+import { WEIGHTS } from '../../lib/score';
 import { en, t, why, type MessageKey } from '../strings';
 
 /**
@@ -72,6 +73,56 @@ describe('the promises survive translation', () => {
     expect(placeholders.sort()).toEqual(['done', 'total']);
   });
 
+  it('the deck score still names the sources it is made of (R12)', () => {
+    /*
+      R12: a statistic never appears without naming what it covers. The three
+      percentages in this sentence are WEIGHTS in src/lib/score.ts, read here
+      rather than copied, so changing the formula and leaving the copy alone
+      goes red -- and so does the reverse.
+
+      Set comparison, not a fixed order: "35% Letterboxd" and "Letterboxd 35%"
+      are both honest and a language may need the second. What this cannot see
+      is a source paired with the WRONG one of its three numbers; two of the
+      three weights are equal, so that pairing is not checkable from the string.
+    */
+    const line = t('details.deckScore', { score: '85.7' });
+    const printed = [...line.matchAll(/(\d+)\s?%/g)].map((m) => Number(m[1]));
+    const real = Object.values(WEIGHTS).map((w) => Math.round(w * 100));
+    expect(printed.sort((a, b) => a - b)).toEqual(real.sort((a, b) => a - b));
+    for (const source of [/Letterboxd/, /IMDb/, /RT|Rotten Tomatoes/]) {
+      expect(line, `the deck score no longer names ${source}`).toMatch(source);
+    }
+  });
+
+  it('the deck score still prints the score (R12)', () => {
+    // The weights above survive a sentence with no number in it at all, which
+    // would be three sources labelling nothing.
+    expect(t('details.deckScore', { score: '85.7' })).toContain('85.7');
+  });
+
+  it('the two trailer controls do not collapse into one word (R29)', () => {
+    /*
+      R29 names the Play button: the sheet opens with zero network and the
+      trailer mounts only on tap. "Watch" is the other case -- a link out to
+      YouTube for a URL that will not embed. One verb for both stops telling
+      anyone which of the two is about to happen, and the difference is whether
+      you are leaving the app.
+    */
+    expect(t('details.playTrailer')).not.toBe(t('details.watchTrailer'));
+    expect(t('details.playTrailer')).toMatch(/trailer/i);
+    expect(t('details.watchTrailer')).toMatch(/trailer/i);
+  });
+
+  it('the hybrid tag stays a fact and does not borrow the cost voice (R42)', () => {
+    /*
+      R42 gives one voice to the thing that spends the host's disk. "Tagged both
+      genres" says why the film is high in the deck; it was cut from the card
+      face precisely so the one chip a card wears means money and nothing else.
+      A film tagged both genres may well already be on the server.
+    */
+    expect(t('details.hybrid')).not.toMatch(/download|request|disk|server|cost/i);
+  });
+
   it('the abstain label is the one a voice user can say (R134)', () => {
     /*
       WCAG 2.2 A 2.5.3: the accessible name must contain the visible text. The
@@ -92,6 +143,15 @@ describe('a translator is told why, not just what', () => {
     'knockout.abstain',
     'knockout.overlap',
     'knockout.hidden',
+    // The details sheet. Four of its six entries are promises: what the deck
+    // score is made of (R12), which trailer control leaves the app (R29), and
+    // that the hybrid tag is a fact rather than a cost (R42). The other two --
+    // the sheet's own name and the iframe's -- are labels, and say so by
+    // carrying no reason.
+    'details.deckScore',
+    'details.hybrid',
+    'details.playTrailer',
+    'details.watchTrailer',
   ];
 
   for (const key of LOAD_BEARING) {
@@ -125,19 +185,30 @@ describe('a translator is told why, not just what', () => {
  * is checkable.
  */
 describe('no message is hardcoded as well as catalogued', () => {
-  const sources = appSources();
+  /*
+    The UI, which is what this catalogue covers.
+
+    The first version scanned every app source and failed on `lobby.scopeLocal`
+    ("Jellyfin only") because `server/diagnose.ts` says "Switching the room back
+    to Jellyfin only will work now" — a different sentence that happens to name
+    the mode. That is a substring collision, not a duplicated message, and a
+    guard that cannot tell them apart would have pushed me to either mangle a
+    diagnostic or stop cataloguing short labels.
+
+    Server-side diagnostic copy is its own surface with its own wording. If it
+    is ever catalogued too, this scope widens with it.
+  */
+  const sources = appSources().filter(
+    (f) => f.path.startsWith('src/ui/') || f.path.startsWith('app/'),
+  );
 
   for (const key of keys) {
     const text = t(key);
-    // Templates never appear literally in a component; the rest must appear
-    // exactly once across the whole app, in the catalogue itself.
     it(`${key} appears once, in the catalogue`, () => {
-      const holders = sources
-        .filter((f) => f.code.includes(text))
-        .map((f) => f.path);
+      const holders = sources.filter((f) => f.code.includes(text)).map((f) => f.path);
       expect(
         holders,
-        `"${text.slice(0, 45)}..." is in ${holders.length} files; a component still has its own copy`,
+        `"${text.slice(0, 45)}..." is in ${holders.length} UI files; a component still has its own copy`,
       ).toEqual(['src/ui/strings.ts']);
     });
   }
