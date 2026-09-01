@@ -25,6 +25,7 @@ import { isValidVote } from '../src/lib/match';
 import type { AuthConfig } from './auth';
 import type { RateLimiter } from './limits';
 import { MAX_ROOMS, ROOMS_PER_SOCKET } from './limits';
+import { t } from '../src/ui/strings';
 import type { Room, RoomStore } from './store';
 import {
   knockoutMemberLeft,
@@ -92,27 +93,27 @@ export interface Ctx {
 function room(ctx: Ctx): Room {
   const { roomId } = ctx.session.data;
   const found = roomId ? ctx.store.getRoom(roomId) : undefined;
-  if (!found) throw new Error('You are not in a room');
+  if (!found) throw new Error(t('server.notInRoom'));
   return found;
 }
 
 function me(ctx: Ctx): string {
   const { userId } = ctx.session.data;
-  if (!userId) throw new Error('You are not in a room');
+  if (!userId) throw new Error(t('server.notInRoom'));
   return userId;
 }
 
 export function createRoom(ctx: Ctx, payload: unknown) {
   if (ctx.authConfig().createRequires && !ctx.session.authedName()) {
-    throw new Error('Sign in with your Jellyfin account to create a room');
+    throw new Error(t('server.signInCreate'));
   }
   const { name } = (payload ?? {}) as { name?: unknown };
   // Ceilings, not budgets: a household needs one room (R77).
   if (ctx.store.roomCount() >= MAX_ROOMS) {
-    throw new Error('This server is full. Ask the host to restart it.');
+    throw new Error(t('server.serverFull'));
   }
   const made = ctx.session.data.made ?? 0;
-  if (made >= ROOMS_PER_SOCKET) throw new Error('Too many rooms from this device');
+  if (made >= ROOMS_PER_SOCKET) throw new Error(t('server.tooManyRooms'));
 
   const seat = ctx.store.createRoom(asName(name, 'Host'), Boolean(ctx.session.authedName()));
   ctx.session.data = { roomId: seat.room.roomId, userId: seat.userId, made: made + 1 };
@@ -143,14 +144,14 @@ export function joinRoom(ctx: Ctx, payload: unknown) {
   const who = ctx.session.address();
   if (ctx.joinLimiter.isLimited(who)) {
     const wait = ctx.joinLimiter.retryAfterSec(who);
-    throw new Error(`Too many attempts. Try again in ${Math.max(1, wait)} second(s).`);
+    throw new Error(t('server.tooManyAttempts', { wait: Math.max(1, wait) }));
   }
   ctx.joinLimiter.record(who);
 
   // Only a fresh join is gated; reconnecting an existing member is not, so a
   // guest who already joined keeps their seat.
   if (!userId && ctx.authConfig().joinRequires && !ctx.session.authedName()) {
-    throw new Error('Sign in with your Jellyfin account to join this room');
+    throw new Error(t('server.signInJoin'));
   }
 
   const seat = userId
@@ -186,7 +187,7 @@ export function updateSettings(ctx: Ctx, payload: unknown) {
   // "Any Movie" scope unlocks Jellyseerr requests, so switching to it needs an
   // account even when creating and joining did not.
   if (settings.scope === 'wide' && ctx.authConfig().wideRequires && !ctx.session.authedName()) {
-    throw new Error('Sign in with your Jellyfin account to search any movie');
+    throw new Error(t('server.signInWide'));
   }
   const current = ctx.store.updateSettings(room(ctx).roomId, settings);
   ctx.fx.broadcast(current);
@@ -196,7 +197,7 @@ export function updateSettings(ctx: Ctx, payload: unknown) {
 export function submitGenres(ctx: Ctx, payload: unknown) {
   const { genres } = (payload ?? {}) as { genres?: unknown };
   const current = room(ctx);
-  if (current.status !== 'KNOCKOUT') throw new Error('Not in knockout');
+  if (current.status !== 'KNOCKOUT') throw new Error(t('server.notInKnockout'));
   const { done } = recordGenres(current, me(ctx), asGenres(genres), ctx.store);
   if (done) ctx.fx.startSwiping(current);
   else ctx.fx.broadcast(current);
@@ -206,7 +207,7 @@ export function submitGenres(ctx: Ctx, payload: unknown) {
 export function eliminate(ctx: Ctx, payload: unknown) {
   const { genre } = (payload ?? {}) as { genre?: unknown };
   const current = room(ctx);
-  if (current.status !== 'KNOCKOUT') throw new Error('Not in knockout');
+  if (current.status !== 'KNOCKOUT') throw new Error(t('server.notInKnockout'));
   const { done } = recordElimination(current, me(ctx), asGenre(genre), ctx.store);
   if (done) ctx.fx.startSwiping(current);
   else ctx.fx.broadcast(current);
@@ -219,9 +220,9 @@ export function vote(ctx: Ctx, payload: unknown) {
   const points = Number(raw.points);
   const current = room(ctx);
 
-  if (current.status !== 'SWIPING') throw new Error('Not swiping');
-  if (!isValidVote(points)) throw new Error(`Invalid vote value: ${points}`);
-  if (!current.deck.some((c) => c.id === cardId)) throw new Error(`Unknown card: ${cardId}`);
+  if (current.status !== 'SWIPING') throw new Error(t('server.notSwiping'));
+  if (!isValidVote(points)) throw new Error(t('server.invalidVote', { points: String(points) }));
+  if (!current.deck.some((c) => c.id === cardId)) throw new Error(t('server.unknownCard', { cardId }));
 
   recordVote(current, me(ctx), cardId, points, ctx.store);
   if (!ctx.fx.settleIfPossible(current, cardId)) ctx.fx.broadcast(current);
@@ -242,16 +243,16 @@ export function vote(ctx: Ctx, payload: unknown) {
  */
 export function undo(ctx: Ctx) {
   const current = room(ctx);
-  if (current.status !== 'SWIPING') throw new Error('Not swiping');
+  if (current.status !== 'SWIPING') throw new Error(t('server.notSwiping'));
   const cardId = undoVote(current, me(ctx), ctx.store);
-  if (!cardId) throw new Error('Nothing to undo');
+  if (!cardId) throw new Error(t('server.nothingToUndo'));
   ctx.fx.broadcast(current);
   return { cardId };
 }
 
 export function reject(ctx: Ctx) {
   const current = room(ctx);
-  if (!rejectWinner(current, ctx.store)) throw new Error('No winner to reject');
+  if (!rejectWinner(current, ctx.store)) throw new Error(t('server.noWinnerReject'));
   // The deck may already be finished for everyone, in which case the points
   // settle it again immediately on whatever is left standing.
   if (!ctx.fx.settleIfPossible(current, null)) ctx.fx.broadcast(current);
@@ -279,19 +280,19 @@ export function reject(ctx: Ctx) {
 export async function requestWinner(ctx: Ctx) {
   // Firing a real download always needs an account, even if joining did not.
   if (ctx.authConfig().requestRequires && !ctx.session.authedName()) {
-    throw new Error('Sign in with your Jellyfin account to request a download');
+    throw new Error(t('server.signInRequest'));
   }
   const current = room(ctx);
-  if (current.status !== 'FINISHED' || !current.winner) throw new Error('No winner to request yet');
+  if (current.status !== 'FINISHED' || !current.winner) throw new Error(t('server.noWinnerRequest'));
 
   const card = current.deck.find((c) => c.id === current.winner);
-  if (!card) throw new Error('Winner card missing from deck');
-  if (card.jellyfinItemId) throw new Error('Already in the library');
-  if (card.tmdbId == null) throw new Error('No TMDb id on winner');
+  if (!card) throw new Error(t('server.winnerMissing'));
+  if (card.jellyfinItemId) throw new Error(t('server.alreadyInLibrary'));
+  if (card.tmdbId == null) throw new Error(t('server.noTmdbId'));
 
   // Idempotent by the room, not by the button.
   if (current.winnerRequest) {
-    throw new Error(`${current.winnerRequest.by} already asked for this. The host has it.`);
+    throw new Error(t('server.alreadyAsked', { name: current.winnerRequest.by }));
   }
 
   const result = await ctx.requestMovie(card.tmdbId);

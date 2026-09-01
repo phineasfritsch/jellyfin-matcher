@@ -567,3 +567,34 @@ describe('no screen keeps a sentence of its own', () => {
     });
   }
 });
+
+describe('the catalogue can be read by the server (R176)', () => {
+  /*
+    The server's own refusals live here now, so `server/handlers.ts` imports a
+    module under `src/ui/`. That is only safe because this file imports NOTHING
+    -- no React, no component, no browser API. It is a data file with two pure
+    functions, and R158 already required that when `segments()` was put here and
+    the rendering left to `Sentence`.
+
+    Add one import to the catalogue and the server drags a UI dependency into
+    its graph: at best a slower boot, at worst a module that touches `window`
+    inside a process that has none. The constraint was previously written in a
+    comment and believed. This is it enforced.
+  */
+  const source = appSources().find((f) => f.path === 'src/ui/strings.ts');
+
+  it('is a file the server can import without pulling in the UI', () => {
+    expect(source, 'the catalogue moved and this guard lost its subject').toBeTruthy();
+    const imports = (source!.code.match(/^\s*import\s/gm) ?? []).length;
+    expect(
+      imports,
+      'the catalogue imports something; server/handlers.ts imports the catalogue',
+    ).toBe(0);
+  });
+
+  it('says nothing about a browser', () => {
+    // The other half of the same constraint: a reference to `window` or
+    // `document` compiles fine and throws in Node at the worst moment.
+    expect(source!.code).not.toMatch(/\b(window|document|navigator|localStorage)\b/);
+  });
+});

@@ -606,6 +606,49 @@ export const en = {
     it moves like the rest.
   */
   'details.ratings': 'Ratings',
+
+  /*
+    R176: the room's own refusals, which the server writes and a phone reads.
+
+    These are thrown in server/handlers.ts and `fail()` sends the message
+    verbatim to the ack, so every one of them lands in a household's error
+    banner. They were excluded from the catalogue on the grounds that
+    server-side copy is "its own surface" -- true when those sentences mostly
+    reached logs, and no longer true since R163 made every refusal arrive on
+    screen.
+
+    Upstream failures are deliberately NOT here. "Jellyfin request failed: 502"
+    is a technical line for the person who can act on it, and R54 argues it
+    should stay technical rather than be softened into copy.
+  */
+  'server.signInCreate': 'Sign in with your Jellyfin account to create a room',
+  'server.signInJoin': 'Sign in with your Jellyfin account to join this room',
+  'server.signInRequest': 'Sign in with your Jellyfin account to request a download',
+  'server.signInWide': 'Sign in with your Jellyfin account to search any movie',
+  'server.serverFull': {
+    text: 'This server is full. Ask the host to restart it.',
+    why: 'MAX_ROOMS is a real ceiling, and the person reading this cannot raise it. So the sentence names who can -- a refusal that does not say what would fix it is a dead end (R54).',
+  },
+  'server.tooManyRooms': 'Too many rooms from this device',
+  'server.alreadyInLibrary': 'Already in the library',
+  'server.notInRoom': 'You are not in a room',
+  'server.nothingToUndo': 'Nothing to undo',
+  'server.notSwiping': 'Not swiping',
+  'server.notInKnockout': 'Not in knockout',
+  'server.noWinnerReject': 'No winner to reject',
+  'server.noWinnerRequest': 'No winner to request yet',
+  'server.noTmdbId': 'No TMDb id on winner',
+  'server.winnerMissing': 'Winner card missing from deck',
+  'server.tooManyAttempts': {
+    text: 'Too many attempts. Try again in {wait} second(s).',
+    why: 'R86: the rate limit on seat-taking. It must say HOW LONG, because a refusal with no horizon is indistinguishable from being broken and the person will keep trying.',
+  },
+  'server.invalidVote': 'Invalid vote value: {points}',
+  'server.unknownCard': 'Unknown card: {cardId}',
+  'server.alreadyAsked': {
+    text: '{name} already asked for this. The host has it.',
+    why: 'R42: the request that spends the host\'s disk is attributed. Somebody pressing the button after somebody else needs to know it is already done and by whom, not merely that they failed.',
+  },
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

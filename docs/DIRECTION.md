@@ -3351,3 +3351,34 @@ Found by reading the knockout for edge cases — ties, abstains, departures —
 after the coverage sweeps ran out. The logic around it is careful and
 well-argued; R87's treatment of a member who votes and then leaves is exactly
 right. The defect was in the sentence that claimed two branches were the same.
+
+### R176 — The server's own sentences, catalogued
+
+R173 named the gap and called closing it a decision: the server throws 22
+refusals that a household reads, none of them in the catalogue, and putting them
+there means `server/handlers.ts` importing a module under `src/ui/`.
+
+Taken, and here is the reasoning rather than the shrug. **The objection is about
+the directory, and the risk is about the imports.** `src/ui/strings.ts` imports
+NOTHING — no React, no component, no browser API. It is a data file with two
+pure functions, and R158 already required that when `segments()` was put there
+and the rendering left to `Sentence`. A server importing it gains a `Map` of
+English and two functions.
+
+So the constraint that makes this safe is not "the file is in the right folder",
+it is "the file imports nothing", and that was a comment somebody believed.
+It is a test now: zero imports, and no reference to `window`, `document`,
+`navigator` or `localStorage`. Add one import to the catalogue and the server
+drags a UI dependency into its graph — at best a slower boot, at worst a module
+touching a browser API in a process that has none.
+
+**What did not move, and why.** Upstream failures stay technical. "Jellyfin
+request failed: 502 Bad Gateway" is a line for the person who can act on it, and
+R54 argues that person is usually in the room; softening it into copy would cost
+the only diagnostic a host gets. The line is the ROOM's refusals versus the
+world's — not "user-facing versus internal", which sounds cleaner and cannot be
+drawn, since `fail()` shows every message to everybody.
+
+Nineteen sentences moved, character for character, including the four
+interpolated ones — a rate-limit wait, a vote value, a card id, and the name of
+whoever already asked for the download.
