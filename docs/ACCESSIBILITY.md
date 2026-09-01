@@ -180,16 +180,28 @@ and they are the ones the whole room is watching:
   number is what the room is allowed to know; it is not announced.
 - `Knockout.tsx` — the `Bar`'s "**N of M in**" and "N left · 2 survive".
 
-A lower-confidence fourth: `WinnerScreen.tsx`'s request result is a
-`role="status"` element that is **inserted into the DOM already containing its
-text**. A polite live region created with content is announced inconsistently
-across screen readers — `role="alert"` survives insertion, `role="status"`
-often does not. The safe shape is a region that is always mounted and empty
-until it has something to say, which is what the deck's live region already
-does.
+A lower-confidence fourth, **also now fixed**: `WinnerScreen.tsx`'s request
+result was a `role="status"` element **inserted into the DOM already containing
+its text**. A polite live region created with content is announced
+inconsistently across screen readers — `role="alert"` survives insertion,
+`role="status"` often does not. On the one control in the app that spends the
+host's disk, the sentence saying the request went through could simply never be
+spoken.
 
-**Fix:** `role="status"` on the three counts. The fourth needs the region
-hoisted above the branch that fills it.
+The region is now always mounted and only its text changes, which is the shape
+the deck's card announcement already uses. It is `sr-only` while empty rather
+than drawn blank: an empty accent box in the dock would say nothing loudly, and
+`sr-only` is out of flow, so the dock's `gap-2` does not open around it either.
+Guarded in `winner.render.test.tsx` — "the request result announces itself".
+
+A phone that arrives with the request already made renders the text on first
+paint and announces nothing. That is correct: it is not news, it was true before
+the reader got there. What this makes reliable are the two announcements that
+happen while somebody is looking — this phone finishing its own request, and the
+room being told another phone asked.
+
+**Fix:** all four are done. `role="status"` on the three counts (R136), and the
+fourth hoisted above the branch that fills it.
 
 ### F6 — 4.1.2 Name, Role, Value (A). The runtime slider announces an ordinal.
 
@@ -655,7 +667,7 @@ Level A and AA, WCAG 2.2. `a11y` below is
 | SC | Lvl | Grade | Evidence, or the gap |
 |---|---|---|---|
 | 4.1.2 Name, Role, Value | A | **PARTIAL** | Every control on the deck, the sheet, the winner screen and the genre picker has a non-empty accessible name — `a11y`, "SC 4.1.2", which follows the winner screen all the way into the sending state where the button's only child is a spinner (R113/T115). States are exposed: `aria-pressed` on every `RowButton`, `aria-checked` on the deck-size radios, `aria-modal` and `role="dialog"` on the sheet, `role="progressbar"` with a name on the deck bar. **F6**: the runtime slider announces an ordinal, not the runtime. |
-| 4.1.3 Status Messages | AA | **PARTIAL** | Live regions are right on the deck's card announcement (tested in `a11y`, including that the text *follows* the card rather than being a constant), the loading skeleton, the waiting screens, and every `role="alert"`. **F5**: three counts change with nothing announcing them, and one region is inserted already full. |
+| 4.1.3 Status Messages | AA | **PASS (tested)** | Live regions are right on the deck's card announcement (tested in `a11y`, including that the text *follows* the card rather than being a constant), the loading skeleton, the waiting screens, and every `role="alert"`. **F5 fixed**: the three counts are live regions (R136), and the winner screen's request result is mounted empty rather than inserted full. |
 
 *(4.1.1 Parsing was removed from WCAG in 2.2 and is not graded.)*
 
