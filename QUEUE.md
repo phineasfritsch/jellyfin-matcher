@@ -42,22 +42,24 @@ The active plan is [docs/PLAN-1.1.md](docs/PLAN-1.1.md), which has an end
 written into it: six conditions, a tag, a published image. This section is what
 is left of it.
 
-- [ ] **Finish the string catalogue (F3).** `src/ui/strings.ts` holds the
-      sentences from the knockout, the deck, the lobby's scope choice, the
-      details sheet and the winner screen. What remains is `RoomClient`,
-      `HomeActions`, `SwipeCard`, `VoteRow`, `DiagnosisPanel` and
-      `app/guide/page.tsx` — the guide is the biggest single file of prose in
-      the project. Mechanical: the pin question is answered (the catalogue is in
-      scanned source, so moving text costs no pin churn) and the duplication
-      guard makes it safe one file at a time. Copy each string character for
-      character; three have been paraphrased so far and the tests caught all
-      three.
+- [x] **Finish the string catalogue (F3).** Done, on the third attempt, and the
+      two failures are the part worth keeping. Called finished once with the
+      guide's prose left behind — R155 wrote down why (a sentence wrapping an
+      element cannot be held without splitting it into fragments a translator
+      cannot reorder) and R158 built the message type that fixed it. Called
+      finished again with eight sentences still hardcoded, because completion
+      had been checked by listing FILES and a string lives in a BRANCH (R159).
+      The guard asks the source now, inline sentences included, with its two
+      proper-noun exemptions listed rather than silently skipped.
 
-- [ ] **Settle the trailer captions (B3).** 1.2.2, 1.2.3 and 1.2.5 are the last
-      Level A/AA failures and they are one YouTube embed. The outcome may be a
-      documented limitation rather than a fix — the media is not ours — but it
-      has to be decided and written, not left open. Whatever it is, R29 stands:
-      the sheet opens with zero network and the trailer mounts only on a press.
+- [x] **Settle the trailer captions (B3).** Decided, not deferred: **`FAIL
+      (stated)`**. The app suppresses nothing — no `cc_load_policy=0`, controls
+      intact — and supplies nothing, since the video id is MDBList's `trailer`
+      field. So 1.2.2 is met per film and the app cannot see which; 1.2.3 and
+      1.2.5 are not met and will not be. The finding that was not previously
+      written down is the cost of the privacy choice: `youtube-nocookie.com` is
+      a different origin, so no stored caption preference reaches the frame and
+      captions are off on every trailer, every time.
 
 - [ ] **Prove F1 in a browser.** `server/__tests__/restart.test.ts` drives the
       real handlers through a snapshot, a fresh store and a rejoin, which is the
