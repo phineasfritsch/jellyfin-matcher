@@ -3023,3 +3023,35 @@ reliable.
 assertion about the picker passes with the failure swallowed, because the picker
 is behaving correctly — it is being lied to upstream. The mutation restores the
 old line exactly and only the honesty test goes red.
+
+### R165 — An impossible number is not a rating
+
+`compositeScore` refused NaN and Infinity and accepted everything else. What
+reaches it comes from MDBList, and nothing validates those numbers at ingestion:
+`MdblistRating` is a TYPE, which is a promise about shape and says nothing at
+all at runtime.
+
+So the values that got through were the ordinary-looking impossibilities — an
+API that changed, a scale moving from 0-10 to 0-100, one bad row. A score of
+1000 sorts its film to the top of every deck and wins any settlement decided on
+points, and the room gets a pick nobody can account for.
+
+**Clamping was the obvious answer and is the worse one.** Clamp 1000 to 100 and
+the film still leads the deck and still wins, on a number nobody can defend, and
+R12 says a statistic never appears without naming what it covers. Treating it as
+MISSING reweights the sources that are credible — which is exactly what this
+function already does for a title nobody rated — and a film whose every source
+is impossible correctly comes back `null`.
+
+0 and 100 are kept, because they are real verdicts. A film everybody hated is
+not a film nobody rated.
+
+**And a correction, because it was nearly shipped as fact.** The first version
+of that test said the deck sorts an unrated film differently from one scored
+zero. It does not: `rankFallback` reads `card.scores.composite ?? 0`, so the two
+rank identically. That is a real consequence and possibly a wrong one — roughly
+a tenth of a real library has no TMDb id and so no ratings, and those titles
+must overcome a zero they did not earn. It is written down and deliberately not
+fixed here: how the deck should treat an honestly unrated film is a different
+question, and answering it while fixing something else is how a fix becomes a
+rewrite.

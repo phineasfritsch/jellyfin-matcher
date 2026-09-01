@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-158 rulings. 123 argued in a design document; the rest are
+159 rulings. 124 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -26,7 +26,7 @@ defined at their first citation.
 | **R09** | `docs/REDESIGN.md:120` | `src/ui/strings.ts:241` |
 | **R10** | `docs/REDESIGN.md:122` | `src/ui/AuthGate.tsx:114` +1 |
 | **R11** | `docs/REDESIGN.md:124` | — |
-| **R12** | `docs/REDESIGN.md:126` | `src/ui/components/SwipeCard.tsx:25` +5 |
+| **R12** | `docs/REDESIGN.md:126` | `src/lib/score.ts:36` +6 |
 | **R13** | `docs/REDESIGN.md:128` | `src/ui/components/EmptyState.tsx:6` |
 | **R14** | `docs/REDESIGN.md:133` | — |
 | **R15** | `docs/REDESIGN.md:135` | — |
@@ -173,5 +173,6 @@ defined at their first citation.
 | **R162** | `docs/DIRECTION.md:2936` | — |
 | **R163** | `docs/DIRECTION.md:2976` | — |
 | **R164** | `docs/DIRECTION.md:3004` | — |
+| **R165** | `docs/DIRECTION.md:3027` | — |
 
 No ruling is orphaned.

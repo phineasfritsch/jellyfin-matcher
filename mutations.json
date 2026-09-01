@@ -719,6 +719,18 @@
         "src/ui/__tests__/useroom.render.test.tsx"
       ],
       "note": "Restores the old behaviour exactly: the failure is swallowed and the picker is handed an empty list. Every test about the PICKER still passes, because an empty list is a perfectly valid thing to render -- which is why this sat unnoticed. The room is told its library has no genres when the truth is that its server did not answer, and nobody goes looking for a server problem after the app has given them an answer."
+    },
+    {
+      "id": "R165-impossible-rating-counts",
+      "ruling": "R165",
+      "claim": "a score outside 0-100 is treated as unrated rather than allowed to decide the room",
+      "file": "src/lib/score.ts",
+      "find": "    if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100) {",
+      "replace": "    if (typeof value === 'number' && Number.isFinite(value)) {",
+      "expect": [
+        "src/lib/__tests__/score.test.ts"
+      ],
+      "note": "Restores the original condition, which refused NaN and Infinity and admitted every ordinary-looking impossibility -- a changed API, a scale moving from 0-10 to 0-100, one bad row. Nothing validates MDBList's numbers at ingestion: MdblistRating is a type, which is a promise about shape and says nothing at runtime. A score of 1000 sorts its film to the top of every deck and wins any settlement decided on points."
     }
   ]
 }

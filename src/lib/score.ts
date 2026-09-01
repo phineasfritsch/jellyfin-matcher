@@ -21,9 +21,26 @@ export const WEIGHTS: Record<keyof SourceScores, number> = {
 export function compositeScore(scores: Partial<SourceScores>): number | null {
   let weightSum = 0;
   let total = 0;
+  /*
+    R165: a number outside 0-100 is not a rating, so it is treated as a MISSING
+    one rather than clamped.
+
+    These come from MDBList and nothing validates them at ingestion --
+    `MdblistRating` is a type, which is a promise about the shape and says
+    nothing at runtime. `Number.isFinite` already refused NaN and Infinity, so
+    the impossible values that got through were the ordinary-looking ones: a
+    changed API, a scale switching from 0-10 to 0-100, one bad row.
+
+    Clamping was the obvious answer and is worse. Clamp 1000 to 100 and the film
+    still sorts to the top of the deck and still wins a points settlement, on a
+    number nobody can defend -- and R12 says a statistic never appears without
+    naming what it covers. Dropping it reweights the sources that ARE credible,
+    which is what this function already does for a title nobody rated, and a
+    film with no usable rating at all correctly comes back null.
+  */
   for (const key of Object.keys(WEIGHTS) as Array<keyof SourceScores>) {
     const value = scores[key];
-    if (typeof value === 'number' && Number.isFinite(value)) {
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100) {
       weightSum += WEIGHTS[key];
       total += WEIGHTS[key] * value;
     }
