@@ -32,7 +32,12 @@ noted, but the reason to do it is the household.
    starts a real server, makes a room over real sockets, SIGKILLs the
    process, starts another against the same snapshot, and watches the
    clients reconnect and recover their seats — no Jellyfin needed, because
-   a lobby-phase room never builds a deck. It passed first run.
+   a lobby-phase room never builds a deck.
+
+   Its first green run proved nothing: the kill hit a shell wrapper and the
+   old server answered the health check (R192). It now asserts the port goes
+   silent and that a different `startedAt` answers, and on that basis it
+   passes for real.
 
    What is still missing is the browser half, and it needs a live Jellyfin
    because it has to build a deck. What it must prove, beyond what the unit test

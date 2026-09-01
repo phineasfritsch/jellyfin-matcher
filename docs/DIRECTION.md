@@ -3535,7 +3535,9 @@ the process dying at 9pm, so the thing that must have saved the room is the
 thirty-second timer, not the shutdown handler — a graceful stop would have
 tested the easy half and called it the hard one.
 
-It passed on the first run: room WMA6, both phones reconnected without being
+It passed on the first run and that pass was WORTHLESS -- see R192. What
+follows describes the intent; the evidence arrived later. Room WMA6, both
+phones reconnected without being
 told to, both seats recovered from the secrets the clients held, and a stranger
 with the right room code and the wrong secret still refused (R86 — the restore
 must not become a way in).
@@ -3723,3 +3725,47 @@ gap and saying so in the UI is a legitimate answer too.
 What is not legitimate is the current state, where the app claims a restart does
 not end the night and quietly makes one of its two promises smaller than it
 sounds.
+
+### R192 — The proof passed because nothing was killed
+
+R181 reported that a room survived a real process being killed. It did not kill
+anything.
+
+`boot()` spawned `npx tsx server/index.ts` through a shell and the harness called
+`child.kill('SIGKILL')`. That signal reaches the WRAPPER -- cmd.exe on Windows,
+npx elsewhere -- and the node process holding the room carries on. Five orphaned
+servers were still listening afterwards, which is how obvious this was once
+anybody looked.
+
+**The way it passed is the whole lesson.** With the old server still bound to the
+port, the second `boot()` could not bind, so the ORIGINAL process answered
+`/healthz`. The harness waited for health and got it. The clients never
+disconnected, so "they reconnected on their own" was true of sockets that had
+never dropped. The room "came back" because it had never left. Every assertion
+was true, of a server that was never restarted.
+
+A test that cannot fail passes, and reads exactly like a test that passed.
+
+**Found by an adversarial reviewer, not by re-reading it.** The prediction was
+specific -- the signal reaches a wrapper, the port stays bound, the old process
+answers -- and it was right in every part, on every platform rather than just
+Windows. Nineteen of twenty findings from that review survived verifiers who
+were told to default to refuted, which says something about how much of a day's
+work is worth re-examining by somebody who did not write it.
+
+**Two assertions now make the harness capable of failing**, and they are the
+ones a restart test cannot do without: the port must go SILENT after the kill,
+proving the signal reached the server rather than its launcher; and `/healthz`
+must report a different `startedAt` afterwards, proving a different process is
+answering. The kill itself fells the tree -- `detached` plus `kill(-pid)` on
+POSIX, `taskkill /T` on Windows -- because `child.kill()` only ever promises the
+child.
+
+**The claim turned out to be true.** Room EKYD survived a real SIGKILL, the port
+went quiet, a process started 38 seconds later answered, both phones reconnected
+and recovered their seats from the secrets they held, and the stranger with the
+wrong secret was still refused. F1 has its evidence.
+
+That distinction is worth keeping separate: the property was real all along, and
+the proof of it was worthless. Only the second one was ever in this repository's
+control, and it shipped green for hours.

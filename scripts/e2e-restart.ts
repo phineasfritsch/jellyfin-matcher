@@ -30,7 +30,7 @@
  * Deliberately a script rather than a vitest case. It boots Next, which takes
  * tens of seconds, and G9 runs the suite once per mutation — seventy-odd times.
  */
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -57,12 +57,25 @@ function check(ok: boolean, what: string) {
   console.log(`   ok: ${what}`);
 }
 
-async function waitForHealth(ms = 90_000): Promise<void> {
+/**
+ * Wait for a healthy server and report WHICH ONE answered.
+ *
+ * `startedAt` is the identity that matters here. Without it this harness has a
+ * trivial pass available to it: if the kill does not actually reach the server
+ * -- and on Windows the child is a shell wrapping npx wrapping node, so a
+ * signal to the child may not -- then the second spawn cannot bind the port,
+ * the ORIGINAL process answers /healthz, and the room "comes back" because it
+ * never left. Every assertion downstream would pass while proving nothing.
+ */
+async function waitForHealth(ms = 90_000): Promise<string> {
   const deadline = Date.now() + ms;
   while (Date.now() < deadline) {
     try {
       const res = await fetch(`${URL}/healthz`);
-      if (res.ok && (await res.json()).ok === true) return;
+      if (res.ok) {
+        const body = (await res.json()) as { ok?: boolean; startedAt?: string };
+        if (body.ok === true && typeof body.startedAt === 'string') return body.startedAt;
+      }
     } catch {
       // Not listening yet. Next takes a while on a cold start.
     }
@@ -71,8 +84,41 @@ async function waitForHealth(ms = 90_000): Promise<void> {
   fail('the server never became healthy');
 }
 
+/** Nothing answers on the port. Proves the kill reached the server itself. */
+async function waitForGone(ms = 20_000): Promise<void> {
+  const deadline = Date.now() + ms;
+  while (Date.now() < deadline) {
+    try {
+      await fetch(`${URL}/healthz`);
+    } catch {
+      return;
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  fail('the port still answers after the kill: the signal did not reach the server');
+}
+
+/**
+ * R192: kill the SERVER, not the thing that launched it.
+ *
+ * The first version of this spawned `npx tsx server/index.ts` through a shell
+ * and called `child.kill('SIGKILL')`. That signal reaches the wrapper --
+ * cmd.exe on Windows, npx elsewhere -- and the node process holding the room
+ * carries on. It was not a subtle failure: five orphaned servers were still
+ * listening afterwards.
+ *
+ * The harness PASSED anyway, and the way it passed is the lesson. With the old
+ * server still bound to the port, the second `boot()` could not bind, the
+ * ORIGINAL process answered /healthz, and the room "came back" because it had
+ * never gone. Every assertion downstream was true of a server that was never
+ * restarted.
+ *
+ * So: no shell, and a group to kill. On POSIX `detached` puts the child in its
+ * own process group and `kill(-pid)` fells the group. On Windows there are no
+ * process groups, so `taskkill /T` walks the tree instead.
+ */
 function boot(snapshotFile: string): ChildProcess {
-  const child = spawn('npx', ['tsx', 'server/index.ts'], {
+  return spawn(process.execPath, ['node_modules/tsx/dist/cli.mjs', 'server/index.ts'], {
     env: {
       ...process.env,
       PORT: String(PORT),
@@ -82,9 +128,23 @@ function boot(snapshotFile: string): ChildProcess {
       MATCHER_AUTH: 'off',
     },
     stdio: 'inherit',
-    shell: process.platform === 'win32',
+    detached: process.platform !== 'win32',
   });
-  return child;
+}
+
+/** Fell the whole tree. `child.kill()` only ever promises the child. */
+function killTree(child: ChildProcess): void {
+  const pid = child.pid;
+  if (pid === undefined) return;
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore' });
+    return;
+  }
+  try {
+    process.kill(-pid, 'SIGKILL');
+  } catch {
+    child.kill('SIGKILL');
+  }
 }
 
 /** Wait for a process to actually be gone, not merely signalled. */
@@ -131,7 +191,7 @@ async function main() {
   try {
     say('start a server, with its snapshot somewhere that is not the real one');
     server = boot(snapshot);
-    await waitForHealth();
+    const firstBoot = await waitForHealth();
 
     say('two phones make a room');
     ada = connect();
@@ -156,13 +216,18 @@ async function main() {
     // process dying at 9pm, not a deploy. The 30s timer is what has to have
     // saved the room, not the shutdown handler.
     await new Promise((r) => setTimeout(r, 35_000));
-    server.kill('SIGKILL');
+    killTree(server);
     await ended(server);
-    check(true, 'the server is gone');
+    await waitForGone();
+    check(true, 'nothing answers on the port -- the server itself is gone, not just its wrapper');
 
     say('start a different process against the same snapshot');
     server = boot(snapshot);
-    await waitForHealth();
+    const secondBoot = await waitForHealth();
+    check(
+      secondBoot !== firstBoot,
+      `a DIFFERENT process is answering (${firstBoot} -> ${secondBoot})`,
+    );
 
     say('the phones reconnect on their own');
     await Promise.all([reconnected(ada), reconnected(bex)]);
@@ -206,7 +271,7 @@ async function main() {
     ada?.close();
     bex?.close();
     if (server && server.exitCode === null) {
-      server.kill('SIGKILL');
+      killTree(server);
       await ended(server);
     }
     await rm(dir, { recursive: true, force: true });
