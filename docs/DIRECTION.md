@@ -3188,3 +3188,31 @@ state the control exists to hold; a plain action row does not claim a pressed
 state it has not got; a disabled row does not act; and a static `Row` renders no
 button at all, which is R98 — the failure panel explains a dead end and must not
 also look like a way out of one.
+
+### R171 — Reached by a test is not the same as tested
+
+`SwipeCard` is mounted by the deck's tests, so it looked covered. Those tests
+mount a deck and assert deck things; three claims that live on the CARD were
+pinned only as source text — A18's poster alt, A22's icon-only details button,
+and R42's server chip.
+
+A pin proves a string is written somewhere in a file. It cannot see which
+element carries it, whether that element renders, or what the browser makes of
+it. `R171-poster-alt-says-poster` replaces the alt with "Movie poster" and every
+source-level check still passes — while a deck, which is a stack of posters,
+tells a screen-reader user which card they are on exactly as well as silence
+would.
+
+Also rendered rather than assumed: the server chip appears when a film is NOT
+yours and is absent when it is, because R42 gives one voice to the thing that
+spends the host's disk and a chip on every card would make the chip mean "film"
+rather than "this one costs something"; a film with no year says so instead of
+showing a gap; and a film with no artwork still renders its title, which is then
+the only thing identifying it.
+
+**Two of these tests were wrong before they were right**, and in a way worth
+recording: the year assertion failed because the year shares a line with the
+runtime, and the title assertion failed because the title appears both as text
+and inside the poster's alt. Both were my assertions being naive about the DOM
+rather than the component being wrong — which is exactly the failure a test
+written from the source rather than the screen produces.

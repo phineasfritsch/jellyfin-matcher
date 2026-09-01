@@ -791,6 +791,18 @@
         "src/ui/__tests__/listing.render.test.tsx"
       ],
       "note": "One attribute, and every named region in the app loses its name at once. A15, A16 and A17 all pin an `ariaLabel=` in a CALLER's file, so all three stay green -- they prove a caller supplies a name and say nothing about whether Group uses it. The A12 shape: a pin on the input of a component that never checks the output."
+    },
+    {
+      "id": "R171-poster-alt-says-poster",
+      "ruling": "R171",
+      "claim": "the poster's alt text names the film, not the word poster",
+      "file": "src/ui/components/SwipeCard.tsx",
+      "find": "              alt={t('card.posterAlt', { title: card.title })}",
+      "replace": "              alt=\"Movie poster\"",
+      "expect": [
+        "src/ui/__tests__/swipecard.render.test.tsx"
+      ],
+      "note": "A18 pins the alt as SOURCE, so the pin sees an attribute somewhere in the file and cannot see what it says once rendered. A deck is a stack of posters: 'Movie poster' on every card tells a screen-reader user which card they are on exactly as well as silence would, and every source-level check still passes."
     }
   ]
 }
