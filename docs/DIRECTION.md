@@ -3139,3 +3139,28 @@ occupies the place where the check would go.
 
 Our own client has always sent a real boolean, so nothing that ever worked stops
 working.
+
+### R169 — A ruling about shape, checked only against words
+
+Four components had no render test. `AuthGate` is the one that mattered,
+because two rulings live entirely inside it and both were asserted only against
+the CATALOGUE — which proves a sentence exists, not that it reaches a screen.
+R129 is why that distinction is written down at all.
+
+R55 is the sharper case, because it is not about words. The decline used to be
+14px grey underlined text reading "Back", under a full-width green button. A
+guest who will never make an account reads that pairing as a trial wall — the
+decline styled as the lesser option is the house style of software that does not
+really mean to offer it — and puts the phone down rather than reading the
+screen. Nothing on that screen is gated that a guest cannot simply skip.
+
+The catalogue test that guarded R55 checks the WORDS: that the way out is a
+sentence rather than "Back". Every one of those assertions passes with the
+control shrunk back to grey underlined text, because **R55 is about shape and a
+copy test cannot see shape**. `R169-way-out-shrinks` does exactly that and only
+the rendered tests go red.
+
+Also rendered rather than assumed: the decline is absent when there is nothing
+to decline into, since a control that cannot work is worse than none; the login
+says which room it is for (R10); both fields are bound to their labels; and the
+password field is a password field, which nothing anywhere had checked.

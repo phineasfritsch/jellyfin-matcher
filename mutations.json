@@ -767,6 +767,18 @@
         "server/__tests__/validate.test.ts"
       ],
       "note": "Restores the original one-liner, which validated nothing in the module whose entire job is refusing what a phone sends. Boolean('false') is true, and so are Boolean({}) and Boolean([]) -- so a client that stringified its payload marked itself READY by sending the word \"false\", and the lobby then waited for nobody while telling everybody it was waiting. Found by listing exported functions that no test file so much as names; there were two."
+    },
+    {
+      "id": "R169-way-out-shrinks",
+      "ruling": "R169",
+      "claim": "the way out of the login is the same size and shape as the way in",
+      "file": "src/ui/AuthGate.tsx",
+      "find": "            className=\"flex min-h-[52px] cursor-pointer items-center justify-center rounded-[var(--radius-control)] bg-white/[0.07] px-4 py-3.5 text-row font-semibold tracking-[-0.01em] text-foreground ring-1 ring-white/15 transition active:scale-[0.985]\"",
+      "replace": "            className=\"cursor-pointer text-label text-muted-fg underline\"",
+      "expect": [
+        "src/ui/__tests__/authgate.render.test.tsx"
+      ],
+      "note": "R55 exactly as it was: the decline shrunk back to small grey underlined text under a full-width button. The WORDS are untouched, so every catalogue assertion still passes -- R55 is about shape, and shape is the half a copy test cannot see. A guest reads the pairing as a trial wall and puts the phone down, and nothing here is gated that a guest cannot simply skip."
     }
   ]
 }
