@@ -79,7 +79,7 @@ function CheckboxPhase({ roomHook }: { roomHook: RoomHook }) {
             role="alert"
             className="mx-3 mt-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/[0.14] px-4 py-3 text-body font-semibold text-destructive"
           >
-            Too few shared picks — vote again with more options.
+            {t('knockout.tooFewPicks')}
           </p>
         )}
 

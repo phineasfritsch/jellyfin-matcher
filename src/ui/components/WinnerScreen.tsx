@@ -87,7 +87,7 @@ export function WinnerScreen({
       */}
       <Bar
         left={viaFallback ? t('winner.pointsWinner') : t('winner.locked')}
-        right={held ? 'On your server' : 'Not on your server'}
+        right={held ? t('card.onServer') : t('card.notOnServer')}
         tone={held ? 'go' : 'stop'}
       />
 

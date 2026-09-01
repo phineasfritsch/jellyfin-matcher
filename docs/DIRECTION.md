@@ -2814,3 +2814,37 @@ opening with its slot still opens with it. `R158-sentence-drops-its-slot` is the
 case that shows why: dropping the slot leaves every word of the sentence intact
 and only the name missing -- "We use  for requests." A guard checking the
 surrounding copy would pass.
+
+### R159 — A string does not live in a file
+
+F3 was called finished twice. It was not, either time.
+
+The first miss was the guide's prose, and that one was honest: R155 recorded it,
+said why, and R158 built what it needed. The second was five sentences nobody
+had noticed at all -- the knockout's failure line, the card's "Not on your
+server" chip, the deck's building message and its spoken server line, and the
+reconnect notice. One of them turned out to be in TWO components, which the
+duplication guard could only report once one copy was catalogued.
+
+They survived because completion was checked by LISTING FILES. Every file in the
+plan had been opened and migrated, so every file was ticked. But a string does
+not live in a file, it lives in a BRANCH -- and all five are in branches nobody
+looks at twice: two loading states, a chip, an error line, and a screen-reader
+announcement. A file can be ninety per cent migrated and read as done.
+
+So the source is asked instead of the plan. The guard is deliberately narrow: a
+line that is ENTIRELY prose, with no markup, no braces, no trailing opener and
+no leading keyword. That is how JSX writes a sentence on its own line, and it is
+the shape that cannot be confused with a type parameter -- `useState<string>(x)`
+looks exactly like a JSX text node to anything matching `>...<` across a file,
+which is how the first attempt produced a page of false positives and then
+matched `return createPortal(` as English.
+
+**What it does not catch is stated rather than papered over.** A sentence inline
+with its tag is invisible to it, and `Reconnecting…` was exactly that -- found by
+hand, not by this. It closes the common case. A guard that claimed to close all
+of them would be the hollow kind this project keeps finding.
+
+It found three more the moment it ran: the guide's opening paragraph, its first
+request step, and the home screen's tagline -- the one sentence that explains
+the whole game to a guest who has just scanned a QR.

@@ -567,6 +567,39 @@ export const en = {
   'guide.phoneOutro': 'Each one asks for the server address ({address}) and your login, then your library and resume points sync everywhere.',
   'guide.requestIntro': "We use {name} for requests. If a movie or show isn't in the library, ask for it there and it gets downloaded and added automatically.",
   'guide.matcherIntro': '{name} is a swipe game for picking something together. Everyone joins on their phone and it guarantees a pick.',
+
+  /*
+    The five a scan found after F3 was called finished.
+
+    They were missed because they are not where sentences usually are: two are
+    in loading states nobody looks at twice, one is a chip on the card, one is
+    the knockout's failure line, and one is the deck's spoken announcement. The
+    lesson is in R159 -- "every file migrated" was checked by listing files, and
+    a string does not live in a file, it lives in a branch.
+  */
+  'knockout.tooFewPicks': {
+    text: 'Too few shared picks — vote again with more options.',
+    why: 'R54: it names what went wrong AND what to do about it. A room that reads only "too few picks" is a room staring at a screen with no next move.',
+  },
+  'card.notOnServer': {
+    text: 'Not on your server',
+    why: 'R42: a fact, not a warning. The film can still be voted for and requested; this says where it is, and must not borrow the voice of the cost disclosure.',
+  },
+  'card.onServer': 'On your server',
+  'deck.onServerSpoken': 'On your server.',
+  'deck.notOnServerSpoken': 'Not on your server.',
+  'deck.building': 'Building your deck…',
+  'room.reconnecting': {
+    text: 'Reconnecting…',
+    why: 'R149: the phone lost the socket and is trying again. It says the app is working on it, not that anything is lost -- rooms survive a restart now, and this screen is usually gone within a second.',
+  },
+
+  'guide.intro': "Everything you need to start watching on {host}: which apps to install on your TV, phone, and laptop, how to request something we don't have yet, and how to settle movie night when nobody can decide.",
+  'guide.requestStep1': 'Go to {address} and sign in with your Jellyfin account (same login).',
+  'home.tagline': {
+    text: 'Everyone swipes the same deck. First film you all like wins.',
+    why: 'R55: the first thing a guest reads after scanning a QR, and it has to explain the whole game in one line without asking them to sign up for anything. Both halves earn their place -- what everyone does, and how it ends.',
+  },
 } as const satisfies Record<string, Message>;
 
 export type MessageKey = keyof typeof en;

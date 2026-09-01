@@ -137,7 +137,7 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
         {top
           ? `Card ${myIndex + 1} of ${room.deck.length}. ${top.title}${top.year ? `, ${top.year}` : ''}${
               top.runtime ? `, ${top.runtime} minutes` : ''
-            }. ${top.jellyfinItemId ? 'On your server.' : 'Not on your server.'}`
+            }. ${top.jellyfinItemId ? t('deck.onServerSpoken') : t('deck.notOnServerSpoken')}`
           : ''}
       </p>
 
@@ -255,7 +255,7 @@ function DeckSkeleton({ lockedGenres }: { lockedGenres: string[] }) {
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-fg">
           {lockedGenres.join(' + ')}
         </p>
-        <p className="mt-1 text-sm text-muted-fg">Building your deck…</p>
+        <p className="mt-1 text-sm text-muted-fg">{t('deck.building')}</p>
       </header>
       <div className="relative min-h-[150px] flex-1 shrink px-3 pt-3" aria-hidden>
         <div className="absolute inset-0 animate-pulse rounded-2xl border border-border bg-muted" />

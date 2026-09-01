@@ -20,7 +20,7 @@ export function RoomClient({ roomId }: { roomId: string }) {
     return (
       <Centered>
         <Loader2 aria-hidden className="size-8 animate-spin text-muted-fg" />
-        <p className="text-muted-fg">Reconnecting…</p>
+        <p className="text-muted-fg">{t('room.reconnecting')}</p>
       </Centered>
     );
   }

@@ -1,5 +1,6 @@
 import { Clapperboard } from 'lucide-react';
 import { HomeActions } from '../src/ui/HomeActions';
+import { t } from '../src/ui/strings';
 
 export default function HomePage() {
   return (
@@ -20,7 +21,7 @@ export default function HomePage() {
           */}
           <h1 className="text-display font-semibold leading-none tracking-[-0.02em]">Jellyfin Matcher</h1>
           <p className="mt-1.5 text-label text-muted-fg">
-            Everyone swipes the same deck. First film you all like wins.
+            {t('home.tagline')}
           </p>
         </div>
       </header>

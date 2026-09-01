@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-152 rulings. 117 argued in a design document; the rest are
+153 rulings. 118 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -56,7 +56,7 @@ defined at their first citation.
 | **R39** | _at its citation_ | `src/ui/components/Knockout.tsx:107` +3 |
 | **R40** | _at its citation_ | `src/ui/components/Listing.tsx:16` +3 |
 | **R41** | _at its citation_ | `src/ui/components/Listing.tsx:19` +2 |
-| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:230` +8 |
+| **R42** | _at its citation_ | `src/ui/components/Listing.tsx:230` +9 |
 | **R43** | _at its citation_ | `src/ui/components/Lobby.tsx:20` +1 |
 | **R44** | _at its citation_ | `server/store.ts:17` |
 | **R45** | _at its citation_ | `src/ui/components/Lobby.tsx:86` |
@@ -68,8 +68,8 @@ defined at their first citation.
 | **R51** | _at its citation_ | `src/ui/components/VoteRow.tsx:44` +1 |
 | **R52** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:32` +2 |
 | **R53** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:78` +1 |
-| **R54** | _at its citation_ | `server/diagnose.ts:8` +6 |
-| **R55** | _at its citation_ | `src/ui/AuthGate.tsx:169` +4 |
+| **R54** | _at its citation_ | `server/diagnose.ts:8` +7 |
+| **R55** | _at its citation_ | `src/ui/AuthGate.tsx:169` +5 |
 | **R58** | `docs/DIRECTION.md:221` | `src/ui/components/SwipeCard.tsx:190` |
 | **R59** | `docs/DIRECTION.md:247` | `src/ui/components/SwipeCard.tsx:183` |
 | **R60** | _at its citation_ | `src/ui/components/SwipeCard.tsx:132` +4 |
@@ -167,5 +167,6 @@ defined at their first citation.
 | **R156** | `docs/DIRECTION.md:2713` | — |
 | **R157** | `docs/DIRECTION.md:2753` | — |
 | **R158** | `docs/DIRECTION.md:2784` | — |
+| **R159** | `docs/DIRECTION.md:2818` | — |
 
 No ruling is orphaned.

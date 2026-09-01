@@ -106,7 +106,7 @@ export function SwipeCard({ card, onVote, active, onOpenDetails }: SwipeCardProp
           */}
           {notHeld && (
             <span className="absolute left-3 top-3 rounded-full bg-background/85 px-3 py-1.5 text-caption font-semibold text-destructive ring-1 ring-destructive/40">
-              Not on your server
+              {t('card.notOnServer')}
             </span>
           )}
 

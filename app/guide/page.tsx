@@ -52,9 +52,7 @@ export default function GuidePage() {
       <header className="mb-10 flex flex-col gap-3">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{HEADING}</h1>
         <p className="max-w-2xl text-base leading-relaxed text-muted-fg">
-          Everything you need to start watching on {jellyfinHost}: which apps to install on your TV,
-          phone, and laptop, how to request something we don&apos;t have yet, and how to settle
-          movie night when nobody can decide.
+          {t('guide.intro', { host: jellyfinHost })}
         </p>
       </header>
 
@@ -140,10 +138,10 @@ export default function GuidePage() {
         </p>
         <Steps
           steps={[
-            <>
-              Go to <Code>{jellyseerrUrl || jellyseerrHost}</Code> and sign in with your Jellyfin
-              account (same login).
-            </>,
+            <Sentence
+              k="guide.requestStep1"
+              slots={{ address: <Code>{jellyseerrUrl || jellyseerrHost}</Code> }}
+            />,
             t('guide.requestStep2'),
             t('guide.requestStep3'),
             t('guide.requestStep4'),

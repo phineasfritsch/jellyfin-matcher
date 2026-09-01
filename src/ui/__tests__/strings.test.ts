@@ -487,3 +487,57 @@ describe('no message is hardcoded as well as catalogued', () => {
     });
   }
 });
+
+describe('no screen keeps a sentence of its own', () => {
+  /*
+    R159. F3 was called finished and five sentences were still hardcoded: the
+    knockout's failure line, the card's "Not on your server" chip, the deck's
+    building message and its spoken server line, and the reconnect notice. One
+    of them, "Not on your server", turned out to be in TWO components.
+
+    They survived because "every file migrated" was checked by LISTING FILES.
+    A string does not live in a file, it lives in a branch -- and these are all
+    in branches nobody looks at twice: two loading states, a chip, and an error.
+    A file can be ninety per cent migrated and read as done.
+
+    So this asks the source instead. It is deliberately narrow: only a line that
+    is ENTIRELY prose, with no markup, no braces and no code punctuation on it.
+    That is how JSX writes a sentence on its own line, and it is the shape that
+    cannot be confused with a type parameter -- `useState<string>(null)` looks
+    like a JSX text node to anything matching `>...<` across a whole file, which
+    is how a first attempt at this produced a page of false positives.
+
+    What it therefore does NOT catch is a sentence inline with its tag, and
+    `Reconnecting…` was exactly that. That limit is real and is stated rather
+    than papered over: this closes the common case, not every case.
+  */
+  const PROSE = /^[A-Za-z][A-Za-z0-9 ,.'’—…!?:()/-]{11,}$/;
+  const scanned = appSources().filter(
+    (f) => f.path.startsWith('src/ui/') || f.path.startsWith('app/'),
+  );
+
+  for (const file of scanned) {
+    if (file.path.endsWith('strings.ts')) continue;
+    const offenders = file.code
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(
+        (l) =>
+          PROSE.test(l) &&
+          l.includes(' ') &&
+          // Code that happens to be words: `return createPortal(`,
+          // `function handleDragEnd(`. A sentence does not end in an opener.
+          !/[,({[]$/.test(l) &&
+          !/^(return|function|export|import|const|let|await|if|else|for|while|type|interface|class|new|throw)\b/.test(
+            l,
+          ),
+      );
+
+    it(`${file.path} has no bare sentence in its markup`, () => {
+      expect(
+        offenders,
+        `${file.path} writes prose directly into the page; it belongs in strings.ts`,
+      ).toEqual([]);
+    });
+  }
+});
