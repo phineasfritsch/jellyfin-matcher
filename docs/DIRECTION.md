@@ -3382,3 +3382,41 @@ drawn, since `fail()` shows every message to everybody.
 Nineteen sentences moved, character for character, including the four
 interpolated ones — a rate-limit wait, a vote value, a card id, and the name of
 whoever already asked for the download.
+
+### R177 — The diagnosis panel's copy stays on the server, and a guard decided it
+
+R176 catalogued the room's refusals and left `server/diagnose.ts` as the
+remaining English. Finishing the job looked obvious: the failure panel's
+headline and fix are copy a household reads, so by R176's own line they belong
+in the catalogue.
+
+**B03 refused it, and B03 is right.**
+
+Three of those sentences name environment variables — "The host can check
+MDBLIST_API_KEY", "JELLYFIN_API_KEY is wrong or was revoked", "check
+JELLYSEERR_URL and its key". The catalogue is reachable from the browser, and
+B03 asserts that no module the client bundle can reach so much as NAMES a
+server credential. Its own wording is about the name, not the read: "a server
+credential named in code that ships to guests".
+
+The narrowing was available and would have been wrong. Changing `includes` to
+"reads `process.env`" makes the guard pass, reads like a precision improvement,
+and quietly concedes the thing B03 exists to hold. That is the move this whole
+session has been finding in other people's work; doing it here to finish a
+migration would be worse for knowing better.
+
+There is a real argument on the other side, and it is not enough. That copy
+already reaches guests — the server sends it over the socket when the failure
+happens. Cataloguing it would move the names from a message shown on failure
+into a bundle shipped always, which is a small increase and still an increase,
+for a translation benefit on sentences that are host-operational advice rather
+than the room's own words.
+
+So the line R176 drew holds and is now sharper: **the room's refusals are
+catalogued, the world's failures stay on the server.** The diagnosis panel
+explains the world's failures. `technical` was never a candidate and neither, it
+turns out, is the fix that names the key.
+
+The attempt is recorded rather than the conclusion alone, because "we tried and
+a guard stopped us" is the useful half. The next person to look at U8 will see
+the same obvious remaining work and needs to know it was examined.
