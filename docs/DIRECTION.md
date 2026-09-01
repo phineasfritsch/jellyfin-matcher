@@ -2972,3 +2972,31 @@ trade the disconnect guard makes.
 The limiter sweeps are left alone deliberately. They walk a Map of numbers with
 no room state in them, and wrapping every callback in the file to be seen doing
 it would make the guards mean less, not more.
+
+### R163 — The refusal arrived and nobody was listening
+
+R93 is one of this project's better decisions: eleven socket handlers each
+carrying their own try/catch became one wrapper, so a refusal ALWAYS reaches the
+ack. Its stated reason is that a refusal which never arrives is a phone that
+hangs.
+
+The phone then threw it away. `void eliminate(g)`, `void setReady(...)`,
+`void undoVote()`, and both `submitGenres(...).finally(...)` — `.finally` does
+not handle a rejection — dropped every refusal the server took such care to
+send. The tap did nothing, the banner stayed empty, and the person tried again.
+Which is the hanging phone, one layer further up, reached by a different route.
+
+Exactly one call site handled it: the deck's vote, which needed to put the card
+back after an optimistic exit animation. It was written because somebody could
+SEE the bug there. The other five failed invisibly, so nothing prompted anyone.
+
+**The actions resolve `false` now rather than rejecting, and that shape is the
+whole ruling.** Rethrowing would have been the obvious fix and would have left
+every bare call site with an unhandled rejection — so the fix would have had to
+be repeated at each of the five, which is precisely what R93 got rid of on the
+server. The banner is set in one place. A caller that has extra work to do, like
+the deck putting its card back, reads the boolean.
+
+The mutation keeps the boolean and drops the banner. That is the version that
+passes every test asserting the ACTION and is still wrong to the person holding
+the phone: the tap does nothing and nothing says why.

@@ -695,6 +695,18 @@
         "server/__tests__/validate.test.ts"
       ],
       "note": "A setInterval callback is a callback. The sweep walks every room in the store and runs whether or not anybody is playing, so it is the timer most likely to meet something it did not expect -- and a throw out of it is an uncaught exception. A sweep that fails is a room reaped late; a sweep that throws is every room gone at once."
+    },
+    {
+      "id": "R163-refusal-dropped",
+      "ruling": "R163",
+      "claim": "an action the server refuses says so on the phone",
+      "file": "src/ui/useRoom.ts",
+      "find": "      setError(err instanceof Error ? err.message : 'That did not work. Try again.');\n      return false;",
+      "replace": "      return false;",
+      "expect": [
+        "src/ui/__tests__/useroom.render.test.tsx"
+      ],
+      "note": "Keeps the boolean and drops the banner, which is the version that looks fine in every test asserting the ACTION and wrong to the person holding the phone: the tap does nothing and nothing says why. R93 made sure every refusal reaches the ack; five call sites then discarded it, and returning a boolean rather than rethrowing is what stops that fix having to be repeated at each of them."
     }
   ]
 }

@@ -51,7 +51,10 @@ export function SwipeDeck({ roomHook }: { roomHook: RoomHook }) {
 
   function castVote(cardId: string, points: number) {
     setExits((prev) => ({ ...prev, [cardId]: points }));
-    void vote(cardId, points).catch(() => {
+    // R163: the refusal arrives as `false` now, and the banner is already set.
+    // This still has its own work to do -- putting the card back.
+    void vote(cardId, points).then((ok) => {
+      if (ok) return;
       setExits((prev) => {
         const next = { ...prev };
         delete next[cardId];

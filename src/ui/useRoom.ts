@@ -20,14 +20,29 @@ export interface RoomHook {
   connecting: boolean;
   /** Null until a session exists — the join gate collects a name first. */
   join: (name: string) => Promise<void>;
-  setReady: (ready: boolean) => Promise<void>;
-  updateSettings: (settings: Partial<ClientRoom['settings']>) => Promise<void>;
+  /*
+    R163: these RESOLVE FALSE on a refusal rather than rejecting.
+
+    The server refuses carefully -- R93 turned eleven try/catches into one
+    wrapper precisely so a refusal always reaches the ack. Five call sites then
+    dropped it: `void eliminate(g)`, `void setReady(...)`, `void undoVote()` and
+    both `submitGenres(...).finally(...)`, which does not handle a rejection
+    either. The refusal arrived and nothing on the phone changed, which is the
+    hanging phone R93 exists to prevent, one layer up.
+
+    Returning a boolean rather than rethrowing is the point. Rethrowing would
+    have left every bare call site with an unhandled rejection, so the fix would
+    have had to be repeated at each of them -- and repeating a decision at N
+    call sites is what R93 got rid of. The banner is set here, once.
+  */
+  setReady: (ready: boolean) => Promise<boolean>;
+  updateSettings: (settings: Partial<ClientRoom['settings']>) => Promise<boolean>;
   listGenres: () => Promise<string[]>;
-  submitGenres: (genres: string[]) => Promise<void>;
-  eliminate: (genre: string) => Promise<void>;
-  undoVote: () => Promise<void>;
-  rejectWinner: () => Promise<void>;
-  vote: (cardId: string, points: number) => Promise<void>;
+  submitGenres: (genres: string[]) => Promise<boolean>;
+  eliminate: (genre: string) => Promise<boolean>;
+  undoVote: () => Promise<boolean>;
+  rejectWinner: () => Promise<boolean>;
+  vote: (cardId: string, points: number) => Promise<boolean>;
 }
 
 export function useRoom(roomId: string): RoomHook {
@@ -165,38 +180,53 @@ export function useRoom(roomId: string): RoomHook {
     [roomId],
   );
 
-  const setReady = useCallback(async (ready: boolean) => {
-    await emitAck('room:ready', { ready });
+  /**
+   * R163: run an action and say whether it worked, putting any refusal on
+   * screen. The one place that decision is made, rather than at each caller.
+   */
+  const act = useCallback(async (run: () => Promise<unknown>): Promise<boolean> => {
+    try {
+      await run();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'That did not work. Try again.');
+      return false;
+    }
   }, []);
 
-  const updateSettings = useCallback(async (settings: Partial<ClientRoom['settings']>) => {
-    await emitAck('room:settings', settings);
-  }, []);
+  const setReady = useCallback(
+    (ready: boolean) => act(() => emitAck('room:ready', { ready })),
+    [act],
+  );
+
+  const updateSettings = useCallback(
+    (settings: Partial<ClientRoom['settings']>) => act(() => emitAck('room:settings', settings)),
+    [act],
+  );
 
   const listGenres = useCallback(async () => {
     const res = await emitAck<{ genres: string[] }>('genres:list', {});
     return res.genres;
   }, []);
 
-  const submitGenres = useCallback(async (genres: string[]) => {
-    await emitAck('knockout:submit_genres', { genres });
-  }, []);
+  const submitGenres = useCallback(
+    (genres: string[]) => act(() => emitAck('knockout:submit_genres', { genres })),
+    [act],
+  );
 
-  const rejectWinner = useCallback(async () => {
-    await emitAck('winner:reject', {});
-  }, []);
+  const rejectWinner = useCallback(() => act(() => emitAck('winner:reject', {})), [act]);
 
-  const undoVote = useCallback(async () => {
-    await emitAck('swipe:undo', {});
-  }, []);
+  const undoVote = useCallback(() => act(() => emitAck('swipe:undo', {})), [act]);
 
-  const eliminate = useCallback(async (genre: string) => {
-    await emitAck('knockout:eliminate', { genre });
-  }, []);
+  const eliminate = useCallback(
+    (genre: string) => act(() => emitAck('knockout:eliminate', { genre })),
+    [act],
+  );
 
-  const vote = useCallback(async (cardId: string, points: number) => {
-    await emitAck('swipe:vote', { cardId, points });
-  }, []);
+  const vote = useCallback(
+    (cardId: string, points: number) => act(() => emitAck('swipe:vote', { cardId, points })),
+    [act],
+  );
 
   /**
    * R98: the panel's way out. The server has already put the room back to

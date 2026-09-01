@@ -220,7 +220,7 @@ describe('SC 2.5.1 Pointer Gestures and SC 2.5.7 Dragging Movements', () => {
     So this presses all four and checks the value that came out.
   */
   it('casts every one of the four weights from a button, not only a swipe', () => {
-    const vote = vi.fn(async () => {});
+    const vote = vi.fn(async () => true);
     render(<SwipeDeck roomHook={hook(room(), { vote })} />);
 
     const pressed: number[] = [];

@@ -186,3 +186,58 @@ describe('the connecting flag is always let go of', () => {
     expect(probe.latest().connecting).toBe(false);
   });
 });
+
+describe('a refusal reaches the person who caused it (R163)', () => {
+  /*
+    The server refuses carefully. R93 turned eleven per-handler try/catches into
+    one wrapper precisely so a refusal always reaches the ack, because a refusal
+    that never arrives is a phone that hangs.
+
+    Five call sites then dropped it on the floor: `void eliminate(g)`,
+    `void setReady(...)`, `void undoVote()` and both
+    `submitGenres(...).finally(...)` -- `.finally` does not handle a rejection.
+    So the refusal arrived and nothing on the phone changed, which is the same
+    experience R93 was written to prevent, one layer up.
+
+    These actions resolve FALSE now instead of rejecting. Rethrowing would have
+    left every bare call site with an unhandled rejection and the fix would have
+    had to be repeated at each -- which is the thing R93 got rid of.
+  */
+  beforeEach(() => {
+    store.join = (event) =>
+      event === 'room:join'
+        ? Promise.resolve({ userId: 'u_1', secret: 's' })
+        : Promise.reject(new Error('Room is full'));
+  });
+
+  it('puts the reason on screen instead of failing silently', async () => {
+    const probe = mount();
+    await act(async () => {});
+    await act(async () => {
+      await probe.latest().setReady(true);
+    });
+    expect(probe.latest().error, 'the phone was told nothing').toBe('Room is full');
+  });
+
+  it('says it did not work, rather than rejecting into nobody', async () => {
+    const probe = mount();
+    await act(async () => {});
+    let outcome: boolean | undefined;
+    await act(async () => {
+      outcome = await probe.latest().eliminate('Action');
+    });
+    expect(outcome, 'a refused action reported success').toBe(false);
+  });
+
+  it('reports success when the server accepts', async () => {
+    store.join = () => Promise.resolve({ userId: 'u_1', secret: 's' });
+    const probe = mount();
+    await act(async () => {});
+    let outcome: boolean | undefined;
+    await act(async () => {
+      outcome = await probe.latest().vote('c1', 3);
+    });
+    expect(outcome).toBe(true);
+    expect(probe.latest().error, 'a working vote set an error banner').toBeNull();
+  });
+});

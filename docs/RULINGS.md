@@ -10,7 +10,7 @@ cites them and were never written up anywhere else. That is not ideal, but it
 is honest, and it is better than prose invented after the fact to fill a
 table. This index says, for every ruling, where to go.
 
-156 rulings. 121 argued in a design document; the rest are
+157 rulings. 122 argued in a design document; the rest are
 defined at their first citation.
 
 | Ruling | Argued in | Cited from |
@@ -36,7 +36,7 @@ defined at their first citation.
 | **R19** | `docs/DIRECTION.md:111` | — |
 | **R20** | `docs/DIRECTION.md:112` | — |
 | **R21** | `docs/DIRECTION.md:113` | `src/ui/RoomClient.tsx:75` +2 |
-| **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:133` |
+| **R22** | `docs/DIRECTION.md:114` | `src/ui/components/SwipeDeck.tsx:136` |
 | **R23** | `docs/DIRECTION.md:115` | — |
 | **R24** | `docs/DIRECTION.md:116` | — |
 | **R25** | `docs/DIRECTION.md:117` | `src/ui/components/VoteRow.tsx:9` +3 |
@@ -77,7 +77,7 @@ defined at their first citation.
 | **R62** | _at its citation_ | `server/validate.ts:73` +2 |
 | **R63** | _at its citation_ | `server/settlement.ts:65` +6 |
 | **R65** | _at its citation_ | `src/lib/deadline.ts:8` |
-| **R66** | _at its citation_ | `src/ui/useRoom.ts:126` |
+| **R66** | _at its citation_ | `src/ui/useRoom.ts:141` |
 | **R67** | _at its citation_ | `server/index.ts:147` |
 | **R68** | _at its citation_ | `server/index.ts:81` +1 |
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
@@ -103,7 +103,7 @@ defined at their first citation.
 | **R90** | `docs/DIRECTION.md:536` | `server/handlers.ts:300` +13 |
 | **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:237` +10 |
 | **R92** | `docs/DIRECTION.md:590` | — |
-| **R93** | `docs/DIRECTION.md:609` | `server/handlers.ts:22` +3 |
+| **R93** | `docs/DIRECTION.md:609` | `server/handlers.ts:22` +6 |
 | **R94** | `docs/DIRECTION.md:651` | — |
 | **R95** | `docs/DIRECTION.md:702` | `src/ui/components/VoteRow.tsx:76` +1 |
 | **R96** | `docs/DIRECTION.md:731` | `src/ui/components/SwipeCard.tsx:120` |
@@ -171,5 +171,6 @@ defined at their first citation.
 | **R160** | `docs/DIRECTION.md:2872` | — |
 | **R161** | `docs/DIRECTION.md:2906` | — |
 | **R162** | `docs/DIRECTION.md:2936` | — |
+| **R163** | `docs/DIRECTION.md:2976` | — |
 
 No ruling is orphaned.
