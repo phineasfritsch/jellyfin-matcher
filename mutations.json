@@ -779,6 +779,18 @@
         "src/ui/__tests__/authgate.render.test.tsx"
       ],
       "note": "R55 exactly as it was: the decline shrunk back to small grey underlined text under a full-width button. The WORDS are untouched, so every catalogue assertion still passes -- R55 is about shape, and shape is the half a copy test cannot see. A guest reads the pairing as a trial wall and puts the phone down, and nothing here is gated that a guest cannot simply skip."
+    },
+    {
+      "id": "R170-group-drops-its-name",
+      "ruling": "R170",
+      "claim": "the label a caller gives a section reaches the accessibility tree",
+      "file": "src/ui/components/Listing.tsx",
+      "find": "    <section aria-label={ariaLabel} className=\"px-3 pt-3\">",
+      "replace": "    <section className=\"px-3 pt-3\">",
+      "expect": [
+        "src/ui/__tests__/listing.render.test.tsx"
+      ],
+      "note": "One attribute, and every named region in the app loses its name at once. A15, A16 and A17 all pin an `ariaLabel=` in a CALLER's file, so all three stay green -- they prove a caller supplies a name and say nothing about whether Group uses it. The A12 shape: a pin on the input of a component that never checks the output."
     }
   ]
 }

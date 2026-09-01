@@ -3164,3 +3164,27 @@ Also rendered rather than assumed: the decline is absent when there is nothing
 to decline into, since a control that cannot work is worse than none; the login
 says which room it is for (R10); both fields are bound to their labels; and the
 password field is a password field, which nothing anywhere had checked.
+
+### R170 — Three pins on the caller, none on the callee
+
+`Listing.tsx` is where the lobby, the knockout, the details sheet and the winner
+screen all get their sections and rows. It had no tests.
+
+A15, A16 and A17 each pin an `ariaLabel=` — the members list, the final ranking,
+the session settings — and every one of those pins reads a CALLER's file.
+Nothing checked that `Group` does anything with what it is handed. Delete one
+attribute from the shared component and all three pins stay green while every
+named region in the app loses its name at once.
+
+That is the A12 shape in a new place: a check on the input of a component,
+standing in for a claim about its output. It is a comfortable mistake because
+the pin does name something real — the caller genuinely supplies a label — and
+the gap it leaves is invisible until somebody edits the callee.
+
+Also pinned by rendering: a `RowButton` reports whether it is CHOSEN and not
+merely that it is a button, because the knockout's picks and the deck-size
+choice are toggles and a reader told "Horror, button" learns nothing about the
+state the control exists to hold; a plain action row does not claim a pressed
+state it has not got; a disabled row does not act; and a static `Row` renders no
+button at all, which is R98 — the failure panel explains a dead end and must not
+also look like a way out of one.
