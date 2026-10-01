@@ -23,7 +23,7 @@ licence text.
 | express | 5.2.1 | MIT |
 | framer-motion | 12.42.2 | MIT |
 | lucide-react | 1.26.0 | ISC |
-| next | 15.5.21 | MIT |
+| next | 15.5.27 | MIT |
 | react | 19.2.8 | MIT |
 | react-dom | 19.2.8 | MIT |
 | react-qr-code | 2.2.0 | MIT |

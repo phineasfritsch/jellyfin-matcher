@@ -12,7 +12,8 @@ export type AuthMode = 'off' | 'requests' | 'create' | 'all';
  *                        A Jellyfin-only night needs no login at all.
  *   create             - login to create any room (either scope); joining open.
  *   all                - login to create and to join.
- *   off                - no login anywhere (private networks / local dev).
+ *   off                - no login for room actions (private networks / local dev).
+ * The server guide always requires a Jellyfin sign-in, in every mode.
  * "on" is accepted as an alias for "all" for backwards compatibility.
  */
 export function authMode(): AuthMode {
@@ -66,6 +67,10 @@ export class AuthStore {
     const token = randomBytes(24).toString('hex');
     this.sessions.set(token, { ...user, issuedAt: this.now() });
     return token;
+  }
+
+  revoke(token: string): void {
+    this.sessions.delete(token);
   }
 
   validate(token: string | undefined): AuthedUser | null {

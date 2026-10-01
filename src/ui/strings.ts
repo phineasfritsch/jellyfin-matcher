@@ -470,6 +470,12 @@ export const en = {
   'auth.username': 'Username',
   'auth.password': 'Password',
   'auth.submit': 'Sign in',
+  'guideLogin.checking': 'Checking your Jellyfin sign-in…',
+  'guideLogin.title': 'Sign in here',
+  'guideLogin.metadata': 'Sign in to the server guide',
+  'guideLogin.explanation': 'This guide requires your Jellyfin account. An existing Matcher sign-in is reused automatically.',
+  'guideLogin.blocked': 'Your browser may block sign-in inside an embedded tab. Open the guide in its own tab to continue.',
+  'guideLogin.openTab': 'Open sign-in in a new tab',
   'diagnosis.labelErr': 'ERR',
   'winner.cancel': 'Cancel',
   'winner.requestFailed': {

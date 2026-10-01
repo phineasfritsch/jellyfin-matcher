@@ -4,7 +4,7 @@ import { t } from '../../src/ui/strings';
 import { Sentence } from '../../src/ui/components/Sentence';
 
 // Embedded in Jellyfin via the Custom Tabs plugin (an iframe pointing here),
-// so it renders standalone with no login gate.
+// Access is checked by the custom server before any HTML or RSC is rendered.
 export const dynamic = 'force-dynamic';
 
 /*

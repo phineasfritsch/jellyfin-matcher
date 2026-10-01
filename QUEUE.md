@@ -8,7 +8,7 @@ item to Done only when `npm run gate` was green *after* it, run by something
 that is not the agent that did the work. Blocked is a legitimate outcome and
 should be written down, not worked around.
 
-**Today's numbers:** 1228 test cases, 55 files, 190 pinned claims, all green.
+**Today's numbers:** 1262 test cases, 57 files, 190 pinned claims, all green.
 
 This queue is the output of the review board — see [docs/BOARD.md](docs/BOARD.md)
 for the mandates, how a round runs, and the rule that the product is finished
@@ -345,3 +345,7 @@ ruling numbers are indexed in [docs/RULINGS.md](docs/RULINGS.md).
       `npm run gate`, `npm run prod:read`, `npm run inventory`, `GIT_SHA` →
       `/healthz` so parity is a fact, CI gating the image build. See
       OPERATING.md and docs/REDESIGN.md.
+
+## Security hotfix — 2026-10-01
+
+- [ ] Prepared isolated hotfix from published main 236be57: Next.js 15.5.27 with patched PostCSS/sharp, and server-enforced guide sign-in using existing Jellyfin-authenticated Matcher sessions or the existing login form. Direct HTML/RSC access, forged/expired sessions, logout and embedded-cookie fallback are covered. Independent fast gate passes 9/9: 1262 cases, 57 files, 190 pins. Production build and local production HTTP smoke checks pass. Deployment pending; unrelated local work is excluded.

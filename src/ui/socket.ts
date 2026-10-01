@@ -84,6 +84,11 @@ export function setAuth(token: string, name: string): void {
 }
 
 export function clearAuth(): void {
+  const token = getAuthToken();
+  void fetch('/api/logout', {
+    method: 'POST', credentials: 'same-origin', keepalive: true,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  }).catch(() => { /* An offline browser cannot reach the server; its session still expires. */ });
   try {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(AUTH_NAME_KEY);

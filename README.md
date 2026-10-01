@@ -3,7 +3,7 @@
 [![gate](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml/badge.svg)](https://github.com/phineasfritsch/jellyfin-matcher/actions/workflows/docker.yml)
 [![image](https://ghcr-badge.egpl.dev/phineasfritsch/jellyfin-matcher/latest_tag?trim=major&label=ghcr.io)](https://github.com/phineasfritsch/jellyfin-matcher/pkgs/container/jellyfin-matcher)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-1c7a52)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-1228%20in%2055%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
+[![tests](https://img.shields.io/badge/tests-1262%20in%2057%20files-1c7a52)](CONTRIBUTING.md#the-one-command)
 [![pinned claims](https://img.shields.io/badge/pinned%20claims-190-2f4b78)](CONTRIBUTING.md#pinned-claims-and-why-a-test-might-fail-for-a-good-reason)
 
 **Everyone swipes the same deck on their own phone. The first film you all like wins.**
@@ -78,7 +78,7 @@ Rooms support more than two people. Match just requires everyone, and the fallba
 
 Sign-in is tied to what an action actually costs, not to the app as a whole, so account-less friends can still play. By default (`MATCHER_AUTH=requests`) a Jellyfin-only night needs no login at all: anyone can open a room, share the code, and swipe through what's on the server. Signing in with a Jellyfin account is only asked for when someone switches a room to "Any Movie" (which enables downloads) or fires an actual Jellyseerr request. Login goes through Jellyfin's own authenticate endpoint, so only real server accounts pass, and the admin API key stays server side and never reaches the browser. Sessions last 12 hours.
 
-If you want it stricter, `MATCHER_AUTH=create` makes creating any room require an account (joining stays open), `all` requires an account to join too, and `off` turns login off everywhere. One thing to know about the default: since a Jellyfin-only room is openable by anyone who can reach the app, a guest in that room sees the deck of your library titles. That's the nature of the app, but if it matters, put a Cloudflare Access policy on the hostname or bump to `create`.
+If you want it stricter, `MATCHER_AUTH=create` makes creating any room require an account (joining stays open), `all` requires an account to join too, and `off` turns login off for room actions. The server guide always requires a Jellyfin sign-in. One thing to know about the default: since a Jellyfin-only room is openable by anyone who can reach the app, a guest in that room sees the deck of your library titles. That's the nature of the app, but if it matters, put a Cloudflare Access policy on the hostname or bump to `create`.
 
 ## Running it
 
@@ -172,7 +172,7 @@ On a LAN with no tunnel, the default is fine.
 
 ### A help tab inside Jellyfin
 
-Matcher serves a `/guide` page: which apps to install on a TV, phone, or laptop, how to request things in Jellyseerr, and how to use Matcher. You can drop it into the Jellyfin web client as a tab with the [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin. Add a tab in the plugin settings, paste the contents of `custom-tab-guide.html` into the Html Content box, and replace `MATCHER_URL` with your Matcher address (keep the `/guide` on the end). It's an iframe, which is the plugin's own tested pattern, so it fills the tab cleanly. The `/guide` page has no login gate, so it works for everyone.
+Matcher serves a `/guide` page: which apps to install on a TV, phone, or laptop, how to request things in Jellyseerr, and how to use Matcher. You can drop it into the Jellyfin web client as a tab with the [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin. Add a tab in the plugin settings, paste the contents of `custom-tab-guide.html` into the Html Content box, and replace `MATCHER_URL` with your Matcher address (keep the `/guide` on the end). It's an iframe, which is the plugin's own tested pattern, so it fills the tab cleanly. The guide requires a Jellyfin account and reuses an existing Matcher sign-in automatically. Otherwise choose **Sign in here** using your Jellyfin username and password. A Jellyfin web-client login on another origin is not automatically shared with Matcher. If your browser blocks embedded cookies, use **Open sign-in in a new tab**. Production guide sessions require HTTPS; sessions expire after 12 hours and server restarts require signing in again.
 
 ### Every setting
 
@@ -235,7 +235,7 @@ Auth is `?apikey=` in the query string. `POST /tmdb/movie/` with `{"ids": [...]}
 
 ## Testing
 
-`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 1228 cases across 55 files.
+`npm run gate` is the one command: typecheck, the suite, the pinned claims, and a production build, each numbered and counted, non-zero if anything drops. Currently 1262 cases across 57 files.
 
 Most of those are unit tests over the scoring math, knockout state machine, deck ordering, match rules, and the API clients (mocked fetch, injectable clocks). The realtime path got verified with an actual browser plus the scripted partner: full lobby to confetti flow against a real Jellyfin library.
 

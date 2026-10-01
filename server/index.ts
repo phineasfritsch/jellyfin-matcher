@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { installGuideAuth, sameOrigin, setGuideCookie } from './guideAuth';
 import express from 'express';
 import next from 'next';
 import { Server, type Socket } from 'socket.io';
@@ -65,6 +66,7 @@ const nextHandler = nextApp.getRequestHandler();
 
 const app = express();
 app.use(express.json());
+installGuideAuth(app, auth);
 const STARTED_AT = Date.now();
 
 /**
@@ -242,6 +244,8 @@ const joinLimiter = new RateLimiter(JOIN_ATTEMPTS, JOIN_WINDOW_MS);
 setInterval(() => joinLimiter.sweep(), 5 * 60 * 1000).unref();
 
 app.post('/api/login', async (req, res) => {
+  res.set('Cache-Control', 'private, no-store');
+  if (!sameOrigin(req)) return res.sendStatus(403);
   const who = req.ip ?? 'unknown';
   if (loginLimiter.isLimited(who)) {
     const wait = loginLimiter.retryAfterSec(who);
@@ -259,6 +263,7 @@ app.post('/api/login', async (req, res) => {
     const user = await authenticateWithJellyfin(username, password);
     const token = auth.issue(user);
     loginLimiter.clear(who);
+    setGuideCookie(req, res, token);
     res.json({ token, name: user.name });
   } catch (err) {
     loginLimiter.record(who);

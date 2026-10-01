@@ -105,6 +105,11 @@ const A11Y: Pin[] = [
  */
 const LIVE_REGIONS: { file: string; count: number; why: string }[] = [
   {
+    file: 'src/ui/GuideLogin.tsx',
+    count: 1,
+    why: 'embedded cookie refusal must explain why sign-in cannot continue and offer the top-level alternative',
+  },
+  {
     file: 'src/ui/AuthGate.tsx',
     count: 1,
     why: 'a refused sign-in, which is the one moment a guest cannot see what went wrong from anywhere else on the screen',

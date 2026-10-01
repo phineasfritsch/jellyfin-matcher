@@ -78,15 +78,15 @@ defined at their first citation.
 | **R63** | _at its citation_ | `server/settlement.ts:65` +6 |
 | **R65** | _at its citation_ | `src/lib/deadline.ts:8` |
 | **R66** | _at its citation_ | `src/ui/useRoom.ts:141` |
-| **R67** | _at its citation_ | `server/index.ts:148` |
-| **R68** | _at its citation_ | `server/index.ts:82` +1 |
+| **R67** | _at its citation_ | `server/index.ts:150` |
+| **R68** | _at its citation_ | `server/index.ts:84` +1 |
 | **R69** | _at its citation_ | `server/handlers.ts:17` |
 | **R70** | _at its citation_ | `server/diagnose.ts:102` +1 |
 | **R71** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:204` |
 | **R73** | _at its citation_ | `src/ui/RoomClient.tsx:153` |
 | **R74** | _at its citation_ | `src/ui/components/Listing.tsx:150` +2 |
 | **R75** | _at its citation_ | `server/validate.ts:10` |
-| **R76** | _at its citation_ | `server/index.ts:645` |
+| **R76** | _at its citation_ | `server/index.ts:650` |
 | **R77** | _at its citation_ | `server/handlers.ts:111` +3 |
 | **R78** | _at its citation_ | `server/history.ts:80` +1 |
 | **R79** | _at its citation_ | `src/ui/components/WinnerScreen.tsx:97` +1 |
@@ -98,7 +98,7 @@ defined at their first citation.
 | **R85** | `docs/DIRECTION.md:390` | `src/ui/components/Knockout.tsx:88` +3 |
 | **R86** | `docs/DIRECTION.md:416` | `server/handlers.ts:124` +15 |
 | **R87** | `docs/DIRECTION.md:453` | `server/handlers.ts:327` +11 |
-| **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:92` +3 |
+| **R88** | `docs/DIRECTION.md:489` | `server/auth.ts:97` +3 |
 | **R89** | `docs/DIRECTION.md:509` | `app/globals.css:37` |
 | **R90** | `docs/DIRECTION.md:536` | `server/handlers.ts:301` +13 |
 | **R91** | `docs/DIRECTION.md:562` | `src/ui/components/Listing.tsx:237` +10 |
@@ -121,7 +121,7 @@ defined at their first citation.
 | **R108** | `docs/DIRECTION.md:1085` | `server/handlers.ts:349` |
 | **R109** | `docs/DIRECTION.md:1101` | `server/history.ts:163` +1 |
 | **R110** | `docs/DIRECTION.md:1134` | — |
-| **R111** | `docs/DIRECTION.md:1192` | `server/index.ts:292` +11 |
+| **R111** | `docs/DIRECTION.md:1192` | `server/index.ts:297` +11 |
 | **R112** | `docs/DIRECTION.md:1230` | `server/handlers.ts:53` +7 |
 | **R113** | `docs/DIRECTION.md:1261` | `src/ui/components/WinnerScreen.tsx:25` +3 |
 | **R114** | `docs/DIRECTION.md:1283` | — |
@@ -158,20 +158,20 @@ defined at their first citation.
 | **R146** | `docs/DIRECTION.md:2384` | `app/guide/page.tsx:24` +3 |
 | **R147** | `docs/DIRECTION.md:2414` | `server/persistence.ts:7` +1 |
 | **R148** | `docs/DIRECTION.md:2469` | — |
-| **R149** | `docs/DIRECTION.md:2482` | `server/index.ts:589` +10 |
-| **R150** | _at its citation_ | `src/ui/strings.ts:660` +3 |
+| **R149** | `docs/DIRECTION.md:2482` | `server/index.ts:594` +10 |
+| **R150** | _at its citation_ | `src/ui/strings.ts:666` +3 |
 | **R151** | `docs/DIRECTION.md:2534` | `src/ui/components/SwipeDeck.tsx:150` +1 |
 | **R152** | `docs/DIRECTION.md:2558` | — |
 | **R153** | `docs/DIRECTION.md:2600` | — |
 | **R154** | `docs/DIRECTION.md:2635` | `src/ui/strings.ts:319` +2 |
-| **R155** | `docs/DIRECTION.md:2674` | `src/ui/strings.ts:557` +1 |
+| **R155** | `docs/DIRECTION.md:2674` | `src/ui/strings.ts:563` +1 |
 | **R156** | `docs/DIRECTION.md:2713` | `src/ui/components/Knockout.tsx:59` +4 |
 | **R157** | `docs/DIRECTION.md:2753` | — |
 | **R158** | `docs/DIRECTION.md:2784` | `src/ui/components/Sentence.tsx:5` +2 |
-| **R159** | `docs/DIRECTION.md:2818` | `src/ui/strings.ts:577` |
-| **R160** | `docs/DIRECTION.md:2872` | `server/index.ts:622` +1 |
-| **R161** | `docs/DIRECTION.md:2906` | `server/index.ts:160` +1 |
-| **R162** | `docs/DIRECTION.md:2936` | `server/index.ts:502` +1 |
+| **R159** | `docs/DIRECTION.md:2818` | `src/ui/strings.ts:583` |
+| **R160** | `docs/DIRECTION.md:2872` | `server/index.ts:627` +1 |
+| **R161** | `docs/DIRECTION.md:2906` | `server/index.ts:162` +1 |
+| **R162** | `docs/DIRECTION.md:2936` | `server/index.ts:507` +1 |
 | **R163** | `docs/DIRECTION.md:2976` | `src/ui/components/SwipeDeck.tsx:54` +3 |
 | **R164** | `docs/DIRECTION.md:3004` | `src/ui/components/Knockout.tsx:27` +1 |
 | **R165** | `docs/DIRECTION.md:3027` | `src/lib/score.ts:25` |
@@ -185,7 +185,7 @@ defined at their first citation.
 | **R173** | `docs/DIRECTION.md:3263` | — |
 | **R174** | `docs/DIRECTION.md:3297` | — |
 | **R175** | `docs/DIRECTION.md:3326` | `src/lib/knockout.ts:149` +1 |
-| **R176** | `docs/DIRECTION.md:3355` | `src/ui/strings.ts:611` +1 |
+| **R176** | `docs/DIRECTION.md:3355` | `src/ui/strings.ts:617` +1 |
 | **R177** | `docs/DIRECTION.md:3386` | — |
 | **R178** | `docs/DIRECTION.md:3424` | — |
 | **R179** | `docs/DIRECTION.md:3453` | — |
@@ -199,7 +199,7 @@ defined at their first citation.
 | **R193** | `docs/DIRECTION.md:3773` | — |
 | **R194** | `docs/DIRECTION.md:3812` | — |
 | **R195** | `docs/DIRECTION.md:3849` | `server/persistence.ts:37` +1 |
-| **R196** | `docs/DIRECTION.md:3886` | `src/ui/strings.ts:655` |
+| **R196** | `docs/DIRECTION.md:3886` | `src/ui/strings.ts:661` |
 | **R197** | `docs/DIRECTION.md:3919` | — |
 | **R198** | `docs/DIRECTION.md:3959` | — |
 | **R199** | `docs/DIRECTION.md:3989` | — |
